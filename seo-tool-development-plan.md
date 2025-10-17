@@ -63,7 +63,6 @@ seo-optimizer/
 ├── database/
 │   └── seo_optimizer.db
 ├── package.json
-└── webpack.config.js
 ```
 
 ## Core Features & Components
