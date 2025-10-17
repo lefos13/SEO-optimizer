@@ -483,6 +483,42 @@
     gap: $spacing-md;
 }
 
+// Project Analysis Section
+.project-analysis-section {
+    @include flex-column;
+    gap: $spacing-md;
+    padding: $spacing-lg;
+    background: $color-bg-secondary;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-md;
+    margin-bottom: $spacing-lg;
+
+    h4 {
+        margin: 0 0 $spacing-md 0;
+        font-size: $font-size-lg;
+        color: $color-text-primary;
+        @include flex-row;
+        align-items: center;
+        gap: $spacing-md;
+
+        .project-badge {
+            display: inline-block;
+        }
+
+        .analysis-count {
+            font-size: $font-size-xs;
+            color: $color-text-secondary;
+            font-weight: $font-weight-normal;
+            margin-left: auto;
+        }
+    }
+
+    .project-analyses-list {
+        @include flex-column;
+        gap: $spacing-md;
+    }
+}
+
 // Responsive Design
 @media (max-width: 768px) {
     .dashboard-stats-grid {

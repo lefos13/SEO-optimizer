@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [showQuickAnalysisModal, setShowQuickAnalysisModal] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -59,23 +58,25 @@ const Dashboard = () => {
           project => project && project.id
         );
         if (validProjects.length > 0) {
-          const analysesPromises = validProjects
-            .slice(0, 5)
-            .map(project =>
-              window.electronAPI.analyses.getByProject(project.id, { limit: 5 })
-            );
+          const analysesPromises = validProjects.map(project =>
+            window.electronAPI.analyses.getByProject(project.id, { limit: 10 })
+          );
           const analysesResults = await Promise.all(analysesPromises);
           recentAnalyses = analysesResults
             .flat()
+            .map(analysis => ({
+              ...analysis,
+              project_id: analysis.project_id || analysis.projectId,
+            }))
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 5);
+            .slice(0, 20); // Get more to ensure we have enough per project
         }
       }
 
-      // Calculate average score from overall_score field (0-100 range)
+      // Calculate average score from percentage field (0-100 range)
       const avgScore =
         recentAnalyses.length > 0
-          ? recentAnalyses.reduce((sum, a) => sum + (a.overall_score || 0), 0) /
+          ? recentAnalyses.reduce((sum, a) => sum + (a.percentage || 0), 0) /
             recentAnalyses.length
           : 0;
 
@@ -132,6 +133,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleStartAnalysis = () => {
+    // Check if there are any projects
+    if (projects.length === 0) {
+      // No projects, prompt user to create one first
+      alert('Please create a project first before starting an analysis.');
+      setShowNewProjectModal(true);
+    } else {
+      // Has projects, navigate to analysis page
+      window.location.hash = '#/analysis';
+    }
+  };
+
   const getGradeVariant = percentage => {
     if (percentage >= 90) return 'success';
     if (percentage >= 70) return 'info';
@@ -174,14 +187,34 @@ const Dashboard = () => {
           >
             + New Project
           </Button>
-          <Button
-            variant="primary"
-            onClick={() => setShowQuickAnalysisModal(true)}
-          >
-            🔍 Quick Analysis
+          <Button variant="primary" onClick={handleStartAnalysis}>
+            🔍 Start Analysis
           </Button>
         </div>
       </div>
+
+      {/* No Projects Notice */}
+      {projects.length === 0 && (
+        <Card className="notice-card notice-info">
+          <div className="notice-content">
+            <div className="notice-icon">ℹ️</div>
+            <div className="notice-text">
+              <h3>Get Started</h3>
+              <p>
+                Create your first project to organize your SEO analyses. Each
+                project can track multiple analyses over time, helping you
+                monitor improvements.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              onClick={() => setShowNewProjectModal(true)}
+            >
+              Create First Project
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Statistics Overview */}
       <div className="dashboard-stats-grid">
@@ -216,14 +249,14 @@ const Dashboard = () => {
           subtitle="Start analyzing"
           icon="⚡"
           variant="success"
-          onClick={() => setShowQuickAnalysisModal(true)}
+          onClick={handleStartAnalysis}
         />
       </div>
 
       {/* Recent Activity */}
       <div className="dashboard-content-grid">
         <Card title="Recent Analyses" className="recent-analyses-card">
-          {stats.recentAnalyses.length === 0 ? (
+          {projects.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📄</div>
               <h3>No analyses yet</h3>
@@ -231,56 +264,108 @@ const Dashboard = () => {
                 Create a project and start analyzing content to see activity
                 here.
               </p>
-              <Button
-                variant="primary"
-                onClick={() => setShowQuickAnalysisModal(true)}
-              >
+              <Button variant="primary" onClick={handleStartAnalysis}>
+                {projects.length === 0
+                  ? 'Create Project First'
+                  : 'Start First Analysis'}
+              </Button>
+            </div>
+          ) : stats.recentAnalyses.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📄</div>
+              <h3>No analyses yet</h3>
+              <p>Run an analysis to see results here.</p>
+              <Button variant="primary" onClick={handleStartAnalysis}>
                 Start First Analysis
               </Button>
             </div>
           ) : (
-            <div className="analysis-list">
-              {stats.recentAnalyses.map(analysis => (
-                <div key={analysis.id} className="analysis-item">
-                  <div className="analysis-item-header">
-                    <div className="analysis-item-title">
-                      <h4>{analysis.title || 'Untitled Analysis'}</h4>
-                      <span className="analysis-item-date">
-                        {new Date(analysis.created_at).toLocaleDateString()}
-                      </span>
+            <div className="analysis-by-project">
+              {projects.map(project => {
+                const projectAnalyses = stats.recentAnalyses.filter(
+                  a => a.project_id === project.id
+                );
+
+                if (projectAnalyses.length === 0) {
+                  return null; // Skip projects with no analyses
+                }
+
+                return (
+                  <div key={project.id} className="project-analysis-section">
+                    <div className="project-section-header">
+                      <h4 className="project-section-title">
+                        📁 {project.name}
+                      </h4>
+                      <Badge variant="info">{projectAnalyses.length}</Badge>
                     </div>
-                    <Badge
-                      variant={getGradeVariant(analysis.overall_score || 0)}
-                    >
-                      {getGradeLetter(analysis.overall_score || 0)}
-                    </Badge>
+
+                    <div className="project-analyses-list">
+                      {projectAnalyses.map(analysis => (
+                        <div key={analysis.id} className="analysis-item">
+                          <div className="analysis-item-header">
+                            <div className="analysis-item-title">
+                              <h5>{analysis.title || 'Untitled Analysis'}</h5>
+                              <span className="analysis-item-date">
+                                {new Date(
+                                  analysis.created_at
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <Badge
+                              variant={getGradeVariant(
+                                analysis.overall_score || 0
+                              )}
+                            >
+                              {getGradeLetter(analysis.overall_score || 0)}
+                            </Badge>
+                          </div>
+                          <ProgressBar
+                            value={
+                              analysis.percentage ||
+                              Math.round(
+                                (analysis.overall_score / analysis.max_score) *
+                                  100
+                              ) ||
+                              0
+                            }
+                            max={100}
+                            label="SEO Score"
+                          />
+                          <div className="analysis-item-meta">
+                            <span>
+                              Score:{' '}
+                              {analysis.percentage ||
+                                Math.round(
+                                  (analysis.overall_score /
+                                    analysis.max_score) *
+                                    100
+                                ) ||
+                                0}
+                              %
+                            </span>
+                            {analysis.language && (
+                              <span>
+                                Language: {analysis.language.toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="analysis-item-actions">
+                            <Button
+                              variant="primary"
+                              size="small"
+                              onClick={() =>
+                                (window.location.hash = `#/analysis/results/${analysis.id}`)
+                              }
+                            >
+                              📊 View Results
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <ProgressBar
-                    value={analysis.overall_score || 0}
-                    max={100}
-                    label="SEO Score"
-                  />
-                  <div className="analysis-item-meta">
-                    <span>
-                      Score: {Math.round(analysis.overall_score || 0)}%
-                    </span>
-                    {analysis.language && (
-                      <span>Language: {analysis.language.toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div className="analysis-item-actions">
-                    <Button
-                      variant="primary"
-                      size="small"
-                      onClick={() =>
-                        (window.location.hash = `#/analysis/results/${analysis.id}`)
-                      }
-                    >
-                      📊 View Results
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>
@@ -389,30 +474,6 @@ const Dashboard = () => {
             placeholder="https://example.com"
             type="url"
           />
-        </div>
-      </Modal>
-
-      {/* Quick Analysis Modal */}
-      <Modal
-        isOpen={showQuickAnalysisModal}
-        onClose={() => setShowQuickAnalysisModal(false)}
-        title="Quick SEO Analysis"
-        size="large"
-      >
-        <div className="quick-analysis-form">
-          <p>
-            For detailed analysis, please use the Analysis page from the sidebar
-            menu.
-          </p>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setShowQuickAnalysisModal(false);
-              window.location.hash = '#/analysis';
-            }}
-          >
-            Go to Analysis Page
-          </Button>
         </div>
       </Modal>
     </div>

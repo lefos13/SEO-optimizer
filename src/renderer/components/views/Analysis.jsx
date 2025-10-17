@@ -7,11 +7,13 @@
  * - Analysis configuration
  * - Real-time progress tracking
  * - Results display
+ * - Project selection
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import Badge from '../ui/Badge';
 import ContentInput from '../analysis/ContentInput';
 import KeywordsInput from '../analysis/KeywordsInput';
 import AnalysisConfig from '../analysis/AnalysisConfig';
@@ -20,6 +22,8 @@ import AnalysisProgress from '../analysis/AnalysisProgress';
 const Analysis = () => {
   const navigate = useNavigate();
 
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [content, setContent] = useState('');
   const [url, setUrl] = useState('');
   const [keywords, setKeywords] = useState([]);
@@ -36,6 +40,25 @@ const Analysis = () => {
   const [currentStage, setCurrentStage] = useState('init');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+
+  // Load projects on mount
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projectsData = await window.electronAPI.projects.getAll({
+          limit: 100,
+        });
+        setProjects(projectsData || []);
+        // Set first project as default
+        if (projectsData && projectsData.length > 0) {
+          setSelectedProjectId(projectsData[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load projects:', err);
+      }
+    };
+    loadProjects();
+  }, []);
 
   const validateInputs = () => {
     if (!content || content.trim().length < 50) {
@@ -147,16 +170,10 @@ const Analysis = () => {
       setCurrentStage('recommendations');
       setProgress(95);
 
-      // Get the "Direct Input" project ID for this analysis
+      // Get the selected project ID for this analysis
       // eslint-disable-next-line no-console
-      console.log('🔍 [ANALYSIS] Fetching Direct Input project...');
-      const directInputProject = await window.electronAPI.projects.getAll({
-        limit: 1,
-      });
-      const projectId =
-        directInputProject && directInputProject.length > 0
-          ? directInputProject[0].id
-          : 1; // Fallback to ID 1 if not found
+      console.log('🔍 [ANALYSIS] Using selected project:', selectedProjectId);
+      const projectId = selectedProjectId || 1; // Use selected or fallback to 1
 
       // eslint-disable-next-line no-console
       console.log('✅ [ANALYSIS] Project ID resolved:', projectId);
@@ -189,11 +206,12 @@ const Analysis = () => {
           maxScore: result.maxScore,
           percentage: result.percentage,
           grade: result.grade,
+          categoryScores: result.categoryScores,
         });
 
         // Prepare category scores for storage (as JSON string)
-        const categoryScoresJson = result.enhancedRecommendations?.byCategory
-          ? JSON.stringify(result.enhancedRecommendations.byCategory)
+        const categoryScoresJson = result.categoryScores
+          ? JSON.stringify(result.categoryScores)
           : null;
 
         await window.electronAPI.analyses.update(savedAnalysis.id, {
@@ -263,6 +281,10 @@ const Analysis = () => {
   const canAnalyze =
     content && content.trim().length >= 50 && config.contentType;
 
+  const selectedProject =
+    projects.find(project => project.id === selectedProjectId) || null;
+  const projectCount = projects.length;
+
   return (
     <div className="view-container analysis-view">
       <div className="view-header">
@@ -272,6 +294,92 @@ const Analysis = () => {
           recommendations
         </p>
       </div>
+
+      {/* Project Selector */}
+      {!isAnalyzing && (
+        <Card className="project-selector-card">
+          <div className="project-selector-content">
+            <div className="project-selector-header">
+              <div className="project-selector-title">
+                <span className="project-selector-icon">📁</span>
+                <div className="project-selector-copy">
+                  <h3>Current Project</h3>
+                  <p>Choose where this analysis will be saved.</p>
+                </div>
+              </div>
+              {projectCount > 0 && (
+                <Badge variant="primary" size="large">
+                  {projectCount} {projectCount === 1 ? 'Project' : 'Projects'}
+                </Badge>
+              )}
+            </div>
+
+            <div className="project-selector-body">
+              {selectedProject ? (
+                <div className="selected-project">
+                  <h4 className="selected-project-name">
+                    {selectedProject.name}
+                  </h4>
+                  {selectedProject.description ? (
+                    <p className="selected-project-description">
+                      {selectedProject.description}
+                    </p>
+                  ) : (
+                    <p className="selected-project-hint">
+                      All analyses on this page will be saved to this project.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="no-project-selected">
+                  <span className="status-icon">⚠️</span>
+                  <div>
+                    <strong>No project selected</strong>
+                    <p>
+                      Please create a project first to organize your analyses.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="project-selector-footer">
+              {projectCount > 1 ? (
+                <div className="project-switcher">
+                  <label
+                    htmlFor="project-select"
+                    className="project-switcher-label"
+                  >
+                    Switch Project
+                  </label>
+                  <div className="project-select-wrapper">
+                    <select
+                      id="project-select"
+                      value={selectedProjectId || ''}
+                      onChange={e =>
+                        setSelectedProjectId(Number(e.target.value))
+                      }
+                      className="project-select"
+                    >
+                      {projects.map(project => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <p className="project-selector-empty">
+                  You currently have a single project. Create additional
+                  projects from the dashboard to organize analyses by client or
+                  website.
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {isAnalyzing ? (
         <Card className="analysis-progress-card">

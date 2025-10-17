@@ -22,7 +22,12 @@ const ScoreBreakdown = ({ analysis }) => {
   }
 
   const { score, maxScore, grade, categoryScores } = analysis;
-  const percentage = Math.round((score / maxScore) * 100);
+
+  // Handle cases where score or maxScore might be 0 or invalid
+  const validScore = score || 0;
+  const validMaxScore = maxScore || 100;
+  const percentage =
+    validMaxScore > 0 ? Math.round((validScore / validMaxScore) * 100) : 0;
 
   // Calculate grade variant for badge
   const getGradeVariant = grade => {
@@ -80,8 +85,8 @@ const ScoreBreakdown = ({ analysis }) => {
               />
             </svg>
             <div className="progress-ring-content">
-              <div className="score-value">{score}</div>
-              <div className="score-max">/ {maxScore}</div>
+              <div className="score-value">{validScore}</div>
+              <div className="score-max">/ {validMaxScore}</div>
             </div>
           </div>
 
@@ -114,65 +119,73 @@ const ScoreBreakdown = ({ analysis }) => {
       <div className="category-breakdown">
         <h4 className="breakdown-title">Score Breakdown by Category</h4>
         <div className="category-list">
-          {Object.entries(categoryScores || {}).map(([category, data]) => {
-            const categoryPercentage = Math.round(
-              (data.score / data.maxScore) * 100
-            );
+          {categoryScores && Object.keys(categoryScores).length > 0 ? (
+            Object.entries(categoryScores).map(([category, data]) => {
+              // Ensure data has required fields
+              const catScore = data.score || 0;
+              const catMaxScore = data.maxScore || 0;
+              const catPassed = data.passed || 0;
+              const catFailed = data.failed || 0;
+              const categoryPercentage =
+                catMaxScore > 0
+                  ? Math.round((catScore / catMaxScore) * 100)
+                  : 0;
 
-            return (
-              <div key={category} className="category-item">
-                <div className="category-header">
-                  <div className="category-info">
-                    <span className="category-icon">
-                      {getCategoryIcon(category)}
-                    </span>
-                    <span className="category-name">{category}</span>
+              return (
+                <div key={category} className="category-item">
+                  <div className="category-header">
+                    <div className="category-info">
+                      <span className="category-icon">
+                        {getCategoryIcon(category)}
+                      </span>
+                      <span className="category-name">{category}</span>
+                    </div>
+                    <div className="category-score">
+                      <span className="score-numbers">
+                        {catScore} / {catMaxScore}
+                      </span>
+                      <Badge
+                        variant={
+                          categoryPercentage >= 80
+                            ? 'success'
+                            : categoryPercentage >= 60
+                              ? 'info'
+                              : categoryPercentage >= 40
+                                ? 'warning'
+                                : 'danger'
+                        }
+                        size="small"
+                      >
+                        {categoryPercentage}%
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="category-score">
-                    <span className="score-numbers">
-                      {data.score} / {data.maxScore}
-                    </span>
-                    <Badge
-                      variant={
-                        categoryPercentage >= 80
-                          ? 'success'
-                          : categoryPercentage >= 60
-                            ? 'info'
-                            : categoryPercentage >= 40
-                              ? 'warning'
-                              : 'danger'
-                      }
-                      size="small"
-                    >
-                      {categoryPercentage}%
-                    </Badge>
+                  <ProgressBar
+                    value={categoryPercentage}
+                    variant={
+                      categoryPercentage >= 80
+                        ? 'success'
+                        : categoryPercentage >= 60
+                          ? 'info'
+                          : categoryPercentage >= 40
+                            ? 'warning'
+                            : 'danger'
+                    }
+                    showLabel={false}
+                    size="small"
+                  />
+                  <div className="category-meta">
+                    <span className="passed-rules">✓ {catPassed} passed</span>
+                    <span className="failed-rules">✗ {catFailed} failed</span>
                   </div>
                 </div>
-                <ProgressBar
-                  value={categoryPercentage}
-                  variant={
-                    categoryPercentage >= 80
-                      ? 'success'
-                      : categoryPercentage >= 60
-                        ? 'info'
-                        : categoryPercentage >= 40
-                          ? 'warning'
-                          : 'danger'
-                  }
-                  showLabel={false}
-                  size="small"
-                />
-                <div className="category-meta">
-                  <span className="passed-rules">
-                    ✓ {data.passed || 0} passed
-                  </span>
-                  <span className="failed-rules">
-                    ✗ {data.failed || 0} failed
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="category-empty">
+              <p>No category data available</p>
+            </div>
+          )}
         </div>
       </div>
 

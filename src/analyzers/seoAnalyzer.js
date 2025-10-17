@@ -188,6 +188,7 @@ class SEOAnalyzer {
       issues: [],
       recommendations: [],
       metadata: {},
+      categoryScores: {},
     };
   }
 
@@ -248,16 +249,30 @@ class SEOAnalyzer {
     try {
       const result = await rule.check(content);
 
-      // Add to max score
+      // Initialize category scores if not exists
+      if (!this.results.categoryScores[rule.category]) {
+        this.results.categoryScores[rule.category] = {
+          score: 0,
+          maxScore: 0,
+          passed: 0,
+          failed: 0,
+        };
+      }
+
+      // Add to max score (overall and category)
       this.results.maxScore += rule.weight;
+      this.results.categoryScores[rule.category].maxScore += rule.weight;
 
       if (result.passed) {
         // Rule passed
         this.results.score += rule.weight;
+        this.results.categoryScores[rule.category].score += rule.weight;
         this.results.passedRules++;
+        this.results.categoryScores[rule.category].passed++;
       } else {
         // Rule failed
         this.results.failedRules++;
+        this.results.categoryScores[rule.category].failed++;
 
         // Add issue
         this.results.issues.push({
