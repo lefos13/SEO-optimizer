@@ -1,0 +1,81 @@
+{
+  "common": {
+    "appName": "SEO Optimizer",
+    "version": "Έκδοση {{version}}",
+    "loading": "Φόρτωση...",
+    "save": "Αποθήκευση",
+    "cancel": "Ακύρωση",
+    "delete": "Διαγραφή",
+    "edit": "Επεξεργασία",
+    "close": "Κλείσιμο",
+    "back": "Πίσω",
+    "next": "Επόμενο",
+    "submit": "Υποβολή",
+    "reset": "Επαναφορά",
+    "search": "Αναζήτηση",
+    "export": "Εξαγωγή",
+    "import": "Εισαγωγή",
+    "settings": "Ρυθμίσεις"
+  },
+  "navigation": {
+    "home": "Αρχική",
+    "analysis": "Ανάλυση",
+    "projects": "Έργα",
+    "miniServices": "Μίνι-υπηρεσίες",
+    "settings": "Ρυθμίσεις",
+    "about": "Σχετικά"
+  },
+  "home": {
+    "welcome": "Καλώς ήρθατε στο SEO Optimizer",
+    "description": "Μια ισχυρή εφαρμογή για την ανάλυση και βελτιστοποίηση του περιεχομένου σας για SEO.",
+    "features": {
+      "analysis": {
+        "title": "Ανάλυση Περιεχομένου",
+        "description": "Ολοκληρωμένη ανάλυση SEO με πρακτικές συστάσεις"
+      },
+      "multilanguage": {
+        "title": "Πολυγλωσσία",
+        "description": "Υποστήριξη για περιεχόμενο στα Αγγλικά και Ελληνικά"
+      },
+      "miniServices": {
+        "title": "Μίνι-υπηρεσίες",
+        "description": "Γεννήτρια λέξεων-κλειδιών, αναλυτής αναγνωσιμότητας και άλλα"
+      },
+      "localStorage": {
+        "title": "Τοπική Αποθήκευση",
+        "description": "Όλα τα δεδομένα σας αποθηκεύονται με ασφάλεια στη συσκευή σας"
+      }
+    }
+  },
+  "analysis": {
+    "title": "Ανάλυση SEO",
+    "newAnalysis": "Νέα Ανάλυση",
+    "contentInput": "Εισάγετε περιεχόμενο ή URL",
+    "targetKeywords": "Λέξεις-κλειδιά Στόχου",
+    "language": "Γλώσσα",
+    "analyze": "Ανάλυση",
+    "overallScore": "Συνολική Βαθμολογία",
+    "recommendations": "Συστάσεις",
+    "categoryScores": "Βαθμολογίες Κατηγοριών",
+    "noAnalysisYet": "Δεν έχει πραγματοποιηθεί ανάλυση ακόμα"
+  },
+  "projects": {
+    "title": "Έργα",
+    "newProject": "Νέο Έργο",
+    "projectName": "Όνομα Έργου",
+    "description": "Περιγραφή",
+    "noProjects": "Δεν υπάρχουν έργα ακόμα",
+    "createFirst": "Δημιουργήστε το πρώτο σας έργο για να ξεκινήσετε"
+  },
+  "settings": {
+    "title": "Ρυθμίσεις",
+    "general": "Γενικά",
+    "language": "Γλώσσα",
+    "theme": "Θέμα",
+    "autoSave": "Αυτόματη αποθήκευση",
+    "database": "Βάση Δεδομένων",
+    "exportData": "Εξαγωγή Δεδομένων",
+    "importData": "Εισαγωγή Δεδομένων",
+    "clearData": "Εκκαθάριση Δεδομένων"
+  }
+}

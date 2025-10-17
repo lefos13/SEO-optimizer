@@ -1,0 +1,81 @@
+{
+  "common": {
+    "appName": "SEO Optimizer",
+    "version": "Version {{version}}",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "reset": "Reset",
+    "search": "Search",
+    "export": "Export",
+    "import": "Import",
+    "settings": "Settings"
+  },
+  "navigation": {
+    "home": "Home",
+    "analysis": "Analysis",
+    "projects": "Projects",
+    "miniServices": "Mini-services",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "home": {
+    "welcome": "Welcome to SEO Optimizer",
+    "description": "A powerful desktop application for analyzing and optimizing your content for SEO.",
+    "features": {
+      "analysis": {
+        "title": "Content Analysis",
+        "description": "Comprehensive SEO analysis with actionable recommendations"
+      },
+      "multilanguage": {
+        "title": "Multi-language",
+        "description": "Support for English and Greek content"
+      },
+      "miniServices": {
+        "title": "Mini-services",
+        "description": "Keyword generator, readability analyzer, and more"
+      },
+      "localStorage": {
+        "title": "Local Storage",
+        "description": "All your data stored securely on your device"
+      }
+    }
+  },
+  "analysis": {
+    "title": "SEO Analysis",
+    "newAnalysis": "New Analysis",
+    "contentInput": "Enter content or URL",
+    "targetKeywords": "Target Keywords",
+    "language": "Language",
+    "analyze": "Analyze",
+    "overallScore": "Overall Score",
+    "recommendations": "Recommendations",
+    "categoryScores": "Category Scores",
+    "noAnalysisYet": "No analysis performed yet"
+  },
+  "projects": {
+    "title": "Projects",
+    "newProject": "New Project",
+    "projectName": "Project Name",
+    "description": "Description",
+    "noProjects": "No projects yet",
+    "createFirst": "Create your first project to get started"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "language": "Language",
+    "theme": "Theme",
+    "autoSave": "Auto-save",
+    "database": "Database",
+    "exportData": "Export Data",
+    "importData": "Import Data",
+    "clearData": "Clear Data"
+  }
+}
