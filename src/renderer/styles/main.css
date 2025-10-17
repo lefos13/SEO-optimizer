@@ -306,3 +306,67 @@ label {
 .p-3 {
   padding: 24px;
 }
+
+/* Dashboard Analysis List Styles */
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.analysis-item:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--primary-color);
+}
+
+.analysis-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.analysis-item-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.analysis-item-title h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysis-item-date {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.analysis-item-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.analysis-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.analysis-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

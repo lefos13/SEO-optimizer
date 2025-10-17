@@ -9,6 +9,9 @@
 @use 'layout';
 @use 'components';
 @use 'views';
+@use 'dashboard';
+@use 'results';
+@use 'analysis';
 
 // Global reset and base styles
 *,

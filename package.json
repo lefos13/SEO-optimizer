@@ -9,6 +9,7 @@
   "scripts": {
     "start": "yarn webpack:build && electron .",
     "dev": "concurrently \"yarn webpack:watch\" \"wait-on dist/index.html && yarn electron:dev\"",
+    "dev:clean": "yarn db:reset && yarn dev",
     "electron:dev": "electron . --dev",
     "webpack:build": "webpack --mode production",
     "webpack:watch": "webpack --mode development --watch",
@@ -16,6 +17,7 @@
     "build:win": "yarn webpack:build && electron-builder --win",
     "build:mac": "yarn webpack:build && electron-builder --mac",
     "build:linux": "yarn webpack:build && electron-builder --linux",
+    "db:reset": "node scripts/resetDatabase.js",
     "lint": "eslint . --ext .js,.jsx",
     "lint:fix": "eslint . --ext .js,.jsx --fix",
     "format": "prettier --write \"**/*.{js,jsx,json,css,md,scss}\"",

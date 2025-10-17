@@ -29,6 +29,11 @@
     flex-direction: column;
 }
 
+@mixin flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
 // Scrollbar styling
 @mixin custom-scrollbar {
     &::-webkit-scrollbar {

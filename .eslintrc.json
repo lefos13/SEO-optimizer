@@ -19,8 +19,9 @@
   },
   "plugins": ["react", "react-hooks"],
   "rules": {
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-console": ["off", { "allow": ["warn", "error"] }],
     "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-control-regex": "off",
     "prefer-const": "error",
     "no-var": "error",
     "react/react-in-jsx-scope": "off",

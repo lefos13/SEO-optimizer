@@ -58,16 +58,35 @@ class SEOAnalyzer {
    */
   async analyze(content) {
     try {
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Starting analysis...');
+
       // Reset results
       this.resetResults();
 
       // Validate input
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Validating input...');
       this.validateInput(content);
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Input validation passed');
 
       // Parse HTML content
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Parsing HTML content...');
       const parsedContent = htmlParser.parse(content.html || '');
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ HTML parsed:', {
+        wordCount: parsedContent.wordCount,
+        charCount: parsedContent.characterCount,
+        headingCount: parsedContent.headings?.length || 0,
+        imageCount: parsedContent.images?.length || 0,
+        linkCount: parsedContent.links?.length || 0,
+      });
 
       // Extract metadata
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Extracting metadata...');
       this.results.metadata = {
         title: content.title || '',
         description: content.description || '',
@@ -82,22 +101,59 @@ class SEOAnalyzer {
         metaTags: parsedContent.metaTags,
         structuralElements: parsedContent.structuralElements,
       };
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Metadata extracted:', {
+        keywords: this.results.metadata.keywords,
+        language: this.results.metadata.language,
+      });
 
       // Run all analysis rules
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Running analysis rules...');
       await this.runAnalysis(parsedContent);
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Rules executed:', {
+        passedRules: this.results.passedRules,
+        failedRules: this.results.failedRules,
+        totalIssues: this.results.issues.length,
+      });
 
       // Calculate final scores
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Calculating scores...');
       this.calculateScores();
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Scores calculated:', {
+        score: this.results.score,
+        maxScore: this.results.maxScore,
+        percentage: this.results.percentage,
+        grade: this.results.grade,
+      });
 
       // Generate enhanced recommendations
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] Generating enhanced recommendations...');
       this.results.enhancedRecommendations =
         this.recommendationEngine.generateRecommendations(
           this.results,
           this.rules
         );
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Recommendations generated:', {
+        recommendationCount:
+          this.results.enhancedRecommendations?.recommendations?.length || 0,
+        categoryScores:
+          Object.keys(
+            this.results.enhancedRecommendations?.categoryScores || {}
+          ).length || 0,
+      });
 
+      // eslint-disable-next-line no-console
+      console.log('[SEO-ANALYZER] ✅ Analysis complete!');
       return this.results;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[SEO-ANALYZER] ❌ Analysis failed:', error);
       throw new Error(`SEO Analysis failed: ${error.message}`);
     }
   }

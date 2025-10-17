@@ -19,6 +19,12 @@ const Navigation = () => {
       label: 'Analysis',
       description: 'Content Analysis',
     },
+    // {
+    //   path: '/analysisResults',
+    //   icon: '🔍',
+    //   label: 'Analysis Results',
+    //   description: 'View Analysis Results',
+    // },
     {
       path: '/reports',
       icon: '📈',

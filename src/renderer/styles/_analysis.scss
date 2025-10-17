@@ -1,0 +1,921 @@
+/**
+ * Analysis View Styling
+ * Styles for content input and analysis interface
+ */
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Analysis View Layout
+.analysis-view {
+    .view-header {
+        margin-bottom: $spacing-xl;
+    }
+}
+
+.analysis-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: $spacing-lg;
+    align-items: start;
+}
+
+.analysis-input-column,
+.analysis-config-column {
+    @include flex-column;
+    gap: $spacing-lg;
+}
+
+// Content Input Component
+.content-input {
+    @include flex-column;
+    gap: 0;
+}
+
+.input-tabs {
+    @include flex-row;
+    border-bottom: 2px solid $color-border;
+    margin-bottom: $spacing-lg;
+}
+
+.input-tab {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-md $spacing-lg;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: all $transition-base;
+    position: relative;
+    top: 2px;
+
+    &:hover {
+        color: $color-text-primary;
+        background: $color-bg-hover;
+    }
+
+    &.active {
+        color: $color-primary;
+        border-bottom-color: $color-primary;
+    }
+
+    .tab-icon {
+        font-size: $font-size-lg;
+    }
+}
+
+.input-content {
+    min-height: 400px;
+}
+
+// Text Input Tab
+.input-text {
+    @include flex-column;
+    gap: $spacing-md;
+}
+
+.textarea-wrapper {
+    position: relative;
+}
+
+.content-textarea {
+    width: 100%;
+    min-height: 400px;
+    padding: $spacing-md;
+    background: $color-bg-secondary;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-md;
+    color: $color-text-primary;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+    resize: vertical;
+    transition: border-color $transition-base;
+    @include custom-scrollbar;
+
+    &:focus {
+        outline: none;
+        border-color: $color-primary;
+        box-shadow: 0 0 0 3px $color-primary-alpha;
+    }
+
+    &::placeholder {
+        color: $color-text-tertiary;
+    }
+}
+
+.content-stats {
+    @include flex-row;
+    gap: $spacing-sm;
+    margin-top: $spacing-sm;
+    flex-wrap: wrap;
+}
+
+.input-help {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+    border-left: 4px solid $color-primary;
+
+    .help-title {
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-sm;
+    }
+
+    .help-list {
+        margin: 0;
+        padding-left: $spacing-lg;
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+
+        li {
+            margin-bottom: $spacing-xs;
+        }
+    }
+}
+
+// URL Input Tab
+.input-url {
+    @include flex-column;
+    gap: $spacing-lg;
+}
+
+.url-input-group {
+    @include flex-column;
+    gap: $spacing-md;
+}
+
+.url-help,
+.file-help {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+
+    .help-title {
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-sm;
+    }
+
+    .help-list {
+        margin: $spacing-sm 0;
+        padding-left: $spacing-lg;
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+
+        li {
+            margin-bottom: $spacing-xs;
+        }
+    }
+
+    .help-note {
+        margin-top: $spacing-sm;
+        font-size: $font-size-sm;
+        color: $color-text-tertiary;
+        font-style: italic;
+    }
+}
+
+.url-success,
+.file-success {
+    margin-top: $spacing-md;
+    padding: $spacing-md;
+    background: $color-success-alpha;
+    border-radius: $border-radius-md;
+    text-align: center;
+
+    .success-text {
+        margin-top: $spacing-xs;
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+    }
+}
+
+// File Upload Tab
+.input-file {
+    @include flex-column;
+    gap: $spacing-lg;
+}
+
+.file-upload-area {
+    position: relative;
+    min-height: 200px;
+}
+
+.file-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.file-upload-label {
+    @include flex-center;
+    @include flex-column;
+    min-height: 200px;
+    padding: $spacing-2xl;
+    background: $color-bg-secondary;
+    border: 2px dashed $color-border;
+    border-radius: $border-radius-lg;
+    cursor: pointer;
+    transition: all $transition-base;
+
+    &:hover {
+        border-color: $color-primary;
+        background: $color-bg-hover;
+    }
+
+    .upload-icon {
+        font-size: 64px;
+        margin-bottom: $spacing-md;
+    }
+
+    .upload-text {
+        text-align: center;
+    }
+
+    .upload-title {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-xs;
+    }
+
+    .upload-subtitle {
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+    }
+}
+
+.file-error {
+    margin-top: $spacing-sm;
+    text-align: center;
+}
+
+// Keywords Input Component
+.keywords-input {
+    @include flex-column;
+    gap: $spacing-md;
+}
+
+.keywords-input-field {
+    @include flex-row;
+    gap: $spacing-sm;
+
+    .keyword-input {
+        flex: 1;
+        padding: $spacing-sm $spacing-md;
+        background: $color-bg-secondary;
+        border: 2px solid $color-border;
+        border-radius: $border-radius-md;
+        color: $color-text-primary;
+        font-size: $font-size-base;
+        transition: border-color $transition-base;
+
+        &:focus {
+            outline: none;
+            border-color: $color-primary;
+            box-shadow: 0 0 0 3px $color-primary-alpha;
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.keyword-limit-message {
+    font-size: $font-size-sm;
+    color: $color-warning;
+    margin: 0;
+}
+
+.keywords-list {
+    @include flex-column;
+    gap: $spacing-sm;
+}
+
+.keywords-label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+}
+
+.keywords-chips {
+    @include flex-row;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+}
+
+.keyword-chip {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs $spacing-sm;
+    background: $color-bg-tertiary;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-full;
+    font-size: $font-size-sm;
+    transition: all $transition-base;
+
+    &.high {
+        border-color: $color-success;
+        background: $color-success-alpha;
+    }
+
+    &.medium {
+        border-color: $color-warning;
+        background: $color-warning-alpha;
+    }
+
+    &.low {
+        border-color: $color-border;
+    }
+
+    .chip-text {
+        color: $color-text-primary;
+        font-weight: $font-weight-medium;
+    }
+
+    .chip-remove {
+        @include button-reset;
+        width: 18px;
+        height: 18px;
+        @include flex-center;
+        border-radius: 50%;
+        color: $color-text-secondary;
+        font-size: 18px;
+        line-height: 1;
+        transition: all $transition-base;
+
+        &:hover {
+            background: $color-danger-alpha;
+            color: $color-danger;
+        }
+    }
+}
+
+.keywords-suggestions {
+    @include flex-column;
+    gap: $spacing-sm;
+}
+
+.suggestions-chips {
+    @include flex-row;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+}
+
+.suggestion-chip {
+    @include button-reset;
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs $spacing-sm;
+    background: $color-info-alpha;
+    border: 2px solid $color-info;
+    border-radius: $border-radius-full;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    transition: all $transition-base;
+
+    &:hover {
+        background: $color-info;
+        color: white;
+    }
+
+    .chip-add {
+        font-size: 16px;
+        font-weight: $font-weight-bold;
+    }
+}
+
+.keywords-help {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+
+    .help-text {
+        margin: 0;
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+    }
+}
+
+.density-guide {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+
+    .guide-title {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-sm;
+    }
+
+    .guide-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            @include flex-row;
+            align-items: center;
+            gap: $spacing-sm;
+            margin-bottom: $spacing-xs;
+            font-size: $font-size-sm;
+            color: $color-text-secondary;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+// Analysis Config Component
+.analysis-config {
+    @include flex-column;
+    gap: $spacing-lg;
+}
+
+.config-section {
+    @include flex-column;
+    gap: $spacing-sm;
+}
+
+.config-label {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+}
+
+.config-sublabel {
+    font-weight: $font-weight-normal;
+    color: $color-text-secondary;
+    font-size: $font-size-xs;
+}
+
+.language-selector {
+    @include flex-row;
+    gap: $spacing-sm;
+}
+
+.language-option {
+    @include button-reset;
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+    flex: 1;
+    padding: $spacing-md;
+    background: $color-bg-secondary;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-md;
+    transition: all $transition-base;
+
+    &:hover {
+        border-color: $color-primary-light;
+    }
+
+    &.active {
+        border-color: $color-primary;
+        background: $color-primary-alpha;
+    }
+
+    .lang-flag {
+        font-size: $font-size-xl;
+    }
+
+    .lang-label {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $color-text-primary;
+    }
+}
+
+.content-type-grid {
+    @include flex-column;
+    gap: $spacing-sm;
+}
+
+.type-option {
+    @include button-reset;
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md;
+    background: $color-bg-secondary;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-md;
+    text-align: left;
+    transition: all $transition-base;
+
+    &:hover {
+        border-color: $color-primary-light;
+    }
+
+    &.active {
+        border-color: $color-primary;
+        background: $color-primary-alpha;
+    }
+
+    .type-icon {
+        font-size: $font-size-2xl;
+    }
+
+    .type-info {
+        flex: 1;
+    }
+
+    .type-label {
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: 2px;
+    }
+
+    .type-desc {
+        font-size: $font-size-xs;
+        color: $color-text-secondary;
+    }
+}
+
+.focus-areas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-sm;
+}
+
+.focus-area-option {
+    @include button-reset;
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-secondary;
+    border: 2px solid $color-border;
+    border-radius: $border-radius-md;
+    transition: all $transition-base;
+    position: relative;
+
+    &:hover {
+        border-color: $color-primary-light;
+    }
+
+    &.active {
+        border-color: $color-primary;
+        background: $color-primary-alpha;
+    }
+
+    .focus-icon {
+        font-size: $font-size-lg;
+    }
+
+    .focus-label {
+        flex: 1;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $color-text-primary;
+        text-align: left;
+    }
+
+    .focus-check {
+        color: $color-primary;
+        font-weight: $font-weight-bold;
+    }
+}
+
+.config-advanced {
+    border: 1px solid $color-border;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+
+    .advanced-summary {
+        padding: $spacing-md;
+        background: $color-bg-secondary;
+        cursor: pointer;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        transition: background $transition-base;
+
+        &:hover {
+            background: $color-bg-hover;
+        }
+    }
+
+    .advanced-content {
+        @include flex-column;
+        gap: $spacing-md;
+        padding: $spacing-md;
+    }
+
+    .checkbox-option {
+        @include flex-row;
+        align-items: flex-start;
+        gap: $spacing-sm;
+        cursor: pointer;
+
+        input[type='checkbox'] {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-info {
+            @include flex-column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .checkbox-label {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-medium;
+            color: $color-text-primary;
+        }
+
+        .checkbox-desc {
+            font-size: $font-size-xs;
+            color: $color-text-secondary;
+        }
+    }
+}
+
+.config-summary {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+
+    .summary-text {
+        margin: 0;
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+
+        strong {
+            color: $color-text-primary;
+        }
+    }
+}
+
+// Analysis Progress Component
+.analysis-progress {
+    @include flex-column;
+    gap: $spacing-lg;
+    padding: $spacing-xl;
+}
+
+.progress-header {
+    @include flex-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+}
+
+.progress-title {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+
+    .progress-icon {
+        font-size: $font-size-xl;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .progress-label {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+    }
+}
+
+.progress-meta {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+}
+
+.progress-time {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+}
+
+.progress-stages {
+    @include flex-row;
+    justify-content: space-between;
+    margin-top: $spacing-lg;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 16px;
+        left: 32px;
+        right: 32px;
+        height: 2px;
+        background: $color-border;
+        z-index: 0;
+    }
+}
+
+.progress-stage {
+    @include flex-column;
+    align-items: center;
+    gap: $spacing-xs;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+
+    .stage-indicator {
+        width: 32px;
+        height: 32px;
+        @include flex-center;
+        border-radius: 50%;
+        background: $color-bg-secondary;
+        border: 2px solid $color-border;
+        transition: all $transition-base;
+    }
+
+    &.complete .stage-indicator {
+        background: $color-success;
+        border-color: $color-success;
+        color: white;
+    }
+
+    &.current .stage-indicator {
+        background: $color-primary;
+        border-color: $color-primary;
+    }
+
+    .stage-check {
+        color: white;
+        font-weight: $font-weight-bold;
+    }
+
+    .stage-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: $color-border;
+    }
+
+    .stage-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid white;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .stage-label {
+        font-size: $font-size-xs;
+        color: $color-text-secondary;
+        text-align: center;
+    }
+
+    &.complete .stage-label {
+        color: $color-success;
+    }
+
+    &.current .stage-label {
+        color: $color-primary;
+        font-weight: $font-weight-semibold;
+    }
+}
+
+.progress-message {
+    margin-top: $spacing-md;
+    text-align: center;
+
+    .message-text {
+        margin: 0;
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+    }
+}
+
+// Analysis Actions
+.analysis-actions {
+    @include flex-column;
+    gap: $spacing-sm;
+}
+
+.analysis-error {
+    @include flex-row;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-md;
+    background: $color-danger-alpha;
+    border: 1px solid $color-danger;
+    border-radius: $border-radius-md;
+
+    .error-icon {
+        font-size: $font-size-lg;
+    }
+
+    .error-text {
+        flex: 1;
+        font-size: $font-size-sm;
+        color: $color-danger;
+        font-weight: $font-weight-medium;
+    }
+}
+
+.analysis-quick-stats {
+    padding: $spacing-md;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-md;
+
+    .stat-item {
+        @include flex-between;
+        padding: $spacing-xs 0;
+        font-size: $font-size-sm;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid $color-border;
+        }
+
+        .stat-label {
+            color: $color-text-secondary;
+        }
+
+        .stat-value {
+            font-weight: $font-weight-semibold;
+            color: $color-text-primary;
+        }
+    }
+}
+
+// Animations
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+    .analysis-layout {
+        grid-template-columns: 1fr;
+
+        .analysis-config-column {
+            order: -1;
+        }
+    }
+
+    .focus-areas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .progress-stages {
+        flex-direction: column;
+        align-items: flex-start;
+
+        &::before {
+            display: none;
+        }
+
+        .progress-stage {
+            flex-direction: row;
+            width: 100%;
+            justify-content: flex-start;
+
+            .stage-label {
+                text-align: left;
+            }
+        }
+    }
+
+    .language-selector {
+        flex-direction: column;
+    }
+}

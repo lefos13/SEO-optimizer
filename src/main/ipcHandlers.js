@@ -54,31 +54,87 @@ class IPCHandlers {
     // ============ ANALYSES ============
     ipcMain.handle('db:analysis:create', (event, analysisData) => {
       try {
-        return DatabaseOperations.createAnalysis(analysisData);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] db:analysis:create called with data:', {
+          project_id: analysisData.project_id,
+          language: analysisData.language,
+          title: analysisData.title,
+          contentLength: analysisData.content?.length,
+          keywordsCount: analysisData.keywords?.split(',').length,
+        });
+        const result = DatabaseOperations.createAnalysis(analysisData);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ Analysis created:', {
+          id: result.id,
+          project_id: result.project_id,
+        });
+        return result;
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[IPC] ❌ Create analysis failed:', error.message);
         throw new Error(`Create analysis failed: ${error.message}`);
       }
     });
 
     ipcMain.handle('db:analysis:get', (event, analysisId) => {
       try {
-        return DatabaseOperations.getAnalysis(analysisId);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] db:analysis:get called with ID:', analysisId);
+        const result = DatabaseOperations.getAnalysis(analysisId);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ Analysis retrieved:', { id: result?.id });
+        return result;
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[IPC] ❌ Get analysis failed:', error.message);
         throw new Error(`Get analysis failed: ${error.message}`);
       }
     });
 
     ipcMain.handle('db:analysis:getByProject', (event, projectId, options) => {
       try {
-        return DatabaseOperations.getProjectAnalyses(projectId, options);
+        // Validate projectId
+        if (!projectId) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[IPC] ⚠️ db:analysis:getByProject called with invalid projectId:',
+            projectId
+          );
+          throw new Error('Project ID is required');
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[IPC] db:analysis:getByProject called:', {
+          projectId,
+          options,
+        });
+        const result = DatabaseOperations.getProjectAnalyses(
+          projectId,
+          options
+        );
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ Project analyses retrieved:', {
+          count: result?.length || 0,
+        });
+        return result;
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[IPC] ❌ Get project analyses failed:', error.message);
         throw new Error(`Get project analyses failed: ${error.message}`);
       }
     });
 
     ipcMain.handle('db:analysis:update', (event, analysisId, updates) => {
       try {
-        return DatabaseOperations.updateAnalysis(analysisId, updates);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] db:analysis:update called:', {
+          analysisId,
+          updateKeys: Object.keys(updates),
+        });
+        const result = DatabaseOperations.updateAnalysis(analysisId, updates);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ Analysis updated:', { id: result?.id });
+        return result;
       } catch (error) {
         throw new Error(`Update analysis failed: ${error.message}`);
       }
@@ -197,6 +253,161 @@ class IPCHandlers {
         return dbManager.getStats();
       } catch (error) {
         throw new Error(`Get database stats failed: ${error.message}`);
+      }
+    });
+
+    // ============ SEO ANALYZER ============
+    ipcMain.handle('seo:analyze', async (event, content) => {
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[IPC] seo:analyze called with content:', {
+          htmlLength: content.html?.length,
+          keywords: content.keywords,
+          language: content.language,
+          url: content.url,
+        });
+        const SEOAnalyzer = require('../analyzers/seoAnalyzer');
+        const analyzer = new SEOAnalyzer(content.language || 'en');
+        // eslint-disable-next-line no-console
+        console.log('[IPC] SEOAnalyzer instance created, running analysis...');
+        const results = await analyzer.analyze(content);
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ SEO analysis complete, returning results:', {
+          score: results.score,
+          percentage: results.percentage,
+          grade: results.grade,
+          issuesCount: results.issues?.length || 0,
+        });
+        return results;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[IPC] ❌ SEO analysis failed:', error.message);
+        throw new Error(`SEO analysis failed: ${error.message}`);
+      }
+    });
+
+    ipcMain.handle('seo:recommendations:get', (event, analysisId) => {
+      try {
+        const dbManager = require('./dbManager');
+        const persistence = require('../database/recommendationPersistence');
+        return persistence.getRecommendations(dbManager.getDb(), analysisId);
+      } catch (error) {
+        throw new Error(`Get recommendations failed: ${error.message}`);
+      }
+    });
+
+    ipcMain.handle(
+      'seo:recommendations:updateStatus',
+      (event, recId, status, notes) => {
+        try {
+          const dbManager = require('./dbManager');
+          const persistence = require('../database/recommendationPersistence');
+          return persistence.updateRecommendationStatus(
+            dbManager.getDb(),
+            recId,
+            status,
+            notes
+          );
+        } catch (error) {
+          throw new Error(
+            `Update recommendation status failed: ${error.message}`
+          );
+        }
+      }
+    );
+
+    ipcMain.handle('seo:recommendations:quickWins', (event, analysisId) => {
+      try {
+        const dbManager = require('./dbManager');
+        const persistence = require('../database/recommendationPersistence');
+        return persistence.getQuickWins(dbManager.getDb(), analysisId, 5);
+      } catch (error) {
+        throw new Error(`Get quick wins failed: ${error.message}`);
+      }
+    });
+
+    // ============ KEYWORD DENSITY ============
+    ipcMain.handle('seo:calculateDensity', async (event, text, keyword) => {
+      try {
+        const SEOAnalyzer = require('../analyzers/seoAnalyzer');
+        const analyzer = new SEOAnalyzer();
+        return analyzer.calculateKeywordDensity(text, keyword);
+      } catch (error) {
+        throw new Error(`Calculate density failed: ${error.message}`);
+      }
+    });
+
+    ipcMain.handle('seo:calculateDensities', async (event, text, keywords) => {
+      try {
+        const SEOAnalyzer = require('../analyzers/seoAnalyzer');
+        const analyzer = new SEOAnalyzer();
+        return analyzer.calculateAllKeywordDensities(text, keywords);
+      } catch (error) {
+        throw new Error(`Calculate densities failed: ${error.message}`);
+      }
+    });
+
+    ipcMain.handle(
+      'seo:recommendations:save',
+      (event, analysisId, enhancedRecommendations) => {
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[IPC] seo:recommendations:save called:', {
+            analysisId,
+            recommendationCount:
+              enhancedRecommendations?.recommendations?.length || 0,
+          });
+          const dbManager = require('./dbManager');
+          const persistence = require('../database/recommendationPersistence');
+          const result = persistence.saveRecommendations(
+            dbManager.getDb(),
+            analysisId,
+            enhancedRecommendations
+          );
+          // eslint-disable-next-line no-console
+          console.log('[IPC] ✅ Recommendations saved successfully');
+          return result;
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('[IPC] ❌ Save recommendations failed:', error.message);
+          throw new Error(`Save recommendations failed: ${error.message}`);
+        }
+      }
+    );
+
+    // ============ URL FETCHER ============
+    ipcMain.handle('seo:fetchUrl', async (event, url, options = {}) => {
+      try {
+        // eslint-disable-next-line no-console
+        console.log('[IPC] 🔗 Fetching URL:', url);
+        const urlFetcher = require('../analyzers/urlFetcher');
+
+        // Validate URL first
+        if (!urlFetcher.isValidUrl(url)) {
+          throw new Error('Invalid URL format. Please use HTTP or HTTPS.');
+        }
+
+        // Fetch the URL
+        const result = await urlFetcher.fetchUrl(url, options);
+
+        if (!result.success) {
+          // eslint-disable-next-line no-console
+          console.error('[IPC] ❌ URL fetch failed:', result.error);
+          throw new Error(result.error || 'Failed to fetch URL');
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('[IPC] ✅ URL fetched successfully:', {
+          finalUrl: result.finalUrl,
+          title: result.title,
+          htmlLength: result.html?.length || 0,
+        });
+
+        return result;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[IPC] ❌ Fetch URL failed:', error.message);
+        throw new Error(`Fetch URL failed: ${error.message}`);
       }
     });
   }

@@ -58,4 +58,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
   database: {
     getStats: () => ipcRenderer.invoke('db:stats'),
   },
+
+  // SEO Analyzer
+  seo: {
+    analyze: content => ipcRenderer.invoke('seo:analyze', content),
+    getRecommendations: analysisId =>
+      ipcRenderer.invoke('seo:recommendations:get', analysisId),
+    updateRecommendationStatus: (recId, status, notes) =>
+      ipcRenderer.invoke(
+        'seo:recommendations:updateStatus',
+        recId,
+        status,
+        notes
+      ),
+    getQuickWins: analysisId =>
+      ipcRenderer.invoke('seo:recommendations:quickWins', analysisId),
+    calculateDensity: (text, keyword) =>
+      ipcRenderer.invoke('seo:calculateDensity', text, keyword),
+    calculateDensities: (text, keywords) =>
+      ipcRenderer.invoke('seo:calculateDensities', text, keywords),
+    saveRecommendations: (analysisId, enhancedRecommendations) =>
+      ipcRenderer.invoke(
+        'seo:recommendations:save',
+        analysisId,
+        enhancedRecommendations
+      ),
+    fetchUrl: (url, options) =>
+      ipcRenderer.invoke('seo:fetchUrl', url, options),
+  },
 });

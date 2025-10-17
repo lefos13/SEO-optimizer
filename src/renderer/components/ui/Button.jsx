@@ -45,6 +45,7 @@ Button.propTypes = {
     'success',
     'danger',
     'warning',
+    'ghost',
   ]),
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   fullWidth: PropTypes.bool,

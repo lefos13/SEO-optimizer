@@ -135,14 +135,21 @@ class DatabaseOperations {
    * @returns {Object} Created analysis with id
    */
   static createAnalysis(analysisData) {
-    const { project_id, content, language, title, meta_description, keywords } =
-      analysisData;
+    const {
+      project_id,
+      content,
+      language,
+      title,
+      meta_description,
+      keywords,
+      url,
+    } = analysisData;
 
     try {
       const result = dbManager.run(
         `INSERT INTO analyses
-         (project_id, content, language, title, meta_description, keywords, overall_score)
-         VALUES (?, ?, ?, ?, ?, ?, 0)`,
+         (project_id, content, language, title, meta_description, keywords, url, overall_score)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
         [
           project_id,
           content,
@@ -150,6 +157,7 @@ class DatabaseOperations {
           title,
           meta_description,
           keywords,
+          url,
         ]
       );
 
@@ -213,7 +221,15 @@ class DatabaseOperations {
         'meta_description',
         'keywords',
         'overall_score',
+        'max_score',
+        'percentage',
+        'grade',
+        'passed_rules',
+        'failed_rules',
+        'warnings',
+        'category_scores',
         'language',
+        'url',
       ];
       const updateFields = [];
       const params = [];

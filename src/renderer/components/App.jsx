@@ -10,8 +10,9 @@ import {
   Navigate,
 } from 'react-router-dom';
 import Layout from './Layout';
-import Dashboard from './views/Dashboard';
+import Dashboard from './views/DashboardNew';
 import Analysis from './views/Analysis';
+import AnalysisResults from './views/AnalysisResults';
 import Reports from './views/Reports';
 import Settings from './views/Settings';
 
@@ -23,6 +24,7 @@ const App = () => {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/analysis" element={<Analysis />} />
+          <Route path="/analysis/results/:id" element={<AnalysisResults />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>

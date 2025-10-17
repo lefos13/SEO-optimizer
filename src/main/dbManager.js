@@ -150,9 +150,17 @@ class DatabaseManager {
           content TEXT NOT NULL,
           language TEXT DEFAULT 'en',
           overall_score REAL DEFAULT 0,
+          max_score REAL DEFAULT 0,
+          percentage INTEGER DEFAULT 0,
+          grade TEXT DEFAULT 'F',
+          passed_rules INTEGER DEFAULT 0,
+          failed_rules INTEGER DEFAULT 0,
+          warnings INTEGER DEFAULT 0,
+          category_scores TEXT,
           title TEXT,
           meta_description TEXT,
           keywords TEXT,
+          url TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -213,6 +221,92 @@ class DatabaseManager {
         'CREATE INDEX idx_mini_service_results_status ON mini_service_results(status);'
       );
 
+      // Recommendations table (for enhanced recommendations from recommendation engine)
+      this.db.run(`
+        CREATE TABLE recommendations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          analysis_id INTEGER NOT NULL,
+          rec_id TEXT NOT NULL,
+          rule_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          priority TEXT NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT,
+          effort TEXT NOT NULL,
+          estimated_time TEXT,
+          score_increase INTEGER,
+          percentage_increase INTEGER,
+          why_explanation TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          status TEXT DEFAULT 'pending',
+          FOREIGN KEY (analysis_id) REFERENCES analyses(id) ON DELETE CASCADE
+        );
+      `);
+
+      this.db.run(
+        'CREATE INDEX idx_recommendations_analysis_id ON recommendations(analysis_id);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_recommendations_priority ON recommendations(priority);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_recommendations_status ON recommendations(status);'
+      );
+
+      // Recommendation actions table
+      this.db.run(`
+        CREATE TABLE recommendation_actions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          recommendation_id INTEGER NOT NULL,
+          step INTEGER NOT NULL,
+          action_text TEXT NOT NULL,
+          action_type TEXT NOT NULL,
+          is_specific BOOLEAN DEFAULT 0,
+          completed BOOLEAN DEFAULT 0,
+          completed_at DATETIME,
+          FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE
+        );
+      `);
+
+      this.db.run(
+        'CREATE INDEX idx_recommendation_actions_rec_id ON recommendation_actions(recommendation_id);'
+      );
+
+      // Recommendation examples table
+      this.db.run(`
+        CREATE TABLE recommendation_examples (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          recommendation_id INTEGER NOT NULL,
+          before_example TEXT,
+          after_example TEXT,
+          FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE
+        );
+      `);
+
+      // Recommendation resources table
+      this.db.run(`
+        CREATE TABLE recommendation_resources (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          recommendation_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          url TEXT NOT NULL,
+          FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE
+        );
+      `);
+
+      // Recommendation status history table
+      this.db.run(`
+        CREATE TABLE recommendation_status_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          recommendation_id INTEGER NOT NULL,
+          old_status TEXT NOT NULL,
+          new_status TEXT NOT NULL,
+          notes TEXT,
+          changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE
+        );
+      `);
+
       // Insert initial schema version
       this.db.run('INSERT INTO schema_version (version) VALUES (1)');
 
@@ -240,6 +334,30 @@ class DatabaseManager {
 
       // eslint-disable-next-line no-console
       console.log('[DB] Current schema version:', currentVersion);
+
+      // Migration 1: Create default "Direct Input" project
+      if (currentVersion < 1) {
+        try {
+          const existingProject = this.db.exec(
+            `SELECT id FROM projects WHERE name = 'Direct Input' LIMIT 1`
+          );
+          if (!existingProject || existingProject.length === 0) {
+            this.db.run(
+              `INSERT INTO projects (name, description, url) VALUES (?, ?, ?)`,
+              [
+                'Direct Input',
+                'Analyses performed on directly submitted content',
+                'N/A',
+              ]
+            );
+            // eslint-disable-next-line no-console
+            console.log('[DB] Created default "Direct Input" project');
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('[DB] Error creating default project:', e);
+        }
+      }
 
       // Future migrations can be added here
       // Each migration should increment the version
@@ -290,15 +408,43 @@ class DatabaseManager {
    * Execute a query and run it (for INSERT, UPDATE, DELETE)
    * @param {string} sql SQL query
    * @param {Array} params Query parameters
-   * @returns {Object} Query result
+   * @returns {Object} Query result with changes and lastID
    */
   run(sql, params = []) {
     try {
+      // eslint-disable-next-line no-console
+      console.log('[DB] Executing query:', {
+        queryType: sql.trim().split(/\s+/)[0].toUpperCase(),
+        paramCount: params.length,
+      });
+
       this.db.run(sql, params);
-      return { changes: this.db.getRowsModified() };
+
+      // For INSERT queries, get the last insert rowid
+      let lastID = null;
+      if (sql.trim().toUpperCase().startsWith('INSERT')) {
+        const lastIdResult = this.db.exec('SELECT last_insert_rowid() as id');
+        if (lastIdResult.length > 0 && lastIdResult[0].values.length > 0) {
+          lastID = lastIdResult[0].values[0][0];
+        }
+        // eslint-disable-next-line no-console
+        console.log('[DB] ✅ INSERT query executed, lastID:', lastID);
+      }
+
+      const changes = this.db.getRowsModified();
+      // eslint-disable-next-line no-console
+      console.log('[DB] ✅ Query executed successfully, changes:', changes);
+
+      return {
+        changes: changes,
+        lastID: lastID,
+      };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('[DB] Error executing run query:', error, { sql, params });
+      console.error('[DB] ❌ Error executing run query:', error, {
+        sql,
+        params,
+      });
       throw error;
     }
   }
