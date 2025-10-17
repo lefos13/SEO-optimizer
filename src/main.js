@@ -1,6 +1,21 @@
 const { app, BrowserWindow } = require('electron/main');
 const path = require('node:path');
 
+// Enable hot reload in development mode
+const isDev = process.argv.includes('--dev');
+if (isDev) {
+  try {
+    require('electron-reload')(__dirname, {
+      electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
+      hardResetMethod: 'exit',
+      // Watch these paths for changes
+      ignored: /node_modules|[/\\]\.|dist|build/,
+    });
+  } catch (err) {
+    console.error('Error loading electron-reload:', err);
+  }
+}
+
 /**
  * Create the main application window
  */
@@ -27,8 +42,30 @@ const createWindow = () => {
   });
 
   // Open DevTools in development mode
-  if (process.argv.includes('--dev')) {
+  if (isDev) {
     win.webContents.openDevTools();
+  }
+
+  // Enable live reload for renderer process in development
+  if (isDev) {
+    // Watch for changes in renderer files
+    const chokidar = require('chokidar');
+    const rendererWatcher = chokidar.watch(
+      [
+        path.join(__dirname, 'renderer', '**', '*'),
+        path.join(__dirname, '..', 'public', '**', '*'),
+      ],
+      {
+        ignoreInitial: true,
+        ignored: /node_modules|[/\\]\./,
+      }
+    );
+
+    rendererWatcher.on('change', filePath => {
+      // eslint-disable-next-line no-console
+      console.log('Renderer files changed, reloading...', filePath);
+      win.webContents.reload();
+    });
   }
 };
 

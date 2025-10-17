@@ -26,8 +26,10 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "chokidar": "^4.0.3",
     "electron": "^38.3.0",
     "electron-builder": "^25.1.8",
+    "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.2",

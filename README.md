@@ -76,7 +76,7 @@ SEO-optimizer/
 ### Available Scripts
 
 - `yarn start` - Start the Electron application
-- `yarn dev` - Start with DevTools enabled
+- `yarn dev` - Start with DevTools and **hot reload** enabled 🔥
 - `yarn lint` - Run ESLint
 - `yarn lint:fix` - Fix ESLint errors automatically
 - `yarn format` - Format code with Prettier
