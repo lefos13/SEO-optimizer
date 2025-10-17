@@ -7,10 +7,9 @@
 
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
 
     <title>SEO Optimizer</title>
-    <link rel="stylesheet" href="../src/renderer/styles/main.css" />
 </head>
 
 <body>
@@ -22,8 +21,7 @@
         </div>
     </div>
 
-    <!-- React will be bundled here -->
-    <script src="../src/renderer/index.js"></script>
+    <!-- Webpack will inject scripts here -->
 </body>
 
 </html>

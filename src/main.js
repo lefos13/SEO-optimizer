@@ -38,7 +38,11 @@ const createWindow = () => {
   });
 
   // Load the main HTML file
-  win.loadFile(path.join(__dirname, '..', 'public', 'index.html'));
+  const htmlPath = isDev
+    ? path.join(__dirname, '..', 'dist', 'index.html')
+    : path.join(__dirname, '..', 'dist', 'index.html');
+
+  win.loadFile(htmlPath);
 
   // Show window when ready to prevent flickering
   win.once('ready-to-show', () => {
