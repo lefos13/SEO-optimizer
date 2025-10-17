@@ -1,0 +1,12 @@
+{
+  "name": "seo_optimizer",
+  "packageManager": "yarn@4.5.2",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "electron": "^38.3.0"
+  }
+}
