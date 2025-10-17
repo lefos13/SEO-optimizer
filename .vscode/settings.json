@@ -1,0 +1,28 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": ["javascript", "javascriptreact"],
+  "files.exclude": {
+    "node_modules": true,
+    ".yarn": true,
+    "dist": true,
+    "build": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.yarn": true,
+    "**/dist": true,
+    "**/build": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.yarn/**": true,
+    "**/dist/**": true,
+    "**/build/**": true
+  }
+}

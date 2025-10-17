@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+
+    <title>SEO Optimizer</title>
+    <link rel="stylesheet" href="../src/renderer/styles/main.css" />
+</head>
+
+<body>
+    <div id="root">
+        <!-- React will mount here -->
+        <div class="loading-screen">
+            <h1>SEO Optimizer</h1>
+            <p>Loading application...</p>
+        </div>
+    </div>
+
+    <!-- React will be bundled here -->
+    <script src="../src/renderer/index.js"></script>
+</body>
+
+</html>
