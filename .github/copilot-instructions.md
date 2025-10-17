@@ -1,5 +1,3 @@
-# Copilot Implementation Prompts for SEO Optimizer Tool
-
 ## General Copilot Instructions (Use for entire project)
 
 You are helping to build a desktop SEO analysis tool using Electron, React, and SQLite. This tool analyzes content for SEO optimization and provides recommendations. Keep these guidelines in mind throughout development:
