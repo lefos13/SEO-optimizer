@@ -25,3 +25,10 @@ You are helping to build a desktop SEO analysis tool using Electron, React, and 
 - Consider both technical and content-based SEO factors
 - Implement evidence-based scoring algorithms
 - Support both English and Greek content analysis
+
+### Documentation Practices
+
+- Do not generate new standalone documents for small or incremental changes.
+- Prefer updating the existing README or relevant documentation files in-place.
+- Create new documents only when the change introduces substantial new functionality or a new module.
+- Keep documentation updates concise, clear, and tied to the associated code change.
