@@ -30,10 +30,6 @@ const Analysis = () => {
   const [config, setConfig] = useState({
     language: 'en',
     contentType: 'article',
-    focusAreas: ['content', 'technical', 'readability', 'keywords'],
-    strictMode: false,
-    includeWarnings: true,
-    generateReport: false,
   });
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -66,11 +62,6 @@ const Analysis = () => {
       return false;
     }
 
-    if (!config.contentType) {
-      setError('Please select a content type.');
-      return false;
-    }
-
     setError('');
     return true;
   };
@@ -86,14 +77,14 @@ const Analysis = () => {
 
     try {
       // Stage 1: Initialize
-      // eslint-disable-next-line no-console
+       
       console.log('🔍 [ANALYSIS] Stage 1: Initializing...');
       setCurrentStage('init');
       setProgress(10);
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Stage 2: Content Analysis
-      // eslint-disable-next-line no-console
+       
       console.log(
         '📝 [ANALYSIS] Stage 2: Content Analysis - Preparing data...'
       );
@@ -106,7 +97,7 @@ const Analysis = () => {
         ? content // Already HTML
         : `<html><head><title></title></head><body><p>${content.replace(/\n/g, '</p><p>')}</p></body></html>`;
 
-      // eslint-disable-next-line no-console
+       
       console.log(
         '📝 [ANALYSIS] Content wrapped as HTML, length:',
         htmlContent.length
@@ -114,14 +105,12 @@ const Analysis = () => {
 
       const analysisData = {
         html: htmlContent,
-        title: '', // Could extract from content if needed
-        description: '', // Could extract from content if needed
         keywords: keywords.join(','), // Backend expects comma-separated string
         language: config.language || 'en',
         url: url || '',
       };
 
-      // eslint-disable-next-line no-console
+       
       console.log('📝 [ANALYSIS] Analysis data prepared:', {
         htmlLength: analysisData.html.length,
         keywords: analysisData.keywords,
@@ -130,11 +119,11 @@ const Analysis = () => {
       });
 
       // Call the SEO analyzer via IPC
-      // eslint-disable-next-line no-console
+       
       console.log('📤 [ANALYSIS] Calling SEO analyzer via IPC...');
       const result = await window.electronAPI.seo.analyze(analysisData);
 
-      // eslint-disable-next-line no-console
+       
       console.log('✅ [ANALYSIS] SEO analyzer returned results:', {
         score: result.score,
         percentage: result.percentage,
@@ -151,35 +140,35 @@ const Analysis = () => {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Stage 3: Keywords
-      // eslint-disable-next-line no-console
+       
       console.log('🔤 [ANALYSIS] Stage 3: Keyword analysis...');
       setCurrentStage('keywords');
       setProgress(65);
       await new Promise(resolve => setTimeout(resolve, 400));
 
       // Stage 4: Technical
-      // eslint-disable-next-line no-console
+       
       console.log('⚙️ [ANALYSIS] Stage 4: Technical analysis...');
       setCurrentStage('technical');
       setProgress(80);
       await new Promise(resolve => setTimeout(resolve, 400));
 
       // Stage 5: Recommendations
-      // eslint-disable-next-line no-console
+       
       console.log('💡 [ANALYSIS] Stage 5: Generating recommendations...');
       setCurrentStage('recommendations');
       setProgress(95);
 
       // Get the selected project ID for this analysis
-      // eslint-disable-next-line no-console
+       
       console.log('🔍 [ANALYSIS] Using selected project:', selectedProjectId);
       const projectId = selectedProjectId || 1; // Use selected or fallback to 1
 
-      // eslint-disable-next-line no-console
+       
       console.log('✅ [ANALYSIS] Project ID resolved:', projectId);
 
       // Save analysis to database with correct schema fields
-      // eslint-disable-next-line no-console
+       
       console.log('💾 [ANALYSIS] Creating analysis record in database...');
       const savedAnalysis = await window.electronAPI.analyses.create({
         project_id: projectId,
@@ -191,7 +180,7 @@ const Analysis = () => {
         url: url || '', // The URL that was analyzed (empty string if direct input)
       });
 
-      // eslint-disable-next-line no-console
+       
       console.log('✅ [ANALYSIS] Analysis record created:', {
         id: savedAnalysis?.id,
         projectId: savedAnalysis?.project_id,
@@ -200,7 +189,7 @@ const Analysis = () => {
 
       // Update the analysis with the calculated score and all analysis data
       if (savedAnalysis && savedAnalysis.id) {
-        // eslint-disable-next-line no-console
+         
         console.log('📊 [ANALYSIS] Updating analysis with full results:', {
           score: result.score,
           maxScore: result.maxScore,
@@ -224,13 +213,13 @@ const Analysis = () => {
           warnings: result.warnings || 0,
           category_scores: categoryScoresJson,
         });
-        // eslint-disable-next-line no-console
+         
         console.log('✅ [ANALYSIS] Full analysis data saved successfully');
       }
 
       // Save recommendations to database
       if (savedAnalysis && savedAnalysis.id && result.enhancedRecommendations) {
-        // eslint-disable-next-line no-console
+         
         console.log(
           '💾 [ANALYSIS] Saving recommendations to database, count:',
           result.enhancedRecommendations.recommendations?.length || 0
@@ -239,21 +228,21 @@ const Analysis = () => {
           savedAnalysis.id,
           result.enhancedRecommendations
         );
-        // eslint-disable-next-line no-console
+         
         console.log('✅ [ANALYSIS] Recommendations saved successfully');
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Complete
-      // eslint-disable-next-line no-console
+       
       console.log('🎉 [ANALYSIS] Analysis complete!');
       setCurrentStage('complete');
       setProgress(100);
 
       // Navigate to results
       if (savedAnalysis && savedAnalysis.id) {
-        // eslint-disable-next-line no-console
+         
         console.log(
           '📍 [ANALYSIS] Navigating to results page, ID:',
           savedAnalysis.id
@@ -262,13 +251,13 @@ const Analysis = () => {
           navigate(`/analysis/results/${savedAnalysis.id}`);
         }, 500);
       } else {
-        // eslint-disable-next-line no-console
+         
         console.error('❌ [ANALYSIS] Analysis completed but no ID received');
         setError('Analysis completed but failed to save results.');
         setIsAnalyzing(false);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error('❌ [ANALYSIS] Analysis error:', err);
       setError(
         err.message ||
@@ -278,8 +267,7 @@ const Analysis = () => {
     }
   };
 
-  const canAnalyze =
-    content && content.trim().length >= 50 && config.contentType;
+  const canAnalyze = content && content.trim().length >= 50;
 
   const selectedProject =
     projects.find(project => project.id === selectedProjectId) || null;

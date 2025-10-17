@@ -19,6 +19,7 @@ const KeywordsInput = ({ keywords = [], onChange, content = '' }) => {
 
   useEffect(() => {
     if (content && content.length > 100) {
+      console.log("Generate Suggestions!");
       generateSuggestions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,54 +54,32 @@ const KeywordsInput = ({ keywords = [], onChange, content = '' }) => {
     }
   };
 
-  const generateSuggestions = () => {
-    // Simple keyword extraction - in real app, use NLP
-    const words = content
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length > 4 && !isCommonWord(w));
+  const generateSuggestions = async () => {
+    if (!content || content.length < 100) {
+      setSuggestions([]);
+      return;
+    }
 
-    // Count occurrences
-    const wordCounts = {};
-    words.forEach(word => {
-      wordCounts[word] = (wordCounts[word] || 0) + 1;
-    });
+    try {
+      // Call backend keyword suggestion engine
+      const suggestions = await window.electronAPI.seo.suggestKeywords(
+        content,
+        5 // Get top 5 suggestions
+      );
 
-    // Sort by frequency and take top 5
-    const topWords = Object.entries(wordCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([word]) => word)
-      .filter(word => !keywords.includes(word));
+      console.log("Suggestions fetched");
 
-    setSuggestions(topWords);
-  };
+      // Extract just the keyword strings and filter out already selected ones
+      const suggestionKeywords = suggestions
+        .map(s => s.keyword)
+        .filter(word => !keywords.includes(word))
+        .slice(0, 5);
 
-  const isCommonWord = word => {
-    const commonWords = [
-      'that',
-      'with',
-      'this',
-      'from',
-      'have',
-      'they',
-      'will',
-      'would',
-      'there',
-      'their',
-      'which',
-      'about',
-      'other',
-      'into',
-      'than',
-      'then',
-      'them',
-      'these',
-      'could',
-      'should',
-    ];
-    return commonWords.includes(word.toLowerCase());
+      setSuggestions(suggestionKeywords);
+    } catch (error) {
+      console.error('Failed to generate suggestions:', error);
+      setSuggestions([]);
+    }
   };
 
   const handleAdd = () => {

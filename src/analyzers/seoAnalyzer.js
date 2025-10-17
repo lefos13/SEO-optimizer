@@ -58,24 +58,24 @@ class SEOAnalyzer {
    */
   async analyze(content) {
     try {
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Starting analysis...');
 
       // Reset results
       this.resetResults();
 
       // Validate input
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Validating input...');
       this.validateInput(content);
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Input validation passed');
 
       // Parse HTML content
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Parsing HTML content...');
       const parsedContent = htmlParser.parse(content.html || '');
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ HTML parsed:', {
         wordCount: parsedContent.wordCount,
         charCount: parsedContent.characterCount,
@@ -85,7 +85,7 @@ class SEOAnalyzer {
       });
 
       // Extract metadata
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Extracting metadata...');
       this.results.metadata = {
         title: content.title || '',
@@ -101,17 +101,17 @@ class SEOAnalyzer {
         metaTags: parsedContent.metaTags,
         structuralElements: parsedContent.structuralElements,
       };
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Metadata extracted:', {
         keywords: this.results.metadata.keywords,
         language: this.results.metadata.language,
       });
 
       // Run all analysis rules
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Running analysis rules...');
       await this.runAnalysis(parsedContent);
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Rules executed:', {
         passedRules: this.results.passedRules,
         failedRules: this.results.failedRules,
@@ -119,10 +119,10 @@ class SEOAnalyzer {
       });
 
       // Calculate final scores
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Calculating scores...');
       this.calculateScores();
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Scores calculated:', {
         score: this.results.score,
         maxScore: this.results.maxScore,
@@ -131,14 +131,14 @@ class SEOAnalyzer {
       });
 
       // Generate enhanced recommendations
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] Generating enhanced recommendations...');
       this.results.enhancedRecommendations =
         this.recommendationEngine.generateRecommendations(
           this.results,
           this.rules
         );
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Recommendations generated:', {
         recommendationCount:
           this.results.enhancedRecommendations?.recommendations?.length || 0,
@@ -148,11 +148,11 @@ class SEOAnalyzer {
           ).length || 0,
       });
 
-      // eslint-disable-next-line no-console
+       
       console.log('[SEO-ANALYZER] ✅ Analysis complete!');
       return this.results;
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('[SEO-ANALYZER] ❌ Analysis failed:', error);
       throw new Error(`SEO Analysis failed: ${error.message}`);
     }
@@ -371,23 +371,38 @@ class SEOAnalyzer {
    */
   calculateKeywordDensity(text, keyword) {
     if (!text || !keyword) {
-      return { count: 0, density: 0 };
+      return { keyword, count: 0, density: 0, wordCount: 0 };
     }
 
-    const normalizedText = text.toLowerCase();
-    const normalizedKeyword = keyword.toLowerCase();
+    // Normalize text: convert hyphens, underscores, slashes to spaces
+    // This matches how the keyword suggestion engine processes text
+    const normalizedText = text.toLowerCase().replace(/[-_/]+/g, ' ');
+    const normalizedKeyword = keyword.toLowerCase().trim();
 
-    // Count keyword occurrences
-    const regex = new RegExp(`\\b${normalizedKeyword}\\b`, 'gi');
+    // Escape special regex characters in the keyword
+    const escapedKeyword = normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // For single words, use word boundaries; for phrases, use looser matching
+    const isPhrase = normalizedKeyword.includes(' ');
+    const regex = isPhrase 
+      ? new RegExp(`\\b${escapedKeyword.replace(/\s+/g, '\\s+')}\\b`, 'gi')  // Phrase: match with flexible spacing
+      : new RegExp(`\\b${escapedKeyword}\\b`, 'gi');  // Single word: use word boundaries
+    
     const matches = normalizedText.match(regex);
     const count = matches ? matches.length : 0;
 
     // Calculate word count
-    const words = text.trim().split(/\s+/);
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     const wordCount = words.length;
 
     // Calculate density as percentage
-    const density = wordCount > 0 ? (count / wordCount) * 100 : 0;
+    // For phrases, divide by the number of words in the phrase
+    let density = 0;
+    if (wordCount > 0) {
+      const keywordWordCount = normalizedKeyword.split(/\s+/).length;
+      // Density = (count * keyword word count / total word count) * 100
+      density = (count * keywordWordCount / wordCount) * 100;
+    }
 
     return {
       keyword,

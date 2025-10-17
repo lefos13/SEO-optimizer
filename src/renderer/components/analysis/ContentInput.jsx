@@ -52,7 +52,7 @@ const ContentInput = ({
     try {
       const urlObj = new URL(urlString);
       return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   };
@@ -72,7 +72,7 @@ const ContentInput = ({
     setUrlError('');
 
     try {
-      // eslint-disable-next-line no-console
+       
       console.log('[CONTENT-INPUT] 🔗 Fetching URL:', url);
 
       // Call the backend URL fetcher via IPC
@@ -81,7 +81,7 @@ const ContentInput = ({
         maxRedirects: 5,
       });
 
-      // eslint-disable-next-line no-console
+       
       console.log('[CONTENT-INPUT] ✅ URL fetched:', {
         finalUrl: result.finalUrl,
         title: result.title,
@@ -113,7 +113,7 @@ const ContentInput = ({
         error.message ||
         'Failed to fetch URL. Please check the URL and try again.';
       setUrlError(errorMessage);
-      // eslint-disable-next-line no-console
+       
       console.error('[CONTENT-INPUT] ❌ URL fetch error:', error);
     } finally {
       setUrlFetching(false);

@@ -77,6 +77,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('seo:calculateDensity', text, keyword),
     calculateDensities: (text, keywords) =>
       ipcRenderer.invoke('seo:calculateDensities', text, keywords),
+    suggestKeywords: (html, maxSuggestions = 10) =>
+      ipcRenderer.invoke('seo:suggestKeywords', html, maxSuggestions),
     saveRecommendations: (analysisId, enhancedRecommendations) =>
       ipcRenderer.invoke(
         'seo:recommendations:save',

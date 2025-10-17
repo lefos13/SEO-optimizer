@@ -70,7 +70,7 @@ const createWindow = () => {
     );
 
     rendererWatcher.on('change', filePath => {
-      // eslint-disable-next-line no-console
+       
       console.log('Renderer files changed, reloading...', filePath);
       win.webContents.reload();
     });
@@ -82,16 +82,16 @@ const createWindow = () => {
 app.whenReady().then(async () => {
   try {
     // Initialize database (async operation)
-    // eslint-disable-next-line no-unused-expressions
+     
     await dbManager.initialize();
 
     // Register IPC handlers
     IPCHandlers.registerHandlers();
 
-    // eslint-disable-next-line no-console
+     
     console.log('[APP] Application initialized successfully');
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error('[APP] Failed to initialize application:', error);
     app.quit();
     return;
