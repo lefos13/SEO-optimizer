@@ -42,7 +42,8 @@
       },
       "rules": {
         "no-console": "off",
-        "unicorn/prefer-top-level-await": "off"
+        "unicorn/prefer-top-level-await": "off",
+        "no-await-in-loop": "off"
       }
     },
     {

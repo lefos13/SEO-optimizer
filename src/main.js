@@ -1,6 +1,10 @@
 const { app, BrowserWindow } = require('electron/main');
 const path = require('node:path');
 
+// Import database manager and IPC handlers
+const dbManager = require('./main/dbManager');
+const IPCHandlers = require('./main/ipcHandlers');
+
 // Enable hot reload in development mode
 const isDev = process.argv.includes('--dev');
 if (isDev) {
@@ -71,7 +75,24 @@ const createWindow = () => {
 
 // Initialize the application when Electron is ready
 // Using .then() pattern as we're using CommonJS (not ES modules)
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  try {
+    // Initialize database (async operation)
+    // eslint-disable-next-line no-unused-expressions
+    await dbManager.initialize();
+
+    // Register IPC handlers
+    IPCHandlers.registerHandlers();
+
+    // eslint-disable-next-line no-console
+    console.log('[APP] Application initialized successfully');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[APP] Failed to initialize application:', error);
+    app.quit();
+    return;
+  }
+
   createWindow();
 
   app.on('activate', () => {
@@ -82,6 +103,9 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  // Clean up database connection
+  dbManager.close();
+
   if (process.platform !== 'darwin') {
     app.quit();
   }

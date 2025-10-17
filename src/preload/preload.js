@@ -7,21 +7,55 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose protected methods to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Database operations
+  // Projects
+  projects: {
+    create: projectData => ipcRenderer.invoke('db:project:create', projectData),
+    get: projectId => ipcRenderer.invoke('db:project:get', projectId),
+    getAll: options => ipcRenderer.invoke('db:project:getAll', options),
+    update: (projectId, updates) =>
+      ipcRenderer.invoke('db:project:update', projectId, updates),
+    delete: projectId => ipcRenderer.invoke('db:project:delete', projectId),
+  },
+
+  // Analyses
+  analyses: {
+    create: analysisData =>
+      ipcRenderer.invoke('db:analysis:create', analysisData),
+    get: analysisId => ipcRenderer.invoke('db:analysis:get', analysisId),
+    getByProject: (projectId, options) =>
+      ipcRenderer.invoke('db:analysis:getByProject', projectId, options),
+    update: (analysisId, updates) =>
+      ipcRenderer.invoke('db:analysis:update', analysisId, updates),
+    delete: analysisId => ipcRenderer.invoke('db:analysis:delete', analysisId),
+  },
+
+  // SEO Rules
+  rules: {
+    create: ruleData => ipcRenderer.invoke('db:rule:create', ruleData),
+    get: ruleId => ipcRenderer.invoke('db:rule:get', ruleId),
+    getAll: options => ipcRenderer.invoke('db:rule:getAll', options),
+    getByCategory: category =>
+      ipcRenderer.invoke('db:rule:getByCategory', category),
+    update: (ruleId, updates) =>
+      ipcRenderer.invoke('db:rule:update', ruleId, updates),
+    delete: ruleId => ipcRenderer.invoke('db:rule:delete', ruleId),
+  },
+
+  // Analysis Results
+  results: {
+    create: resultData => ipcRenderer.invoke('db:result:create', resultData),
+    get: resultId => ipcRenderer.invoke('db:result:get', resultId),
+    getByAnalysis: analysisId =>
+      ipcRenderer.invoke('db:result:getByAnalysis', analysisId),
+    update: (resultId, updates) =>
+      ipcRenderer.invoke('db:result:update', resultId, updates),
+    delete: resultId => ipcRenderer.invoke('db:result:delete', resultId),
+    deleteByAnalysis: analysisId =>
+      ipcRenderer.invoke('db:result:deleteByAnalysis', analysisId),
+  },
+
+  // Database stats
   database: {
-    analyze: content => ipcRenderer.invoke('db:analyze', content),
-    getHistory: () => ipcRenderer.invoke('db:getHistory'),
-    saveAnalysis: data => ipcRenderer.invoke('db:saveAnalysis', data),
-  },
-
-  // File operations
-  file: {
-    selectFile: () => ipcRenderer.invoke('file:select'),
-    readFile: filePath => ipcRenderer.invoke('file:read', filePath),
-  },
-
-  // System information
-  system: {
-    getVersion: () => ipcRenderer.invoke('system:version'),
+    getStats: () => ipcRenderer.invoke('db:stats'),
   },
 });
