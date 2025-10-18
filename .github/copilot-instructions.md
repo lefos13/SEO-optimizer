@@ -2,6 +2,8 @@
 
 You are helping to build a desktop SEO analysis tool using Electron, React, and SQLite. This tool analyzes content for SEO optimization and provides recommendations. Keep these guidelines in mind throughout development:
 
+FIRST AND MOST IMPORTANT RULE: NEVER generate extra doc files unless explicitly instructed to do so. Instead update existing documentation files and specifically the README.md when necessary.
+
 ### Code Style & Standards
 
 - Use modern JavaScript/TypeScript with ES6+ features

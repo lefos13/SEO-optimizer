@@ -10,6 +10,13 @@ $color-bg-tertiary: #2a2f38;
 $color-bg-hover: #2d323c;
 $color-bg-active: #353b47;
 
+// RGB variants for transparency operations
+$color-bg-primary-rgb: 26, 29, 35;
+$color-bg-secondary-rgb: 34, 38, 46;
+$color-bg-tertiary-rgb: 42, 47, 56;
+$color-bg-hover-rgb: 45, 50, 60;
+$color-bg-active-rgb: 53, 59, 71;
+
 $color-surface: #2a2f38;
 $color-surface-elevated: #353b47;
 
@@ -21,12 +28,15 @@ $color-text-muted: #6a6d75;
 $color-border: #3a3f4b;
 $color-border-light: #2a2f38;
 $color-border-focus: #4a90e2;
+$color-border-rgb: 58, 63, 75;
+$color-border-light-rgb: 42, 47, 56;
 
 // Brand Colors
 $color-primary: #4a90e2;
 $color-primary-dark: #3a7bc8;
 $color-primary-light: #5a9ff2;
 $color-primary-alpha: rgba(74, 144, 226, 0.1);
+$color-primary-rgb: 74, 144, 226;
 
 $color-secondary: #5f6c7b;
 $color-secondary-dark: #4f5c6b;
@@ -36,21 +46,25 @@ $color-success: #5cb85c;
 $color-success-dark: #4ca84c;
 $color-success-light: #6cc86c;
 $color-success-alpha: rgba(92, 184, 92, 0.1);
+$color-success-rgb: 92, 184, 92;
 
 $color-danger: #d9534f;
 $color-danger-dark: #c9433f;
 $color-danger-light: #e9635f;
 $color-danger-alpha: rgba(217, 83, 79, 0.1);
+$color-danger-rgb: 217, 83, 79;
 
 $color-warning: #f0ad4e;
 $color-warning-dark: #e09d3e;
 $color-warning-light: #ffbd5e;
 $color-warning-alpha: rgba(240, 173, 78, 0.1);
+$color-warning-rgb: 240, 173, 78;
 
 $color-info: #5bc0de;
 $color-info-dark: #4bb0ce;
 $color-info-light: #6bd0ee;
 $color-info-alpha: rgba(91, 192, 222, 0.1);
+$color-info-rgb: 91, 192, 222;
 
 // Spacing
 $spacing-xs: 4px;

@@ -571,6 +571,152 @@ class IPCHandlers {
         }
       }
     );
+
+    // ============ READABILITY SERVICES (MINI-SERVICES) ============
+    ipcMain.handle(
+      'readability:analyze',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 📖 Readability analysis requested:', {
+            contentLength: content?.length || 0,
+            language: options?.language || 'en',
+          });
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyze(content, options);
+
+          console.log('[IPC] ✅ Readability analysis complete:', {
+            score: result?.compositeScore?.score,
+            warnings: result?.meta?.warnings?.length || 0,
+          });
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Readability analysis failed:', error.message);
+          throw new Error(`Readability analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeOverview',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 📊 Readability overview analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeOverview(content, options);
+
+          console.log('[IPC] ✅ Overview analysis complete');
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Overview analysis failed:', error.message);
+          throw new Error(`Overview analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeStructure',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 🧱 Readability structure analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeStructure(content, options);
+
+          console.log('[IPC] ✅ Structure analysis complete');
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Structure analysis failed:', error.message);
+          throw new Error(`Structure analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeReadingLevels',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 🎓 Reading levels analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeReadingLevels(
+            content,
+            options
+          );
+
+          console.log('[IPC] ✅ Reading levels analysis complete');
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Reading levels analysis failed:',
+            error.message
+          );
+          throw new Error(`Reading levels analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeImprovements',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 💡 Improvements analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeImprovements(
+            content,
+            options
+          );
+
+          console.log('[IPC] ✅ Improvements analysis complete');
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Improvements analysis failed:',
+            error.message
+          );
+          throw new Error(`Improvements analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeLanguageGuidance',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 🌐 Language guidance analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeLanguageGuidance(
+            content,
+            options
+          );
+
+          console.log('[IPC] ✅ Language guidance analysis complete');
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Language guidance analysis failed:',
+            error.message
+          );
+          throw new Error(
+            `Language guidance analysis failed: ${error.message}`
+          );
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'readability:analyzeLiveScore',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] ⚡ Live score analysis requested');
+          const ReadabilityServices = require('../analyzers/readabilityServices');
+          const result = ReadabilityServices.analyzeLiveScore(content, options);
+
+          console.log('[IPC] ✅ Live score analysis complete');
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Live score analysis failed:', error.message);
+          throw new Error(`Live score analysis failed: ${error.message}`);
+        }
+      }
+    );
   }
 }
 

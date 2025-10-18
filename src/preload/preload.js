@@ -112,4 +112,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
         maxSuggestions
       ),
   },
+
+  // Readability Services
+  readability: {
+    analyze: (content, options) =>
+      ipcRenderer.invoke('readability:analyze', content, options),
+    analyzeOverview: (content, options) =>
+      ipcRenderer.invoke('readability:analyzeOverview', content, options),
+    analyzeStructure: (content, options) =>
+      ipcRenderer.invoke('readability:analyzeStructure', content, options),
+    analyzeReadingLevels: (content, options) =>
+      ipcRenderer.invoke('readability:analyzeReadingLevels', content, options),
+    analyzeImprovements: (content, options) =>
+      ipcRenderer.invoke('readability:analyzeImprovements', content, options),
+    analyzeLanguageGuidance: (content, options) =>
+      ipcRenderer.invoke(
+        'readability:analyzeLanguageGuidance',
+        content,
+        options
+      ),
+    analyzeLiveScore: (content, options) =>
+      ipcRenderer.invoke('readability:analyzeLiveScore', content, options),
+  },
 });

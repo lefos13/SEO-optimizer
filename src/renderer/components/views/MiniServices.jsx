@@ -9,6 +9,12 @@ import LongTailKeywordGenerator from '../miniservices/LongTailKeywordGenerator';
 import KeywordDifficultyEstimator from '../miniservices/KeywordDifficultyEstimator';
 import KeywordClusterer from '../miniservices/KeywordClusterer';
 import LSIKeywordGenerator from '../miniservices/LSIKeywordGenerator';
+import ReadabilityOverview from '../miniservices/ReadabilityOverview';
+import SentenceAnalyzer from '../miniservices/SentenceAnalyzer';
+import ReadingLevelGuide from '../miniservices/ReadingLevelGuide';
+import ReadabilityImprovements from '../miniservices/ReadabilityImprovements';
+import LanguageGuidancePanel from '../miniservices/LanguageGuidancePanel';
+import LiveReadabilityScore from '../miniservices/LiveReadabilityScore';
 
 const MiniServices = () => {
   // UI state
@@ -30,6 +36,41 @@ const MiniServices = () => {
         { id: 'difficulty', label: 'Keyword Difficulty', icon: '⚖️' },
         { id: 'clustering', label: 'Keyword Clustering', icon: '🔗' },
         { id: 'lsi', label: 'LSI Keywords', icon: '🧠' },
+      ],
+    },
+    {
+      id: 'readability',
+      label: 'Readability',
+      icon: '📖',
+      description:
+        'Analyze readability with multi-formula scoring, structural insights and language-aware guidance',
+      tabs: [
+        { id: 'readability-overview', label: 'Overview', icon: '📊' },
+        {
+          id: 'readability-structure',
+          label: 'Sentence & Paragraphs',
+          icon: '🧱',
+        },
+        {
+          id: 'readability-levels',
+          label: 'Reading Levels',
+          icon: '🎓',
+        },
+        {
+          id: 'readability-improvements',
+          label: 'Improvements',
+          icon: '💡',
+        },
+        {
+          id: 'readability-language',
+          label: 'Language Rules',
+          icon: '🌐',
+        },
+        {
+          id: 'readability-live',
+          label: 'Live Score',
+          icon: '⚡',
+        },
       ],
     },
     // Example of future categories (commented out for now)
@@ -90,6 +131,24 @@ const MiniServices = () => {
 
       case 'lsi':
         return <LSIKeywordGenerator />;
+
+      case 'readability-overview':
+        return <ReadabilityOverview />;
+
+      case 'readability-structure':
+        return <SentenceAnalyzer />;
+
+      case 'readability-levels':
+        return <ReadingLevelGuide />;
+
+      case 'readability-improvements':
+        return <ReadabilityImprovements />;
+
+      case 'readability-language':
+        return <LanguageGuidancePanel />;
+
+      case 'readability-live':
+        return <LiveReadabilityScore />;
 
       default:
         return null;
