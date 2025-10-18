@@ -17,7 +17,6 @@ function saveRecommendations(db, analysisId, enhancedRecommendations) {
     !enhancedRecommendations.recommendations ||
     !Array.isArray(enhancedRecommendations.recommendations)
   ) {
-     
     console.log('[PERSISTENCE] No recommendations to save');
     return 0;
   }
@@ -25,7 +24,6 @@ function saveRecommendations(db, analysisId, enhancedRecommendations) {
   const recommendations = enhancedRecommendations.recommendations;
   let savedCount = 0;
 
-   
   console.log(
     `[PERSISTENCE] Saving ${recommendations.length} recommendations...`
   );
@@ -33,7 +31,7 @@ function saveRecommendations(db, analysisId, enhancedRecommendations) {
   recommendations.forEach((rec, index) => {
     try {
       // Insert main recommendation
-       
+
       console.log(
         `[PERSISTENCE] Inserting recommendation ${index + 1}/${recommendations.length}`
       );
@@ -123,7 +121,6 @@ function saveRecommendations(db, analysisId, enhancedRecommendations) {
         savedCount++;
       }
     } catch (error) {
-       
       console.error(
         `[PERSISTENCE] Error saving recommendation ${index}:`,
         error.message
@@ -131,7 +128,6 @@ function saveRecommendations(db, analysisId, enhancedRecommendations) {
     }
   });
 
-   
   console.log(`[PERSISTENCE] ✅ Saved ${savedCount} recommendations`);
   return savedCount;
 }
@@ -219,7 +215,6 @@ function getRecommendations(db, analysisId) {
 
     return recommendations;
   } catch (error) {
-     
     console.error('[PERSISTENCE] Error getting recommendations:', error);
     return [];
   }
@@ -255,7 +250,6 @@ function updateRecommendationStatus(
 
     return true;
   } catch (error) {
-     
     console.error('[PERSISTENCE] Error updating status:', error);
     return false;
   }
@@ -294,7 +288,6 @@ function getQuickWins(db, analysisId, limit = 5) {
       return obj;
     });
   } catch (error) {
-     
     console.error('[PERSISTENCE] Error getting quick wins:', error);
     return [];
   }
@@ -310,7 +303,6 @@ function deleteRecommendations(db, analysisId) {
     db.run(`DELETE FROM recommendations WHERE analysis_id = ?`, [analysisId]);
     return true;
   } catch (error) {
-     
     console.error('[PERSISTENCE] Error deleting recommendations:', error);
     return false;
   }

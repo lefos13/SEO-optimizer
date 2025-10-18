@@ -410,3 +410,94 @@
 .progress-danger {
   background: $color-danger;
 }
+
+// Alert Modal Component
+.alert-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.alert-modal {
+  background: $color-bg-primary;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  min-width: 360px;
+  max-width: 500px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid $color-border;
+
+  &.alert-info {
+    --alert-accent: $color-info;
+    --alert-icon-bg: rgba($color-info, 0.1);
+  }
+
+  &.alert-success {
+    --alert-accent: $color-success;
+    --alert-icon-bg: rgba($color-success, 0.1);
+  }
+
+  &.alert-warning {
+    --alert-accent: $color-warning;
+    --alert-icon-bg: rgba($color-warning, 0.1);
+  }
+
+  &.alert-danger {
+    --alert-accent: $color-danger;
+    --alert-icon-bg: rgba($color-danger, 0.1);
+  }
+}
+
+.alert-header {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: $spacing-lg $spacing-lg $spacing-md;
+  border-bottom: 2px solid var(--alert-accent);
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: $border-radius-md;
+  background: var(--alert-icon-bg);
+  color: var(--alert-accent);
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+}
+
+.alert-title {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.alert-body {
+  padding: $spacing-lg;
+}
+
+.alert-message {
+  margin: 0;
+  font-size: $font-size-base;
+  line-height: $line-height-relaxed;
+  color: $color-text-secondary;
+}
+
+.alert-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1px solid $color-border;
+
+  .btn {
+    flex: 1;
+  }
+}

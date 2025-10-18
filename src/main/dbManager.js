@@ -41,7 +41,6 @@ class DatabaseManager {
    */
   async initialize() {
     try {
-       
       console.log('[DB] Initializing database at:', this.dbPath);
 
       // Initialize sql.js
@@ -52,11 +51,11 @@ class DatabaseManager {
       if (fs.existsSync(this.dbPath)) {
         buffer = fs.readFileSync(this.dbPath);
         this.db = new this.SQL.Database(buffer);
-         
+
         console.log('[DB] Loaded existing database');
       } else {
         this.db = new this.SQL.Database();
-         
+
         console.log('[DB] Created new database');
       }
 
@@ -68,12 +67,11 @@ class DatabaseManager {
       this.saveDatabase();
 
       this.isInitialized = true;
-       
+
       console.log('[DB] Database initialized successfully');
 
       return true;
     } catch (error) {
-       
       console.error('[DB] Failed to initialize database:', error);
       throw error;
     }
@@ -89,7 +87,6 @@ class DatabaseManager {
       const buffer = Buffer.from(data);
       fs.writeFileSync(this.dbPath, buffer);
     } catch (error) {
-       
       console.error('[DB] Error saving database:', error);
     }
   }
@@ -105,12 +102,10 @@ class DatabaseManager {
       );
 
       if (result.length > 0 && result[0].values.length > 0) {
-         
         console.log('[DB] Schema already exists');
         return;
       }
 
-       
       console.log('[DB] Creating database schema...');
 
       // Schema version table
@@ -310,10 +305,8 @@ class DatabaseManager {
       // Insert initial schema version
       this.db.run('INSERT INTO schema_version (version) VALUES (1)');
 
-       
       console.log('[DB] Schema created successfully');
     } catch (error) {
-       
       console.error('[DB] Error creating schema:', error);
       throw error;
     }
@@ -332,7 +325,6 @@ class DatabaseManager {
           ? result[0].values[0][0]
           : 0;
 
-       
       console.log('[DB] Current schema version:', currentVersion);
 
       // Migration 1: Create default "Direct Input" project
@@ -350,11 +342,10 @@ class DatabaseManager {
                 'N/A',
               ]
             );
-             
+
             console.log('[DB] Created default "Direct Input" project');
           }
         } catch (e) {
-           
           console.error('[DB] Error creating default project:', e);
         }
       }
@@ -369,7 +360,6 @@ class DatabaseManager {
       //   this.saveDatabase();
       // }
     } catch (error) {
-       
       console.error('[DB] Error running migrations:', error);
       throw error;
     }
@@ -395,11 +385,10 @@ class DatabaseManager {
         this.saveDatabase();
         this.db.close();
         this.isInitialized = false;
-         
+
         console.log('[DB] Database connection closed');
       }
     } catch (error) {
-       
       console.error('[DB] Error closing database:', error);
     }
   }
@@ -412,7 +401,6 @@ class DatabaseManager {
    */
   run(sql, params = []) {
     try {
-       
       console.log('[DB] Executing query:', {
         queryType: sql.trim().split(/\s+/)[0].toUpperCase(),
         paramCount: params.length,
@@ -427,12 +415,12 @@ class DatabaseManager {
         if (lastIdResult.length > 0 && lastIdResult[0].values.length > 0) {
           lastID = lastIdResult[0].values[0][0];
         }
-         
+
         console.log('[DB] ✅ INSERT query executed, lastID:', lastID);
       }
 
       const changes = this.db.getRowsModified();
-       
+
       console.log('[DB] ✅ Query executed successfully, changes:', changes);
 
       return {
@@ -440,7 +428,6 @@ class DatabaseManager {
         lastID: lastID,
       };
     } catch (error) {
-       
       console.error('[DB] ❌ Error executing run query:', error, {
         sql,
         params,
@@ -473,7 +460,6 @@ class DatabaseManager {
 
       return obj;
     } catch (error) {
-       
       console.error('[DB] Error executing get query:', error, { sql, params });
       throw error;
     }
@@ -504,7 +490,6 @@ class DatabaseManager {
         return obj;
       });
     } catch (error) {
-       
       console.error('[DB] Error executing all query:', error, { sql, params });
       throw error;
     }
@@ -521,12 +506,10 @@ class DatabaseManager {
         try {
           this.db.run('ROLLBACK');
         } catch (err) {
-           
           console.error('[DB] Error rolling back transaction:', err);
         }
       };
     } catch (error) {
-       
       console.error('[DB] Error beginning transaction:', error);
       throw error;
     }
@@ -540,7 +523,6 @@ class DatabaseManager {
       this.db.run('COMMIT');
       this.saveDatabase();
     } catch (error) {
-       
       console.error('[DB] Error committing transaction:', error);
       throw error;
     }
@@ -567,7 +549,6 @@ class DatabaseManager {
         rulesCount,
       };
     } catch (error) {
-       
       console.error('[DB] Error getting stats:', error);
       return null;
     }

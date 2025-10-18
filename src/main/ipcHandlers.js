@@ -54,7 +54,6 @@ class IPCHandlers {
     // ============ ANALYSES ============
     ipcMain.handle('db:analysis:create', (event, analysisData) => {
       try {
-         
         console.log('[IPC] db:analysis:create called with data:', {
           project_id: analysisData.project_id,
           language: analysisData.language,
@@ -63,14 +62,13 @@ class IPCHandlers {
           keywordsCount: analysisData.keywords?.split(',').length,
         });
         const result = DatabaseOperations.createAnalysis(analysisData);
-         
+
         console.log('[IPC] ✅ Analysis created:', {
           id: result.id,
           project_id: result.project_id,
         });
         return result;
       } catch (error) {
-         
         console.error('[IPC] ❌ Create analysis failed:', error.message);
         throw new Error(`Create analysis failed: ${error.message}`);
       }
@@ -78,14 +76,12 @@ class IPCHandlers {
 
     ipcMain.handle('db:analysis:get', (event, analysisId) => {
       try {
-         
         console.log('[IPC] db:analysis:get called with ID:', analysisId);
         const result = DatabaseOperations.getAnalysis(analysisId);
-         
+
         console.log('[IPC] ✅ Analysis retrieved:', { id: result?.id });
         return result;
       } catch (error) {
-         
         console.error('[IPC] ❌ Get analysis failed:', error.message);
         throw new Error(`Get analysis failed: ${error.message}`);
       }
@@ -95,7 +91,6 @@ class IPCHandlers {
       try {
         // Validate projectId
         if (!projectId) {
-           
           console.warn(
             '[IPC] ⚠️ db:analysis:getByProject called with invalid projectId:',
             projectId
@@ -103,7 +98,6 @@ class IPCHandlers {
           throw new Error('Project ID is required');
         }
 
-         
         console.log('[IPC] db:analysis:getByProject called:', {
           projectId,
           options,
@@ -112,13 +106,12 @@ class IPCHandlers {
           projectId,
           options
         );
-         
+
         console.log('[IPC] ✅ Project analyses retrieved:', {
           count: result?.length || 0,
         });
         return result;
       } catch (error) {
-         
         console.error('[IPC] ❌ Get project analyses failed:', error.message);
         throw new Error(`Get project analyses failed: ${error.message}`);
       }
@@ -126,13 +119,12 @@ class IPCHandlers {
 
     ipcMain.handle('db:analysis:update', (event, analysisId, updates) => {
       try {
-         
         console.log('[IPC] db:analysis:update called:', {
           analysisId,
           updateKeys: Object.keys(updates),
         });
         const result = DatabaseOperations.updateAnalysis(analysisId, updates);
-         
+
         console.log('[IPC] ✅ Analysis updated:', { id: result?.id });
         return result;
       } catch (error) {
@@ -259,7 +251,6 @@ class IPCHandlers {
     // ============ SEO ANALYZER ============
     ipcMain.handle('seo:analyze', async (event, content) => {
       try {
-         
         console.log('[IPC] seo:analyze called with content:', {
           htmlLength: content.html?.length,
           keywords: content.keywords,
@@ -268,10 +259,10 @@ class IPCHandlers {
         });
         const SEOAnalyzer = require('../analyzers/seoAnalyzer');
         const analyzer = new SEOAnalyzer(content.language || 'en');
-         
+
         console.log('[IPC] SEOAnalyzer instance created, running analysis...');
         const results = await analyzer.analyze(content);
-         
+
         console.log('[IPC] ✅ SEO analysis complete, returning results:', {
           score: results.score,
           percentage: results.percentage,
@@ -280,7 +271,6 @@ class IPCHandlers {
         });
         return results;
       } catch (error) {
-         
         console.error('[IPC] ❌ SEO analysis failed:', error.message);
         throw new Error(`SEO analysis failed: ${error.message}`);
       }
@@ -353,7 +343,10 @@ class IPCHandlers {
         });
         const SEOAnalyzer = require('../analyzers/seoAnalyzer');
         const analyzer = new SEOAnalyzer();
-        const results = analyzer.calculateAllKeywordDensities(cleanText, keywords);
+        const results = analyzer.calculateAllKeywordDensities(
+          cleanText,
+          keywords
+        );
         console.log('[IPC] ✅ Densities calculated:', {
           resultsCount: results.length,
           results: results,
@@ -366,33 +359,36 @@ class IPCHandlers {
     });
 
     // ============ KEYWORD SUGGESTIONS ============
-    ipcMain.handle('seo:suggestKeywords', async (event, html, maxSuggestions = 10) => {
-      try {
-         
-        console.log('[IPC] seo:suggestKeywords called:', {
-          htmlLength: html?.length || 0,
-          maxSuggestions,
-        });
-        const keywordSuggestions = require('../analyzers/keywordSuggestions');
-        const suggestions = keywordSuggestions.suggestKeywords(html, maxSuggestions);
-         
-        console.log('[IPC] ✅ Keyword suggestions generated:', {
-          count: suggestions.length,
-          topSuggestions: suggestions.slice(0, 3).map(s => s.keyword),
-        });
-        return suggestions;
-      } catch (error) {
-         
-        console.error('[IPC] ❌ Keyword suggestions failed:', error.message);
-        throw new Error(`Keyword suggestions failed: ${error.message}`);
+    ipcMain.handle(
+      'seo:suggestKeywords',
+      async (event, html, maxSuggestions = 10) => {
+        try {
+          console.log('[IPC] seo:suggestKeywords called:', {
+            htmlLength: html?.length || 0,
+            maxSuggestions,
+          });
+          const keywordSuggestions = require('../analyzers/keywordSuggestions');
+          const suggestions = keywordSuggestions.suggestKeywords(
+            html,
+            maxSuggestions
+          );
+
+          console.log('[IPC] ✅ Keyword suggestions generated:', {
+            count: suggestions.length,
+            topSuggestions: suggestions.slice(0, 3).map(s => s.keyword),
+          });
+          return suggestions;
+        } catch (error) {
+          console.error('[IPC] ❌ Keyword suggestions failed:', error.message);
+          throw new Error(`Keyword suggestions failed: ${error.message}`);
+        }
       }
-    });
+    );
 
     ipcMain.handle(
       'seo:recommendations:save',
       (event, analysisId, enhancedRecommendations) => {
         try {
-           
           console.log('[IPC] seo:recommendations:save called:', {
             analysisId,
             recommendationCount:
@@ -405,11 +401,10 @@ class IPCHandlers {
             analysisId,
             enhancedRecommendations
           );
-           
+
           console.log('[IPC] ✅ Recommendations saved successfully');
           return result;
         } catch (error) {
-           
           console.error('[IPC] ❌ Save recommendations failed:', error.message);
           throw new Error(`Save recommendations failed: ${error.message}`);
         }
@@ -419,7 +414,6 @@ class IPCHandlers {
     // ============ URL FETCHER ============
     ipcMain.handle('seo:fetchUrl', async (event, url, options = {}) => {
       try {
-         
         console.log('[IPC] 🔗 Fetching URL:', url);
         const urlFetcher = require('../analyzers/urlFetcher');
 
@@ -432,12 +426,10 @@ class IPCHandlers {
         const result = await urlFetcher.fetchUrl(url, options);
 
         if (!result.success) {
-           
           console.error('[IPC] ❌ URL fetch failed:', result.error);
           throw new Error(result.error || 'Failed to fetch URL');
         }
 
-         
         console.log('[IPC] ✅ URL fetched successfully:', {
           finalUrl: result.finalUrl,
           title: result.title,
@@ -446,11 +438,139 @@ class IPCHandlers {
 
         return result;
       } catch (error) {
-         
         console.error('[IPC] ❌ Fetch URL failed:', error.message);
         throw new Error(`Fetch URL failed: ${error.message}`);
       }
     });
+
+    // ============ KEYWORD SERVICES (MINI-SERVICES) ============
+    ipcMain.handle(
+      'keyword:analyzeDensity',
+      async (event, content, keywords) => {
+        try {
+          console.log('[IPC] 🔍 Analyzing keyword density:', {
+            contentLength: content?.length || 0,
+            keywordsCount: keywords?.length || 0,
+          });
+          const KeywordServices = require('../analyzers/keywordServices');
+          const result = KeywordServices.analyzeKeywordDensity(
+            content,
+            keywords
+          );
+
+          console.log('[IPC] ✅ Keyword density analysis complete:', {
+            totalWords: result.totalWords,
+            resultsCount: result.densityResults?.length || 0,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Keyword density analysis failed:',
+            error.message
+          );
+          throw new Error(`Keyword density analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'keyword:generateLongTail',
+      async (event, content, seedKeywords, maxSuggestions) => {
+        try {
+          console.log('[IPC] 🎯 Generating long-tail keywords:', {
+            contentLength: content?.length || 0,
+            seedCount: seedKeywords?.length || 0,
+            maxSuggestions,
+          });
+          const KeywordServices = require('../analyzers/keywordServices');
+          const result = KeywordServices.generateLongTailKeywords(
+            content,
+            seedKeywords,
+            maxSuggestions
+          );
+
+          console.log('[IPC] ✅ Long-tail keywords generated:', {
+            suggestionsCount: result.suggestions?.length || 0,
+          });
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Long-tail generation failed:', error.message);
+          throw new Error(`Long-tail generation failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'keyword:estimateDifficulty',
+      async (event, keywords, content) => {
+        try {
+          console.log('[IPC] 📊 Estimating keyword difficulty:', {
+            keywordsCount: keywords?.length || 0,
+          });
+          const KeywordServices = require('../analyzers/keywordServices');
+          const result = KeywordServices.estimateKeywordDifficulty(
+            keywords,
+            content
+          );
+
+          console.log('[IPC] ✅ Difficulty estimation complete:', {
+            estimatesCount: result.estimates?.length || 0,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Difficulty estimation failed:',
+            error.message
+          );
+          throw new Error(`Difficulty estimation failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle('keyword:cluster', async (event, keywords, content) => {
+      try {
+        console.log('[IPC] 🔗 Clustering keywords:', {
+          keywordsCount: keywords?.length || 0,
+        });
+        const KeywordServices = require('../analyzers/keywordServices');
+        const result = KeywordServices.clusterKeywords(keywords, content);
+
+        console.log('[IPC] ✅ Keyword clustering complete:', {
+          clustersCount: result.totalClusters,
+        });
+        return result;
+      } catch (error) {
+        console.error('[IPC] ❌ Keyword clustering failed:', error.message);
+        throw new Error(`Keyword clustering failed: ${error.message}`);
+      }
+    });
+
+    ipcMain.handle(
+      'keyword:generateLSI',
+      async (event, content, mainKeywords, maxSuggestions) => {
+        try {
+          console.log('[IPC] 📝 Generating LSI keywords:', {
+            contentLength: content?.length || 0,
+            mainKeywordsCount: mainKeywords?.length || 0,
+            maxSuggestions,
+          });
+          const KeywordServices = require('../analyzers/keywordServices');
+          const result = KeywordServices.generateLSIKeywords(
+            content,
+            mainKeywords,
+            maxSuggestions
+          );
+
+          console.log('[IPC] ✅ LSI keywords generated:', {
+            suggestionsCount: result.lsiKeywords?.length || 0,
+          });
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ LSI generation failed:', error.message);
+          throw new Error(`LSI generation failed: ${error.message}`);
+        }
+      }
+    );
   }
 }
 

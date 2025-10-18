@@ -27,9 +27,9 @@ const Navigation = () => {
     // },
     {
       path: '/reports',
-      icon: '📈',
-      label: 'Reports',
-      description: 'SEO Reports',
+      icon: '�️',
+      label: 'Mini-Services',
+      description: 'SEO Tools',
     },
     {
       path: '/settings',

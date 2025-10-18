@@ -88,4 +88,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
     fetchUrl: (url, options) =>
       ipcRenderer.invoke('seo:fetchUrl', url, options),
   },
+
+  // Keyword Services
+  keyword: {
+    analyzeDensity: (content, keywords) =>
+      ipcRenderer.invoke('keyword:analyzeDensity', content, keywords),
+    generateLongTail: (content, seedKeywords, maxSuggestions) =>
+      ipcRenderer.invoke(
+        'keyword:generateLongTail',
+        content,
+        seedKeywords,
+        maxSuggestions
+      ),
+    estimateDifficulty: (keywords, content) =>
+      ipcRenderer.invoke('keyword:estimateDifficulty', keywords, content),
+    cluster: (keywords, content) =>
+      ipcRenderer.invoke('keyword:cluster', keywords, content),
+    generateLSI: (content, mainKeywords, maxSuggestions) =>
+      ipcRenderer.invoke(
+        'keyword:generateLSI',
+        content,
+        mainKeywords,
+        maxSuggestions
+      ),
+  },
 });

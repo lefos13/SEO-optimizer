@@ -12,34 +12,70 @@
 @use 'dashboard';
 @use 'results';
 @use 'analysis';
+@use 'miniservices';
 
 // Global reset and base styles
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html,
 body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
-    font-family: $font-family-base;
-    font-size: $font-size-base;
-    line-height: $line-height-normal;
-    color: $color-text-primary;
-    background: $color-bg-primary;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  background: $color-bg-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  // CSS Variables for theming and dynamic styling
+  --text-primary: #{$color-text-primary};
+  --text-secondary: #{$color-text-secondary};
+  --text-tertiary: #{$color-text-tertiary};
+
+  --bg-primary: #{$color-bg-primary};
+  --bg-secondary: #{$color-bg-secondary};
+  --bg-tertiary: #{$color-bg-tertiary};
+  --bg-hover: #{$color-bg-hover};
+
+  --accent-color: #{$color-primary};
+  --accent-color-dark: #{$color-primary-dark};
+  --accent-color-light: #{$color-primary-light};
+  --accent-color-rgb: 74, 144, 226; // RGB values of $color-primary
+
+  --border-color: #{$color-border};
+  --border-color-rgb: 58, 63, 75; // RGB values of $color-border
+
+  --success-color: #{$color-success};
+  --success-color-rgb: 92, 184, 92;
+
+  --error-color: #{$color-danger};
+  --error-color-rgb: 217, 83, 79;
+
+  --warning-color: #{$color-warning};
+  --warning-color-rgb: 240, 173, 78;
+
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+
+  --radius-sm: #{$border-radius-sm};
+  --radius-md: #{$border-radius-md};
+  --radius-lg: #{$border-radius-lg};
 }
 
 #root {
-    height: 100%;
+  height: 100%;
 }
 
 // Typography
@@ -49,97 +85,97 @@ h3,
 h4,
 h5,
 h6 {
-    margin: 0;
-    font-weight: $font-weight-semibold;
-    line-height: $line-height-tight;
-    color: $color-text-primary;
+  margin: 0;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  color: $color-text-primary;
 }
 
 h1 {
-    font-size: $font-size-3xl;
+  font-size: $font-size-3xl;
 }
 
 h2 {
-    font-size: $font-size-2xl;
+  font-size: $font-size-2xl;
 }
 
 h3 {
-    font-size: $font-size-xl;
+  font-size: $font-size-xl;
 }
 
 h4 {
-    font-size: $font-size-lg;
+  font-size: $font-size-lg;
 }
 
 h5 {
-    font-size: $font-size-md;
+  font-size: $font-size-md;
 }
 
 h6 {
-    font-size: $font-size-base;
+  font-size: $font-size-base;
 }
 
 p {
-    margin: 0 0 $spacing-md;
-    line-height: $line-height-relaxed;
+  margin: 0 0 $spacing-md;
+  line-height: $line-height-relaxed;
 }
 
 a {
-    color: $color-primary;
-    text-decoration: none;
-    transition: color $transition-base;
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-base;
 
-    &:hover {
-        color: $color-primary-light;
-    }
+  &:hover {
+    color: $color-primary-light;
+  }
 }
 
 // Code blocks
 code {
-    font-family: $font-family-mono;
-    font-size: $font-size-sm;
-    padding: 2px 6px;
-    background: $color-bg-tertiary;
-    border-radius: $border-radius-sm;
-    color: $color-primary-light;
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  padding: 2px 6px;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-sm;
+  color: $color-primary-light;
 }
 
 pre {
-    font-family: $font-family-mono;
-    font-size: $font-size-sm;
-    padding: $spacing-md;
-    background: $color-bg-tertiary;
-    border-radius: $border-radius-md;
-    overflow-x: auto;
-    line-height: $line-height-relaxed;
-    @include custom-scrollbar;
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+  overflow-x: auto;
+  line-height: $line-height-relaxed;
+  @include custom-scrollbar;
 
-    code {
-        padding: 0;
-        background: none;
-    }
+  code {
+    padding: 0;
+    background: none;
+  }
 }
 
 // Selection
 ::selection {
-    background: $color-primary-alpha;
-    color: $color-primary-light;
+  background: $color-primary-alpha;
+  color: $color-primary-light;
 }
 
 // Loading screen
 .loading-screen {
-    @include flex-center;
-    @include flex-column;
-    height: 100vh;
-    gap: $spacing-md;
+  @include flex-center;
+  @include flex-column;
+  height: 100vh;
+  gap: $spacing-md;
 
-    h1 {
-        font-size: $font-size-3xl;
-        color: $color-primary;
-    }
+  h1 {
+    font-size: $font-size-3xl;
+    color: $color-primary;
+  }
 
-    p {
-        color: $color-text-secondary;
-        margin: 0;
-    }
+  p {
+    color: $color-text-secondary;
+    margin: 0;
+  }
 }

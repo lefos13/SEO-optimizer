@@ -18,6 +18,7 @@ import ScoreBreakdown from '../results/ScoreBreakdown';
 import RecommendationsList from '../results/RecommendationsList';
 import ResultsFilter from '../results/ResultsFilter';
 import BeforeAfterComparison from '../results/BeforeAfterComparison';
+import ComparisonSelector from '../results/ComparisonSelector';
 import ExportResults from '../results/ExportResults';
 import { calculateCategoryScores } from '../../utils/scoreCalculator';
 
@@ -44,6 +45,8 @@ const AnalysisResults = ({
     sortBy: 'priority',
   });
   const [comparisonAnalysis, setComparisonAnalysis] = useState(null);
+  const [selectedComparisonAnalysisId, setSelectedComparisonAnalysisId] =
+    useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -104,7 +107,7 @@ const AnalysisResults = ({
       const wins = await window.electronAPI.seo.getQuickWins(analysisId);
       setQuickWins(wins || []);
 
-      // Load previous analysis for comparison (if available)
+      // Auto-select the most recent previous analysis for comparison
       // Note: database uses snake_case (project_id) not camelCase (projectId)
       const projectId = analysisData.project_id || analysisData.projectId;
       if (projectId) {
@@ -132,6 +135,7 @@ const AnalysisResults = ({
                 : prevAnalysis.category_scores || {},
           };
           setComparisonAnalysis(parsedPrevAnalysis);
+          setSelectedComparisonAnalysisId(prevAnalysis.id);
         }
       }
     } catch (err) {
@@ -227,6 +231,37 @@ const AnalysisResults = ({
       );
     } catch (err) {
       console.error('Error updating recommendation status:', err);
+    }
+  };
+
+  const handleSelectComparisonAnalysis = async comparisonAnalysisId => {
+    setSelectedComparisonAnalysisId(comparisonAnalysisId);
+
+    try {
+      const selectedAnalysis =
+        await window.electronAPI.analyses.get(comparisonAnalysisId);
+
+      if (selectedAnalysis) {
+        // Parse and map snake_case to camelCase
+        const parsedAnalysis = {
+          ...selectedAnalysis,
+          score: selectedAnalysis.overall_score || 0,
+          maxScore: selectedAnalysis.max_score || 100,
+          percentage: selectedAnalysis.percentage || 0,
+          grade: selectedAnalysis.grade || 'F',
+          passedRules: selectedAnalysis.passed_rules || 0,
+          failedRules: selectedAnalysis.failed_rules || 0,
+          warnings: selectedAnalysis.warnings || 0,
+          categoryScores:
+            typeof selectedAnalysis.category_scores === 'string' &&
+            selectedAnalysis.category_scores
+              ? JSON.parse(selectedAnalysis.category_scores)
+              : selectedAnalysis.category_scores || {},
+        };
+        setComparisonAnalysis(parsedAnalysis);
+      }
+    } catch (err) {
+      console.error('Error loading comparison analysis:', err);
     }
   };
 
@@ -405,10 +440,37 @@ const AnalysisResults = ({
 
         {activeTab === 'comparison' && (
           <div className="results-comparison">
-            <BeforeAfterComparison
-              beforeAnalysis={comparisonAnalysis}
-              afterAnalysis={analysis}
-            />
+            <div className="comparison-layout">
+              <div className="comparison-selector-section">
+                <ComparisonSelector
+                  currentAnalysisId={analysisId}
+                  projectId={analysis?.project_id || analysis?.projectId}
+                  currentAnalysis={analysis}
+                  selectedAnalysisId={selectedComparisonAnalysisId}
+                  onSelectAnalysis={handleSelectComparisonAnalysis}
+                />
+              </div>
+
+              <div className="comparison-results-section">
+                {comparisonAnalysis ? (
+                  <BeforeAfterComparison
+                    beforeAnalysis={comparisonAnalysis}
+                    afterAnalysis={analysis}
+                  />
+                ) : (
+                  <Card className="comparison-empty-state">
+                    <div className="empty-state-content">
+                      <div className="empty-icon">📊</div>
+                      <h3>Select an Analysis to Compare</h3>
+                      <p>
+                        Choose a previous analysis from the list to compare and
+                        track improvements over time.
+                      </p>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

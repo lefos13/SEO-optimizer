@@ -72,7 +72,6 @@ const ContentInput = ({
     setUrlError('');
 
     try {
-       
       console.log('[CONTENT-INPUT] 🔗 Fetching URL:', url);
 
       // Call the backend URL fetcher via IPC
@@ -81,7 +80,6 @@ const ContentInput = ({
         maxRedirects: 5,
       });
 
-       
       console.log('[CONTENT-INPUT] ✅ URL fetched:', {
         finalUrl: result.finalUrl,
         title: result.title,
@@ -113,7 +111,7 @@ const ContentInput = ({
         error.message ||
         'Failed to fetch URL. Please check the URL and try again.';
       setUrlError(errorMessage);
-       
+
       console.error('[CONTENT-INPUT] ❌ URL fetch error:', error);
     } finally {
       setUrlFetching(false);

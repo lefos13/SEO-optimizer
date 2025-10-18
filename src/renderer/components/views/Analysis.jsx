@@ -36,6 +36,7 @@ const Analysis = () => {
   const [currentStage, setCurrentStage] = useState('init');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [resetKey, setResetKey] = useState(0); // Force component remount on reset
 
   // Load projects on mount
   useEffect(() => {
@@ -77,14 +78,14 @@ const Analysis = () => {
 
     try {
       // Stage 1: Initialize
-       
+
       console.log('🔍 [ANALYSIS] Stage 1: Initializing...');
       setCurrentStage('init');
       setProgress(10);
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Stage 2: Content Analysis
-       
+
       console.log(
         '📝 [ANALYSIS] Stage 2: Content Analysis - Preparing data...'
       );
@@ -97,7 +98,6 @@ const Analysis = () => {
         ? content // Already HTML
         : `<html><head><title></title></head><body><p>${content.replace(/\n/g, '</p><p>')}</p></body></html>`;
 
-       
       console.log(
         '📝 [ANALYSIS] Content wrapped as HTML, length:',
         htmlContent.length
@@ -110,7 +110,6 @@ const Analysis = () => {
         url: url || '',
       };
 
-       
       console.log('📝 [ANALYSIS] Analysis data prepared:', {
         htmlLength: analysisData.html.length,
         keywords: analysisData.keywords,
@@ -119,11 +118,10 @@ const Analysis = () => {
       });
 
       // Call the SEO analyzer via IPC
-       
+
       console.log('📤 [ANALYSIS] Calling SEO analyzer via IPC...');
       const result = await window.electronAPI.seo.analyze(analysisData);
 
-       
       console.log('✅ [ANALYSIS] SEO analyzer returned results:', {
         score: result.score,
         percentage: result.percentage,
@@ -140,35 +138,34 @@ const Analysis = () => {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Stage 3: Keywords
-       
+
       console.log('🔤 [ANALYSIS] Stage 3: Keyword analysis...');
       setCurrentStage('keywords');
       setProgress(65);
       await new Promise(resolve => setTimeout(resolve, 400));
 
       // Stage 4: Technical
-       
+
       console.log('⚙️ [ANALYSIS] Stage 4: Technical analysis...');
       setCurrentStage('technical');
       setProgress(80);
       await new Promise(resolve => setTimeout(resolve, 400));
 
       // Stage 5: Recommendations
-       
+
       console.log('💡 [ANALYSIS] Stage 5: Generating recommendations...');
       setCurrentStage('recommendations');
       setProgress(95);
 
       // Get the selected project ID for this analysis
-       
+
       console.log('🔍 [ANALYSIS] Using selected project:', selectedProjectId);
       const projectId = selectedProjectId || 1; // Use selected or fallback to 1
 
-       
       console.log('✅ [ANALYSIS] Project ID resolved:', projectId);
 
       // Save analysis to database with correct schema fields
-       
+
       console.log('💾 [ANALYSIS] Creating analysis record in database...');
       const savedAnalysis = await window.electronAPI.analyses.create({
         project_id: projectId,
@@ -180,7 +177,6 @@ const Analysis = () => {
         url: url || '', // The URL that was analyzed (empty string if direct input)
       });
 
-       
       console.log('✅ [ANALYSIS] Analysis record created:', {
         id: savedAnalysis?.id,
         projectId: savedAnalysis?.project_id,
@@ -189,7 +185,6 @@ const Analysis = () => {
 
       // Update the analysis with the calculated score and all analysis data
       if (savedAnalysis && savedAnalysis.id) {
-         
         console.log('📊 [ANALYSIS] Updating analysis with full results:', {
           score: result.score,
           maxScore: result.maxScore,
@@ -213,13 +208,12 @@ const Analysis = () => {
           warnings: result.warnings || 0,
           category_scores: categoryScoresJson,
         });
-         
+
         console.log('✅ [ANALYSIS] Full analysis data saved successfully');
       }
 
       // Save recommendations to database
       if (savedAnalysis && savedAnalysis.id && result.enhancedRecommendations) {
-         
         console.log(
           '💾 [ANALYSIS] Saving recommendations to database, count:',
           result.enhancedRecommendations.recommendations?.length || 0
@@ -228,21 +222,20 @@ const Analysis = () => {
           savedAnalysis.id,
           result.enhancedRecommendations
         );
-         
+
         console.log('✅ [ANALYSIS] Recommendations saved successfully');
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Complete
-       
+
       console.log('🎉 [ANALYSIS] Analysis complete!');
       setCurrentStage('complete');
       setProgress(100);
 
       // Navigate to results
       if (savedAnalysis && savedAnalysis.id) {
-         
         console.log(
           '📍 [ANALYSIS] Navigating to results page, ID:',
           savedAnalysis.id
@@ -251,13 +244,11 @@ const Analysis = () => {
           navigate(`/analysis/results/${savedAnalysis.id}`);
         }, 500);
       } else {
-         
         console.error('❌ [ANALYSIS] Analysis completed but no ID received');
         setError('Analysis completed but failed to save results.');
         setIsAnalyzing(false);
       }
     } catch (err) {
-       
       console.error('❌ [ANALYSIS] Analysis error:', err);
       setError(
         err.message ||
@@ -332,7 +323,7 @@ const Analysis = () => {
             </div>
 
             <div className="project-selector-footer">
-              {projectCount > 1 ? (
+              {projectCount > 1 && (
                 <div className="project-switcher">
                   <label
                     htmlFor="project-select"
@@ -357,11 +348,18 @@ const Analysis = () => {
                     </select>
                   </div>
                 </div>
-              ) : (
+              )}
+              {projectCount === 1 && (
                 <p className="project-selector-empty">
                   You currently have a single project. Create additional
                   projects from the dashboard to organize analyses by client or
                   website.
+                </p>
+              )}
+              {projectCount === 0 && (
+                <p className="project-selector-empty">
+                  You currently haven&apos;t created a project. Create projects
+                  from the dashboard to organize analyses by client or website.
                 </p>
               )}
             </div>
@@ -380,94 +378,101 @@ const Analysis = () => {
       ) : (
         <div className="analysis-layout">
           {/* Left Column - Input */}
-          <div className="analysis-input-column">
-            <Card title="Content Input" className="input-card">
-              <ContentInput
-                onContentChange={setContent}
-                onUrlChange={setUrl}
-                initialContent={content}
-                initialUrl={url}
-              />
-            </Card>
+          {projectCount > 0 && (
+            <div className="analysis-input-column">
+              <Card title="Content Input" className="input-card">
+                <ContentInput
+                  key={`content-${resetKey}`}
+                  onContentChange={setContent}
+                  onUrlChange={setUrl}
+                  initialContent={content}
+                  initialUrl={url}
+                />
+              </Card>
 
-            <Card title="Target Keywords" className="keywords-card">
-              <KeywordsInput
-                keywords={keywords}
-                onChange={setKeywords}
-                content={content}
-              />
-            </Card>
-          </div>
+              <Card title="Target Keywords" className="keywords-card">
+                <KeywordsInput
+                  key={`keywords-${resetKey}`}
+                  keywords={keywords}
+                  onChange={setKeywords}
+                  content={content}
+                />
+              </Card>
+            </div>
+          )}
 
           {/* Right Column - Config & Action */}
-          <div className="analysis-config-column">
-            <Card title="Analysis Settings" className="config-card">
-              <AnalysisConfig
-                config={config}
-                onChange={setConfig}
-                content={content}
-              />
-            </Card>
+          {projectCount > 0 && (
+            <div className="analysis-config-column">
+              <Card title="Analysis Settings" className="config-card">
+                <AnalysisConfig
+                  config={config}
+                  onChange={setConfig}
+                  content={content}
+                />
+              </Card>
 
-            {/* Error Display */}
-            {error && (
-              <div className="analysis-error">
-                <span className="error-icon">⚠️</span>
-                <span className="error-text">{error}</span>
-              </div>
-            )}
+              {/* Error Display */}
+              {error && (
+                <div className="analysis-error">
+                  <span className="error-icon">⚠️</span>
+                  <span className="error-text">{error}</span>
+                </div>
+              )}
 
-            {/* Analyze Button */}
-            <div className="analysis-actions">
-              <Button
-                variant="primary"
-                size="large"
-                onClick={handleAnalyze}
-                disabled={!canAnalyze || isAnalyzing}
-                fullWidth
-              >
-                {isAnalyzing ? '⏳ Analyzing...' : '🔍 Analyze Content'}
-              </Button>
-
-              {content && (
+              {/* Analyze Button */}
+              <div className="analysis-actions">
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   size="large"
-                  onClick={() => {
-                    setContent('');
-                    setUrl('');
-                    setKeywords([]);
-                    setError('');
-                  }}
+                  onClick={handleAnalyze}
+                  disabled={!canAnalyze || isAnalyzing}
                   fullWidth
                 >
-                  🔄 Reset
+                  {isAnalyzing ? '⏳ Analyzing...' : '🔍 Analyze Content'}
                 </Button>
+
+                {content && (
+                  <Button
+                    variant="secondary"
+                    size="large"
+                    onClick={() => {
+                      setContent('');
+                      setUrl('');
+                      setKeywords([]);
+                      setError('');
+                      setResetKey(prev => prev + 1); // Force remount of child components
+                    }}
+                    fullWidth
+                  >
+                    🔄 Reset
+                  </Button>
+                )}
+              </div>
+
+              {/* Quick Stats */}
+              {content && (
+                <div className="analysis-quick-stats">
+                  <div className="stat-item">
+                    <span className="stat-label">Content Length:</span>
+                    <span className="stat-value">
+                      {content.trim().split(/\s+/).length} words
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Keywords:</span>
+                    <span className="stat-value">{keywords.length}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Language:</span>
+                    <span className="stat-value">
+                      {config.language?.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
-
-            {/* Quick Stats */}
-            {content && (
-              <div className="analysis-quick-stats">
-                <div className="stat-item">
-                  <span className="stat-label">Content Length:</span>
-                  <span className="stat-value">
-                    {content.trim().split(/\s+/).length} words
-                  </span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Keywords:</span>
-                  <span className="stat-value">{keywords.length}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Language:</span>
-                  <span className="stat-value">
-                    {config.language?.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
     </div>

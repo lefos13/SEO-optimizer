@@ -58,24 +58,23 @@ class SEOAnalyzer {
    */
   async analyze(content) {
     try {
-       
       console.log('[SEO-ANALYZER] Starting analysis...');
 
       // Reset results
       this.resetResults();
 
       // Validate input
-       
+
       console.log('[SEO-ANALYZER] Validating input...');
       this.validateInput(content);
-       
+
       console.log('[SEO-ANALYZER] ✅ Input validation passed');
 
       // Parse HTML content
-       
+
       console.log('[SEO-ANALYZER] Parsing HTML content...');
       const parsedContent = htmlParser.parse(content.html || '');
-       
+
       console.log('[SEO-ANALYZER] ✅ HTML parsed:', {
         wordCount: parsedContent.wordCount,
         charCount: parsedContent.characterCount,
@@ -85,7 +84,7 @@ class SEOAnalyzer {
       });
 
       // Extract metadata
-       
+
       console.log('[SEO-ANALYZER] Extracting metadata...');
       this.results.metadata = {
         title: content.title || '',
@@ -101,17 +100,17 @@ class SEOAnalyzer {
         metaTags: parsedContent.metaTags,
         structuralElements: parsedContent.structuralElements,
       };
-       
+
       console.log('[SEO-ANALYZER] ✅ Metadata extracted:', {
         keywords: this.results.metadata.keywords,
         language: this.results.metadata.language,
       });
 
       // Run all analysis rules
-       
+
       console.log('[SEO-ANALYZER] Running analysis rules...');
       await this.runAnalysis(parsedContent);
-       
+
       console.log('[SEO-ANALYZER] ✅ Rules executed:', {
         passedRules: this.results.passedRules,
         failedRules: this.results.failedRules,
@@ -119,10 +118,10 @@ class SEOAnalyzer {
       });
 
       // Calculate final scores
-       
+
       console.log('[SEO-ANALYZER] Calculating scores...');
       this.calculateScores();
-       
+
       console.log('[SEO-ANALYZER] ✅ Scores calculated:', {
         score: this.results.score,
         maxScore: this.results.maxScore,
@@ -131,14 +130,14 @@ class SEOAnalyzer {
       });
 
       // Generate enhanced recommendations
-       
+
       console.log('[SEO-ANALYZER] Generating enhanced recommendations...');
       this.results.enhancedRecommendations =
         this.recommendationEngine.generateRecommendations(
           this.results,
           this.rules
         );
-       
+
       console.log('[SEO-ANALYZER] ✅ Recommendations generated:', {
         recommendationCount:
           this.results.enhancedRecommendations?.recommendations?.length || 0,
@@ -148,11 +147,9 @@ class SEOAnalyzer {
           ).length || 0,
       });
 
-       
       console.log('[SEO-ANALYZER] ✅ Analysis complete!');
       return this.results;
     } catch (error) {
-       
       console.error('[SEO-ANALYZER] ❌ Analysis failed:', error);
       throw new Error(`SEO Analysis failed: ${error.message}`);
     }
@@ -380,19 +377,25 @@ class SEOAnalyzer {
     const normalizedKeyword = keyword.toLowerCase().trim();
 
     // Escape special regex characters in the keyword
-    const escapedKeyword = normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+    const escapedKeyword = normalizedKeyword.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&'
+    );
+
     // For single words, use word boundaries; for phrases, use looser matching
     const isPhrase = normalizedKeyword.includes(' ');
-    const regex = isPhrase 
-      ? new RegExp(`\\b${escapedKeyword.replace(/\s+/g, '\\s+')}\\b`, 'gi')  // Phrase: match with flexible spacing
-      : new RegExp(`\\b${escapedKeyword}\\b`, 'gi');  // Single word: use word boundaries
-    
+    const regex = isPhrase
+      ? new RegExp(`\\b${escapedKeyword.replace(/\s+/g, '\\s+')}\\b`, 'gi') // Phrase: match with flexible spacing
+      : new RegExp(`\\b${escapedKeyword}\\b`, 'gi'); // Single word: use word boundaries
+
     const matches = normalizedText.match(regex);
     const count = matches ? matches.length : 0;
 
     // Calculate word count
-    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter(w => w.length > 0);
     const wordCount = words.length;
 
     // Calculate density as percentage
@@ -401,7 +404,7 @@ class SEOAnalyzer {
     if (wordCount > 0) {
       const keywordWordCount = normalizedKeyword.split(/\s+/).length;
       // Density = (count * keyword word count / total word count) * 100
-      density = (count * keywordWordCount / wordCount) * 100;
+      density = ((count * keywordWordCount) / wordCount) * 100;
     }
 
     return {

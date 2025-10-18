@@ -14,6 +14,7 @@ import StatCard from '../ui/StatCard';
 import ProgressBar from '../ui/ProgressBar';
 import Badge from '../ui/Badge';
 import Modal from '../ui/Modal';
+import AlertModal from '../ui/AlertModal';
 import Input from '../ui/Input';
 
 const Dashboard = () => {
@@ -26,11 +27,22 @@ const Dashboard = () => {
 
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('recent'); // 'recent' or 'projects'
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
     url: '',
+  });
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info',
+    onConfirm: null,
+    confirmText: 'OK',
+    cancelText: 'Cancel',
+    isDangerous: false,
   });
 
   // Load initial data
@@ -49,6 +61,7 @@ const Dashboard = () => {
 
       // Load database stats
       const dbStats = await window.electronAPI.database.getStats();
+      console.log('Database stats received:', dbStats);
 
       // Calculate average score from recent analyses
       let recentAnalyses = [];
@@ -82,7 +95,7 @@ const Dashboard = () => {
 
       setStats({
         totalProjects: projectsData?.length || 0,
-        totalAnalyses: dbStats?.totalAnalyses || 0,
+        totalAnalyses: dbStats?.analysisCount || 0,
         avgScore: Math.round(avgScore),
         recentAnalyses,
       });
@@ -95,7 +108,14 @@ const Dashboard = () => {
 
   const handleCreateProject = async () => {
     if (!newProject.name.trim()) {
-      alert('Please enter a project name');
+      setAlertModal({
+        isOpen: true,
+        title: 'Project Name Required',
+        message: 'Please enter a project name to create a new project.',
+        variant: 'warning',
+        onConfirm: null,
+        confirmText: 'OK',
+      });
       return;
     }
 
@@ -111,33 +131,52 @@ const Dashboard = () => {
       loadDashboardData();
     } catch (error) {
       console.error('Failed to create project:', error);
-      alert('Failed to create project');
+      setAlertModal({
+        isOpen: true,
+        title: 'Failed to Create Project',
+        message:
+          error.message || 'An error occurred while creating the project.',
+        variant: 'danger',
+        onConfirm: null,
+        confirmText: 'OK',
+      });
     }
   };
 
   const handleDeleteProject = async projectId => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this project? All analyses will be deleted.'
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await window.electronAPI.projects.delete(projectId);
-      loadDashboardData();
-    } catch (error) {
-      console.error('Failed to delete project:', error);
-      alert('Failed to delete project');
-    }
+    setAlertModal({
+      isOpen: true,
+      title: 'Delete Project?',
+      message:
+        'Are you sure you want to delete this project? All analyses will be permanently deleted. This action cannot be undone.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await window.electronAPI.projects.delete(projectId);
+          setAlertModal({ ...alertModal, isOpen: false });
+          loadDashboardData();
+        } catch (error) {
+          console.error('Failed to delete project:', error);
+          setAlertModal({
+            isOpen: true,
+            title: 'Failed to Delete Project',
+            message:
+              error.message || 'An error occurred while deleting the project.',
+            variant: 'danger',
+            onConfirm: null,
+            confirmText: 'OK',
+          });
+        }
+      },
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDangerous: true,
+    });
   };
 
   const handleStartAnalysis = () => {
     // Check if there are any projects
     if (projects.length === 0) {
-      // No projects, prompt user to create one first
-      alert('Please create a project first before starting an analysis.');
       setShowNewProjectModal(true);
     } else {
       // Has projects, navigate to analysis page
@@ -243,189 +282,363 @@ const Dashboard = () => {
           icon="⭐"
           variant={getGradeVariant(stats.avgScore)}
         />
-        <StatCard
-          title="Quick Actions"
-          value="Ready"
-          subtitle="Start analyzing"
-          icon="⚡"
-          variant="success"
-          onClick={handleStartAnalysis}
-        />
       </div>
 
-      {/* Recent Activity */}
-      <div className="dashboard-content-grid">
-        <Card title="Recent Analyses" className="recent-analyses-card">
-          {projects.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📄</div>
-              <h3>No analyses yet</h3>
-              <p>
-                Create a project and start analyzing content to see activity
-                here.
-              </p>
-              <Button variant="primary" onClick={handleStartAnalysis}>
-                {projects.length === 0
-                  ? 'Create Project First'
-                  : 'Start First Analysis'}
-              </Button>
-            </div>
-          ) : stats.recentAnalyses.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📄</div>
-              <h3>No analyses yet</h3>
-              <p>Run an analysis to see results here.</p>
-              <Button variant="primary" onClick={handleStartAnalysis}>
-                Start First Analysis
-              </Button>
-            </div>
-          ) : (
-            <div className="analysis-by-project">
-              {projects.map(project => {
-                const projectAnalyses = stats.recentAnalyses.filter(
-                  a => a.project_id === project.id
-                );
+      {/* Tab Navigation */}
+      {projects.length > 0 && (
+        <div className="dashboard-tabs">
+          <button
+            className={`dashboard-tab ${activeTab === 'recent' ? 'active' : ''}`}
+            onClick={() => setActiveTab('recent')}
+          >
+            <span className="tab-icon">📊</span> Recent Analyses
+          </button>
+          <button
+            className={`dashboard-tab ${activeTab === 'projects' ? 'active' : ''}`}
+            onClick={() => setActiveTab('projects')}
+          >
+            <span className="tab-icon">📁</span> Your Projects
+          </button>
+        </div>
+      )}
 
-                if (projectAnalyses.length === 0) {
-                  return null; // Skip projects with no analyses
-                }
+      {/* Main Content Area */}
+      <div className="dashboard-content">
+        {/* Recent Analyses Tab */}
+        {(activeTab === 'recent' || projects.length === 0) && (
+          <Card title="Recent Analyses" className="recent-analyses-card">
+            {projects.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📄</div>
+                <h3>No projects or analyses yet</h3>
+                <p>
+                  Create your first project and start analyzing content to track
+                  SEO performance.
+                </p>
+                <div className="empty-state-actions">
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowNewProjectModal(true)}
+                  >
+                    Create Your First Project
+                  </Button>
+                </div>
+              </div>
+            ) : stats.recentAnalyses.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📄</div>
+                <h3>No analyses performed yet</h3>
+                <p>
+                  Run your first SEO analysis to get insights and improvement
+                  recommendations for your content.
+                </p>
+                <div className="empty-state-actions">
+                  <Button variant="primary" onClick={handleStartAnalysis}>
+                    Start Your First Analysis
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="analysis-by-project">
+                {projects.map(project => {
+                  const projectAnalyses = stats.recentAnalyses.filter(
+                    a => a.project_id === project.id
+                  );
 
-                return (
-                  <div key={project.id} className="project-analysis-section">
-                    <div className="project-section-header">
-                      <h4 className="project-section-title">
-                        📁 {project.name}
-                      </h4>
-                      <Badge variant="info">{projectAnalyses.length}</Badge>
-                    </div>
+                  if (projectAnalyses.length === 0) {
+                    return null; // Skip projects with no analyses
+                  }
 
-                    <div className="project-analyses-list">
-                      {projectAnalyses.map(analysis => (
-                        <div key={analysis.id} className="analysis-item">
-                          <div className="analysis-item-header">
-                            <div className="analysis-item-title">
-                              <h5>{analysis.title || 'Untitled Analysis'}</h5>
-                              <span className="analysis-item-date">
-                                {new Date(
-                                  analysis.created_at
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <Badge
-                              variant={getGradeVariant(
-                                analysis.overall_score || 0
-                              )}
-                            >
-                              {getGradeLetter(analysis.overall_score || 0)}
-                            </Badge>
-                          </div>
-                          <ProgressBar
-                            value={
-                              analysis.percentage ||
-                              Math.round(
-                                (analysis.overall_score / analysis.max_score) *
-                                  100
-                              ) ||
-                              0
+                  return (
+                    <div key={project.id} className="project-analysis-section">
+                      <div className="project-section-header">
+                        <h4 className="project-section-title">
+                          📁 {project.name}
+                        </h4>
+                        <div className="project-section-meta">
+                          <Badge variant="info">{projectAnalyses.length}</Badge>
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            onClick={() =>
+                              (window.location.hash = '#/analysis')
                             }
-                            max={100}
-                            label="SEO Score"
-                          />
-                          <div className="analysis-item-meta">
-                            <span>
-                              Score:{' '}
-                              {analysis.percentage ||
+                          >
+                            New Analysis
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="project-analyses-list">
+                        {projectAnalyses.map(analysis => (
+                          <div key={analysis.id} className="analysis-item">
+                            <div className="analysis-item-header">
+                              <div className="analysis-item-title">
+                                <h5>{analysis.title || 'Untitled Analysis'}</h5>
+                                <div className="analysis-item-details">
+                                  <span className="analysis-item-date">
+                                    <span className="detail-icon">📅</span>
+                                    {new Date(
+                                      analysis.created_at
+                                    ).toLocaleDateString()}
+                                  </span>
+                                  {analysis.language && (
+                                    <span className="analysis-item-language">
+                                      <span className="detail-icon">🌐</span>
+                                      {analysis.language.toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Badge
+                                variant={getGradeVariant(
+                                  analysis.percentage ||
+                                    (analysis.overall_score &&
+                                    analysis.max_score
+                                      ? Math.round(
+                                          (analysis.overall_score /
+                                            analysis.max_score) *
+                                            100
+                                        )
+                                      : 0)
+                                )}
+                                size="large"
+                              >
+                                {getGradeLetter(
+                                  analysis.percentage ||
+                                    (analysis.overall_score &&
+                                    analysis.max_score
+                                      ? Math.round(
+                                          (analysis.overall_score /
+                                            analysis.max_score) *
+                                            100
+                                        )
+                                      : 0)
+                                )}
+                              </Badge>
+                            </div>
+                            <ProgressBar
+                              value={
+                                analysis.percentage ||
                                 Math.round(
                                   (analysis.overall_score /
                                     analysis.max_score) *
                                     100
                                 ) ||
-                                0}
-                              %
-                            </span>
-                            {analysis.language && (
-                              <span>
-                                Language: {analysis.language.toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div className="analysis-item-actions">
-                            <Button
-                              variant="primary"
-                              size="small"
-                              onClick={() =>
-                                (window.location.hash = `#/analysis/results/${analysis.id}`)
+                                0
                               }
-                            >
-                              📊 View Results
-                            </Button>
+                              max={100}
+                              label="SEO Score"
+                            />
+                            <div className="analysis-item-meta">
+                              <span className="score-value">
+                                Score:{' '}
+                                <strong>
+                                  {analysis.percentage ||
+                                    Math.round(
+                                      (analysis.overall_score /
+                                        analysis.max_score) *
+                                        100
+                                    ) ||
+                                    0}
+                                  %
+                                </strong>
+                              </span>
+                            </div>
+                            <div className="analysis-item-actions">
+                              <Button
+                                variant="primary"
+                                size="small"
+                                onClick={() =>
+                                  (window.location.hash = `#/analysis/results/${analysis.id}`)
+                                }
+                              >
+                                📊 View Results
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        )}
 
-        {/* Projects List */}
-        <Card title="Your Projects" className="projects-card">
-          {projects.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📁</div>
-              <h3>No projects yet</h3>
-              <p>Create your first project to organize your SEO analyses.</p>
-              <Button
-                variant="primary"
-                onClick={() => setShowNewProjectModal(true)}
-              >
-                Create First Project
-              </Button>
-            </div>
-          ) : (
-            <div className="project-list">
-              {projects.map(project => (
-                <div key={project.id} className="project-item">
-                  <div className="project-item-header">
-                    <div>
-                      <h4 className="project-item-title">{project.name}</h4>
-                      {project.description && (
-                        <p className="project-item-description">
-                          {project.description}
-                        </p>
-                      )}
-                      {project.url && (
-                        <a
-                          href={project.url}
-                          className="project-item-url"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {project.url}
-                        </a>
-                      )}
-                    </div>
-                    <button
-                      className="project-item-delete"
-                      onClick={() => handleDeleteProject(project.id)}
-                      aria-label="Delete project"
-                    >
-                      🗑️
-                    </button>
+        {/* Projects Tab */}
+        {activeTab === 'projects' && (
+          <Card title="Your Projects" className="projects-card">
+            {projects.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📁</div>
+                <h3>No projects yet</h3>
+                <p>Create your first project to organize your SEO analyses.</p>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowNewProjectModal(true)}
+                >
+                  Create First Project
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="projects-header">
+                  <div className="projects-count">
+                    <Badge variant="primary" size="large">
+                      {projects.length}{' '}
+                      {projects.length === 1 ? 'Project' : 'Projects'}
+                    </Badge>
                   </div>
-                  <div className="project-item-meta">
-                    <span>
-                      Created{' '}
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
+                  <div className="projects-actions">
+                    <Button
+                      variant="primary"
+                      size="small"
+                      onClick={() => setShowNewProjectModal(true)}
+                    >
+                      + Add Project
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </Card>
+
+                <div className="project-grid">
+                  {projects.map(project => {
+                    // Find analyses for this project
+                    const projectAnalyses = stats.recentAnalyses.filter(
+                      a => a.project_id === project.id
+                    );
+
+                    // Calculate project score if available
+                    let projectScore = 0;
+                    let scoreLabel = '--';
+
+                    if (projectAnalyses.length > 0) {
+                      const totalScore = projectAnalyses.reduce(
+                        (sum, analysis) =>
+                          sum +
+                          (analysis.percentage ||
+                            (analysis.overall_score && analysis.max_score
+                              ? (analysis.overall_score / analysis.max_score) *
+                                100
+                              : 0)),
+                        0
+                      );
+                      projectScore = Math.round(
+                        totalScore / projectAnalyses.length
+                      );
+                      scoreLabel = `${projectScore}%`;
+                    }
+
+                    return (
+                      <div key={project.id} className="project-card">
+                        <div className="project-card-header">
+                          <div className="project-info">
+                            <h3 className="project-title">{project.name}</h3>
+                            {projectAnalyses.length > 0 ? (
+                              <Badge variant={getGradeVariant(projectScore)}>
+                                Grade {getGradeLetter(projectScore)}
+                              </Badge>
+                            ) : (
+                              <Badge variant="default">No Analyses</Badge>
+                            )}
+                          </div>
+                          <div className="project-actions">
+                            <button
+                              className="icon-button edit-button"
+                              aria-label="Edit project"
+                              onClick={() => {
+                                setNewProject({
+                                  name: project.name,
+                                  description: project.description || '',
+                                  url: project.url || '',
+                                });
+                                setShowNewProjectModal(true);
+                              }}
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              className="icon-button delete-button"
+                              onClick={() => handleDeleteProject(project.id)}
+                              aria-label="Delete project"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="project-card-body">
+                          {project.description && (
+                            <p className="project-description">
+                              {project.description}
+                            </p>
+                          )}
+
+                          {project.url && (
+                            <a
+                              href={project.url}
+                              className="project-url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              🔗 {project.url}
+                            </a>
+                          )}
+
+                          <div className="project-stats">
+                            <div className="project-stat">
+                              <span className="stat-label">Analyses</span>
+                              <span className="stat-value">
+                                {projectAnalyses.length}
+                              </span>
+                            </div>
+                            <div className="project-stat">
+                              <span className="stat-label">Avg. Score</span>
+                              <span className="stat-value">{scoreLabel}</span>
+                            </div>
+                            <div className="project-stat">
+                              <span className="stat-label">Created</span>
+                              <span className="stat-value">
+                                {new Date(
+                                  project.created_at
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="project-card-footer">
+                          <Button
+                            variant="primary"
+                            size="small"
+                            onClick={() => {
+                              window.location.hash = '#/analysis';
+                            }}
+                          >
+                            Analyze Content
+                          </Button>
+
+                          {projectAnalyses.length > 0 && (
+                            <Button
+                              variant="secondary"
+                              size="small"
+                              onClick={() => {
+                                setActiveTab('recent');
+                              }}
+                            >
+                              View Analyses
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </Card>
+        )}
       </div>
 
       {/* New Project Modal */}
@@ -476,6 +689,25 @@ const Dashboard = () => {
           />
         </div>
       </Modal>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        variant={alertModal.variant}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        onConfirm={
+          alertModal.onConfirm
+            ? () => {
+                alertModal.onConfirm();
+              }
+            : null
+        }
+        confirmText={alertModal.confirmText}
+        cancelText={alertModal.cancelText}
+        isDangerous={alertModal.isDangerous}
+      />
     </div>
   );
 };

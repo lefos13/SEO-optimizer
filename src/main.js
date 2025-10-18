@@ -37,12 +37,16 @@ const createWindow = () => {
     show: false, // Don't show until ready
   });
 
-  // Load the main HTML file
-  const htmlPath = isDev
-    ? path.join(__dirname, '..', 'dist', 'index.html')
-    : path.join(__dirname, '..', 'dist', 'index.html');
+  // Load the main HTML file regardless of dev or packaged env
+  const htmlPath = path.resolve(__dirname, '..', 'dist', 'index.html');
 
-  win.loadFile(htmlPath);
+  console.log('[MAIN] Loading HTML from:', htmlPath);
+  console.log('[MAIN] __dirname:', __dirname);
+  console.log('[MAIN] isDev:', isDev);
+
+  win.loadFile(htmlPath).catch(err => {
+    console.error('[MAIN] Failed to load HTML:', err);
+  });
 
   // Show window when ready to prevent flickering
   win.once('ready-to-show', () => {
@@ -70,7 +74,6 @@ const createWindow = () => {
     );
 
     rendererWatcher.on('change', filePath => {
-       
       console.log('Renderer files changed, reloading...', filePath);
       win.webContents.reload();
     });
@@ -82,16 +85,14 @@ const createWindow = () => {
 app.whenReady().then(async () => {
   try {
     // Initialize database (async operation)
-     
+
     await dbManager.initialize();
 
     // Register IPC handlers
     IPCHandlers.registerHandlers();
 
-     
     console.log('[APP] Application initialized successfully');
   } catch (error) {
-     
     console.error('[APP] Failed to initialize application:', error);
     app.quit();
     return;

@@ -19,33 +19,217 @@ const htmlParser = require('./htmlParser');
  */
 const STOPWORDS = new Set([
   // English stopwords
-  'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
-  'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before',
-  'being', 'below', 'between', 'both', 'but', 'by', 'can', 'could',
-  'did', 'do', 'does', 'down', 'during', 'each', 'few', 'for', 'from',
-  'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here',
-  'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in',
-  'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'might', 'more',
-  'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once',
-  'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over',
-  'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that',
-  'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there',
-  'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under',
-  'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where',
-  'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'you', 'your',
-  'yours', 'yourself', 'yourselves', 'will', 'would', 'could', 'should',
-  'it', 'your', 'you', 'its', 'our', 'your',
+  'a',
+  'about',
+  'above',
+  'after',
+  'again',
+  'against',
+  'all',
+  'am',
+  'an',
+  'and',
+  'any',
+  'are',
+  'as',
+  'at',
+  'be',
+  'because',
+  'been',
+  'before',
+  'being',
+  'below',
+  'between',
+  'both',
+  'but',
+  'by',
+  'can',
+  'could',
+  'did',
+  'do',
+  'does',
+  'down',
+  'during',
+  'each',
+  'few',
+  'for',
+  'from',
+  'further',
+  'had',
+  'has',
+  'have',
+  'having',
+  'he',
+  'her',
+  'here',
+  'hers',
+  'herself',
+  'him',
+  'himself',
+  'his',
+  'how',
+  'i',
+  'if',
+  'in',
+  'into',
+  'is',
+  'it',
+  'its',
+  'itself',
+  'just',
+  'me',
+  'might',
+  'more',
+  'most',
+  'my',
+  'myself',
+  'no',
+  'nor',
+  'not',
+  'of',
+  'off',
+  'on',
+  'once',
+  'only',
+  'or',
+  'other',
+  'our',
+  'ours',
+  'ourselves',
+  'out',
+  'over',
+  'own',
+  'same',
+  'she',
+  'should',
+  'so',
+  'some',
+  'such',
+  'than',
+  'that',
+  'the',
+  'their',
+  'theirs',
+  'them',
+  'themselves',
+  'then',
+  'there',
+  'these',
+  'they',
+  'this',
+  'those',
+  'through',
+  'to',
+  'too',
+  'under',
+  'until',
+  'up',
+  'very',
+  'was',
+  'we',
+  'were',
+  'what',
+  'when',
+  'where',
+  'which',
+  'while',
+  'who',
+  'whom',
+  'why',
+  'with',
+  'would',
+  'you',
+  'your',
+  'yours',
+  'yourself',
+  'yourselves',
+  'will',
+  'would',
+  'could',
+  'should',
+  'it',
+  'your',
+  'you',
+  'its',
+  'our',
+  'your',
 
   // Greek stopwords
-  'ο', 'η', 'το', 'οι', 'τα', 'την', 'των', 'τον', 'του', 'την', 'της',
-  'και', 'που', 'το', 'να', 'για', 'είναι', 'σε', 'με', 'αν', 'από',
-  'μόνο', 'αλλά', 'δεν', 'όχι', 'ή', 'ως', 'αυτό', 'αυτή', 'αυτό',
-  'αυτοί', 'αυτές', 'αυτά', 'πολύ', 'πολλά', 'λίγο', 'λίγα', 'κάτι',
-  'άλλο', 'άλλα', 'άλλη', 'άλλες', 'κάποιος', 'κάποια', 'κάποιο',
-  'κάποιοι', 'κάποιες', 'κάποια', 'ποιος', 'ποια', 'ποιο', 'ποιοι',
-  'ποιες', 'ποια', 'πώς', 'πού', 'πότε', 'γιατί', 'ποσο', 'ποσα',
-  'είμαι', 'είσαι', 'εστε', 'ειμαστε', 'ειστε', 'εινε', 'ημουν',
-  'ησουν', 'ημασταν', 'ησασταν', 'ημουν', 'θα', 'ας', 'αν', 'για',
+  'ο',
+  'η',
+  'το',
+  'οι',
+  'τα',
+  'την',
+  'των',
+  'τον',
+  'του',
+  'την',
+  'της',
+  'και',
+  'που',
+  'το',
+  'να',
+  'για',
+  'είναι',
+  'σε',
+  'με',
+  'αν',
+  'από',
+  'μόνο',
+  'αλλά',
+  'δεν',
+  'όχι',
+  'ή',
+  'ως',
+  'αυτό',
+  'αυτή',
+  'αυτό',
+  'αυτοί',
+  'αυτές',
+  'αυτά',
+  'πολύ',
+  'πολλά',
+  'λίγο',
+  'λίγα',
+  'κάτι',
+  'άλλο',
+  'άλλα',
+  'άλλη',
+  'άλλες',
+  'κάποιος',
+  'κάποια',
+  'κάποιο',
+  'κάποιοι',
+  'κάποιες',
+  'κάποια',
+  'ποιος',
+  'ποια',
+  'ποιο',
+  'ποιοι',
+  'ποιες',
+  'ποια',
+  'πώς',
+  'πού',
+  'πότε',
+  'γιατί',
+  'ποσο',
+  'ποσα',
+  'είμαι',
+  'είσαι',
+  'εστε',
+  'ειμαστε',
+  'ειστε',
+  'εινε',
+  'ημουν',
+  'ησουν',
+  'ημασταν',
+  'ησασταν',
+  'ημουν',
+  'θα',
+  'ας',
+  'αν',
+  'για',
 ]);
 
 /**
@@ -58,8 +242,10 @@ const CODE_PATTERNS = {
   snakeCase: /^[a-z]+_[a-z0-9_]+$/,
   kebabCase: /^[a-z]+(-[a-z0-9]+)+$/,
   cssUnit: /^(px|em|rem|pt|cm|mm|in|pc|ex|ch|vw|vh|vmin|vmax|%)$/i,
-  cssProperty: /^(background|color|border|margin|padding|font|width|height|display|position|flex|grid)$/i,
-  jsKeyword: /^(function|const|let|var|return|if|else|for|while|do|switch|case|try|catch|finally|async|await|class|extends|constructor)$/i,
+  cssProperty:
+    /^(background|color|border|margin|padding|font|width|height|display|position|flex|grid)$/i,
+  jsKeyword:
+    /^(function|const|let|var|return|if|else|for|while|do|switch|case|try|catch|finally|async|await|class|extends|constructor)$/i,
   numericOnly: /^\d+$/,
   singleChar: /^.$/,
   urlLike: /^(http|https|www|ftp|\.com|\.org|\.net|\.edu)$/i,
@@ -164,7 +350,7 @@ function calculateRelevanceScore(frequency, totalWords, length) {
   }
 
   // Phrase bonus (multi-word phrases get bonus)
-  const phraseBonus = (length.toString().split(' ').length > 1) ? 10 : 0;
+  const phraseBonus = length.toString().split(' ').length > 1 ? 10 : 0;
 
   return Math.min(frequencyScore + lengthBonus + phraseBonus, 100);
 }
@@ -182,10 +368,11 @@ function suggestKeywords(html, maxSuggestions = 10, _language) {
       return [];
     }
 
-  // Parse HTML or text to get clean text for analysis
-  const parsed = htmlParser.parse(html);
-  // If parser returns text, use it; otherwise use raw html/text
-  const cleanText = parsed.text && parsed.text.trim().length > 0 ? parsed.text : html;
+    // Parse HTML or text to get clean text for analysis
+    const parsed = htmlParser.parse(html);
+    // If parser returns text, use it; otherwise use raw html/text
+    const cleanText =
+      parsed.text && parsed.text.trim().length > 0 ? parsed.text : html;
 
     if (cleanText.length < 50) {
       return []; // Not enough content
@@ -257,34 +444,48 @@ function suggestKeywords(html, maxSuggestions = 10, _language) {
       })
       // Take top N suggestions
       .slice(0, maxSuggestions);
-    
+
     // Log frequency for each suggested keyword and verify against clean text
-    console.log('[KEYWORD-SUGGESTIONS] Verifying suggestions against clean text:');
+    console.log(
+      '[KEYWORD-SUGGESTIONS] Verifying suggestions against clean text:'
+    );
     suggestions.forEach(s => {
       // Test the same regex pattern that density calculator will use
       const normalizedKeyword = s.keyword.toLowerCase().trim();
-      const escapedKeyword = normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedKeyword = normalizedKeyword.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+      );
       const isPhrase = normalizedKeyword.includes(' ');
-      const regex = isPhrase 
+      const regex = isPhrase
         ? new RegExp(escapedKeyword, 'gi')
         : new RegExp(`\\b${escapedKeyword}\\b`, 'gi');
-      
+
       const matches = cleanText.toLowerCase().match(regex);
       const actualCount = matches ? matches.length : 0;
-      
-      console.log(`[KEYWORD-SUGGESTIONS] '${s.keyword}': found ${s.frequency} times in word array, ${actualCount} times in clean text (regex)`);
-      
+
+      console.log(
+        `[KEYWORD-SUGGESTIONS] '${s.keyword}': found ${s.frequency} times in word array, ${actualCount} times in clean text (regex)`
+      );
+
       // Show first match context if found
       if (actualCount > 0) {
-        const firstMatchIndex = cleanText.toLowerCase().indexOf(normalizedKeyword);
+        const firstMatchIndex = cleanText
+          .toLowerCase()
+          .indexOf(normalizedKeyword);
         if (firstMatchIndex >= 0) {
           const contextStart = Math.max(0, firstMatchIndex - 30);
-          const contextEnd = Math.min(cleanText.length, firstMatchIndex + normalizedKeyword.length + 30);
-          console.log(`[KEYWORD-SUGGESTIONS] Context: "...${cleanText.substring(contextStart, contextEnd)}..."`);
+          const contextEnd = Math.min(
+            cleanText.length,
+            firstMatchIndex + normalizedKeyword.length + 30
+          );
+          console.log(
+            `[KEYWORD-SUGGESTIONS] Context: "...${cleanText.substring(contextStart, contextEnd)}..."`
+          );
         }
       }
     });
-    
+
     return suggestions;
   } catch (error) {
     console.error('[KEYWORD-SUGGESTIONS] Error suggesting keywords:', error);

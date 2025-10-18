@@ -19,7 +19,7 @@ const KeywordsInput = ({ keywords = [], onChange, content = '' }) => {
 
   useEffect(() => {
     if (content && content.length > 100) {
-      console.log("Generate Suggestions!");
+      console.log('Generate Suggestions!');
       generateSuggestions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +67,7 @@ const KeywordsInput = ({ keywords = [], onChange, content = '' }) => {
         5 // Get top 5 suggestions
       );
 
-      console.log("Suggestions fetched");
+      console.log('Suggestions fetched');
 
       // Extract just the keyword strings and filter out already selected ones
       const suggestionKeywords = suggestions

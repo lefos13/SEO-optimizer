@@ -64,11 +64,19 @@
   "build": {
     "appId": "com.seo-optimizer.app",
     "productName": "SEO Optimizer",
+    "npmRebuild": false,
     "directories": {
-      "output": "dist"
+      "output": "build"
     },
     "files": [
       "src/**/*",
+      "dist/**/*",
+      "!dist/builder-*",
+      "!dist/*.exe",
+      "!dist/*.blockmap",
+      "!dist/win-unpacked",
+      "!dist/mac",
+      "!dist/linux-unpacked",
       "public/**/*",
       "node_modules/**/*",
       "package.json"
