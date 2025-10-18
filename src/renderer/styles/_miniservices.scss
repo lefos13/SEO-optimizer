@@ -210,7 +210,6 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 200px;
   gap: 1rem;
 
   @media (max-width: 768px) {
@@ -1008,7 +1007,9 @@
 // INFO & EMPTY STATES
 // ============================================================
 
-.info-card,
+.info-card {
+}
+
 .recommendations-card,
 .insights-card,
 .distribution-card {
@@ -1052,6 +1053,11 @@
   padding: 1.5rem;
   position: relative;
   z-index: 1;
+  h3 {
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+  }
 }
 
 .info-icon {
