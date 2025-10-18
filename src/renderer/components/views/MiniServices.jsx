@@ -15,6 +15,12 @@ import ReadingLevelGuide from '../miniservices/ReadingLevelGuide';
 import ReadabilityImprovements from '../miniservices/ReadabilityImprovements';
 import LanguageGuidancePanel from '../miniservices/LanguageGuidancePanel';
 import LiveReadabilityScore from '../miniservices/LiveReadabilityScore';
+import ContentStructureAnalyzer from '../miniservices/ContentStructureAnalyzer';
+import HeadingOptimizer from '../miniservices/HeadingOptimizer';
+import InternalLinkRecommender from '../miniservices/InternalLinkRecommender';
+import ContentLengthOptimizer from '../miniservices/ContentLengthOptimizer';
+import ContentGapAnalyzer from '../miniservices/ContentGapAnalyzer';
+import CompetitiveContentAnalyzer from '../miniservices/CompetitiveContentAnalyzer';
 
 const MiniServices = () => {
   // UI state
@@ -71,6 +77,21 @@ const MiniServices = () => {
           label: 'Live Score',
           icon: '⚡',
         },
+      ],
+    },
+    {
+      id: 'content',
+      label: 'Content',
+      icon: '📝',
+      description:
+        'Optimize content structure, headings, links, length and analyze gaps against competitors',
+      tabs: [
+        { id: 'content-structure', label: 'Structure', icon: '🏗️' },
+        { id: 'content-headings', label: 'Headings', icon: '📋' },
+        { id: 'content-links', label: 'Internal Links', icon: '🔗' },
+        { id: 'content-length', label: 'Length', icon: '📏' },
+        { id: 'content-gaps', label: 'Topic Gaps', icon: '🔍' },
+        { id: 'content-competitive', label: 'Competitive', icon: '📊' },
       ],
     },
     // Example of future categories (commented out for now)
@@ -149,6 +170,24 @@ const MiniServices = () => {
 
       case 'readability-live':
         return <LiveReadabilityScore />;
+
+      case 'content-structure':
+        return <ContentStructureAnalyzer />;
+
+      case 'content-headings':
+        return <HeadingOptimizer />;
+
+      case 'content-links':
+        return <InternalLinkRecommender />;
+
+      case 'content-length':
+        return <ContentLengthOptimizer />;
+
+      case 'content-gaps':
+        return <ContentGapAnalyzer />;
+
+      case 'content-competitive':
+        return <CompetitiveContentAnalyzer />;
 
       default:
         return null;

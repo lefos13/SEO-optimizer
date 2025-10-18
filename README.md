@@ -39,6 +39,10 @@ yarn build
 - ✅ **Multi-language Support** - English and Greek
 - ✅ **Database Integration** - Full persistence with SQLite
 - ✅ **React UI** - Complete dashboard, analysis, and results interface
+- ✅ **Mini-Services** - Specialized SEO tools collection
+  - **Keywords Services** - Density, long-tail, difficulty, clustering, LSI
+  - **Readability Services** - Multi-formula scoring, structure, levels, improvements
+  - **Content Services** - Structure, headings, links, length, gaps, competitive
 - ⚠️ **Frontend-Backend Integration** - Partial (see [Integration Gaps](./docs/INTEGRATION_GAPS.md))
 
 ## �️ Available Scripts
@@ -92,17 +96,48 @@ src/
 │   ├── seoAnalyzer.js      # Core analysis engine
 │   ├── seoRules.js         # Rule definitions
 │   ├── htmlParser.js       # HTML content parser
+│   ├── keywordServices.js  # Keyword analysis tools
+│   ├── readabilityServices.js # Readability analysis
+│   ├── contentServices.js  # Content optimization tools
 │   └── examples.js         # Usage examples
 └── main.js                  # Electron main entry
 ```
 
 ## 🎨 UI Components
 
-**Views:** Dashboard, Analysis, Reports, Settings  
+**Views:** Dashboard, Analysis, Reports, Settings, Mini-Services  
 **UI Components:** Button, Input, Card  
 **Styling:** Dark theme with SASS modules
 
-## � SEO Analysis Engine
+## 🛠️ Mini-Services Collection
+
+**Keyword Services:**
+
+- **Keyword Density Analyzer** - Real-time density analysis with visualization
+- **Long-tail Keyword Generator** - Discover low-competition opportunities
+- **Keyword Difficulty Estimator** - Assess competition levels
+- **Keyword Clustering** - Group related keywords by theme
+- **LSI Keyword Generator** - Find semantically related terms
+
+**Readability Services:**
+
+- **Overview Dashboard** - Composite scores from multiple formulas
+- **Sentence & Paragraph Analyzer** - Structure and pacing analysis
+- **Reading Level Guide** - Grade levels and audience fit
+- **Improvement Suggestions** - Actionable readability tips
+- **Language Guidance** - English and Greek specific rules
+- **Live Score Calculator** - Real-time readability feedback
+
+**Content Optimization Services:** ✨ NEW
+
+- **Content Structure Analyzer** - Headings, paragraphs, lists, media analysis
+- **Heading Optimizer** - Keyword usage and length optimization
+- **Internal Link Recommender** - Linking opportunities and anchor text analysis
+- **Content Length Optimizer** - Type-specific length recommendations
+- **Content Gap Analyzer** - Topic coverage and depth analysis
+- **Competitive Content Analyzer** - Compare against top-ranking pages
+
+## 🔍 SEO Analysis Engine
 
 **Core Features:**
 
@@ -178,4 +213,4 @@ MIT
 
 ---
 
-**Status:** Phase 3 Complete ✅ | Full UI Implementation | Integration Audit in Progress 🔍
+**Status:** Phase 4 In Progress 🚧 | Content Optimization Services Added ✅ | Mini-Services Collection Complete 🎯

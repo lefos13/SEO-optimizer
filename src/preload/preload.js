@@ -134,4 +134,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
     analyzeLiveScore: (content, options) =>
       ipcRenderer.invoke('readability:analyzeLiveScore', content, options),
   },
+
+  // Content Optimization Services
+  content: {
+    analyzeStructure: (content, options) =>
+      ipcRenderer.invoke('content:analyzeStructure', content, options),
+    optimizeHeadings: (content, keywords) =>
+      ipcRenderer.invoke('content:optimizeHeadings', content, keywords),
+    recommendInternalLinks: (content, existingPages) =>
+      ipcRenderer.invoke(
+        'content:recommendInternalLinks',
+        content,
+        existingPages
+      ),
+    optimizeLength: (content, options) =>
+      ipcRenderer.invoke('content:optimizeLength', content, options),
+    analyzeGaps: (content, topics) =>
+      ipcRenderer.invoke('content:analyzeGaps', content, topics),
+    analyzeCompetitive: (content, competitors) =>
+      ipcRenderer.invoke('content:analyzeCompetitive', content, competitors),
+  },
 });

@@ -717,6 +717,168 @@ class IPCHandlers {
         }
       }
     );
+
+    // ============ CONTENT OPTIMIZATION SERVICES ============
+
+    ipcMain.handle(
+      'content:analyzeStructure',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 🏗️ Content structure analysis requested');
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.analyzeContentStructure(
+            content,
+            options
+          );
+
+          console.log('[IPC] ✅ Content structure analysis complete:', {
+            score: result.score.score,
+            recommendations: result.recommendations.length,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Content structure analysis failed:',
+            error.message
+          );
+          throw new Error(
+            `Content structure analysis failed: ${error.message}`
+          );
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'content:optimizeHeadings',
+      async (event, content, keywords = []) => {
+        try {
+          console.log('[IPC] 📋 Heading optimization requested:', {
+            keywordCount: keywords.length,
+          });
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.optimizeHeadings(content, keywords);
+
+          console.log('[IPC] ✅ Heading optimization complete:', {
+            score: result.score.score,
+            suggestions: result.suggestions.length,
+          });
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Heading optimization failed:', error.message);
+          throw new Error(`Heading optimization failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'content:recommendInternalLinks',
+      async (event, content, existingPages = []) => {
+        try {
+          console.log('[IPC] 🔗 Internal linking analysis requested:', {
+            existingPages: existingPages.length,
+          });
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.recommendInternalLinks(
+            content,
+            existingPages
+          );
+
+          console.log('[IPC] ✅ Internal linking analysis complete:', {
+            opportunities: result.opportunities.length,
+            score: result.score.score,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Internal linking analysis failed:',
+            error.message
+          );
+          throw new Error(`Internal linking analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'content:optimizeLength',
+      async (event, content, options = {}) => {
+        try {
+          console.log('[IPC] 📏 Content length optimization requested:', {
+            targetType: options.targetType || 'blog',
+          });
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.optimizeContentLength(
+            content,
+            options
+          );
+
+          console.log('[IPC] ✅ Content length optimization complete:', {
+            currentWords: result.currentLength.words,
+            score: result.score,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Content length optimization failed:',
+            error.message
+          );
+          throw new Error(
+            `Content length optimization failed: ${error.message}`
+          );
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'content:analyzeGaps',
+      async (event, content, topics = []) => {
+        try {
+          console.log('[IPC] 🔍 Content gap analysis requested:', {
+            topics: topics.length,
+          });
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.analyzeContentGaps(content, topics);
+
+          console.log('[IPC] ✅ Content gap analysis complete:', {
+            gaps: result.gaps.length,
+            score: result.score.score,
+          });
+          return result;
+        } catch (error) {
+          console.error('[IPC] ❌ Content gap analysis failed:', error.message);
+          throw new Error(`Content gap analysis failed: ${error.message}`);
+        }
+      }
+    );
+
+    ipcMain.handle(
+      'content:analyzeCompetitive',
+      async (event, content, competitors = []) => {
+        try {
+          console.log('[IPC] 📊 Competitive content analysis requested:', {
+            competitors: competitors.length,
+          });
+          const ContentServices = require('../analyzers/contentServices');
+          const result = ContentServices.analyzeCompetitiveContent(
+            content,
+            competitors
+          );
+
+          console.log('[IPC] ✅ Competitive content analysis complete:', {
+            score: result.score.score,
+            insights: result.insights.length,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Competitive content analysis failed:',
+            error.message
+          );
+          throw new Error(
+            `Competitive content analysis failed: ${error.message}`
+          );
+        }
+      }
+    );
   }
 }
 
