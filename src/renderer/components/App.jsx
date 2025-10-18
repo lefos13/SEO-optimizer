@@ -13,7 +13,7 @@ import Layout from './Layout';
 import Dashboard from './views/DashboardNew';
 import Analysis from './views/Analysis';
 import AnalysisResults from './views/AnalysisResults';
-import MiniServices from './views/Reports';
+import MiniServices from './views/MiniServices';
 import Settings from './views/Settings';
 
 const App = () => {

@@ -128,33 +128,53 @@
   }
 }
 
-.tabs-container {
-  @include flex-column;
-  min-height: 500px;
+// Right content area with tabs and content
+.content-container {
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-primary;
+  border-radius: $border-radius-lg;
+  border: 1px solid $color-border;
+  overflow: hidden;
 }
 
-.tabs-header {
-  @include flex-start;
+// Tabs navigation (horizontal)
+.tabs-navigation {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0;
-  border-bottom: 2px solid $color-border;
   background: $color-bg-tertiary;
-  padding: 0 $spacing-lg;
+  border-bottom: 1px solid $color-border;
+  padding: $spacing-sm;
 }
 
+// Individual tab button
 .tab-button {
-  @include flex-center;
+  display: flex;
+  align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  background: transparent;
+  padding: $spacing-sm $spacing-lg;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-radius: $border-radius-md;
+  background: transparent;
   color: $color-text-secondary;
-  font-size: $font-size-base;
+  font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: -2px;
-  position: relative;
+
+  .tab-icon {
+    font-size: $font-size-xl;
+    transition: transform 0.2s ease;
+  }
+
+  .tab-label {
+    white-space: nowrap;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
 
   &:hover {
     color: $color-text-primary;
@@ -163,8 +183,8 @@
 
   &.active {
     color: $color-primary;
-    border-bottom-color: $color-primary;
-    background: $color-bg-primary;
+    background: rgba($color-primary, 0.1);
+    font-weight: $font-weight-semibold;
 
     .tab-icon {
       transform: scale(1.1);
@@ -172,38 +192,51 @@
   }
 }
 
-.tab-icon {
-  font-size: $font-size-xl;
-  transition: transform 0.2s ease;
+// Content area for the active tab
+.tab-content-area {
+  flex: 1;
+  padding: $spacing-xl;
+  overflow-y: auto;
 }
 
-.tab-label {
-  white-space: nowrap;
-
-  @media (max-width: 768px) {
-    display: none;
+// Mini-services-card specific styles
+.mini-services-card {
+  .card-body {
+    padding: 0;
+    overflow: hidden;
   }
 }
 
-.tabs-content {
-  flex: 1;
-  padding: $spacing-xl;
-}
-
 .mini-service-content {
-  @include flex-center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   min-height: 400px;
-  gap: 20px;
+  gap: $spacing-xl;
+  padding: $spacing-lg 0;
 
   .empty-state {
     text-align: center;
     max-width: 500px;
     padding: $spacing-2xl;
+    margin: 0 auto;
+    background: $color-bg-tertiary;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
 
     .empty-icon {
       font-size: 64px;
       margin-bottom: $spacing-lg;
       opacity: 0.8;
+      color: $color-primary-light;
     }
 
     h3 {
@@ -267,6 +300,104 @@
 
   strong {
     color: $color-text-primary;
+  }
+}
+
+// ============================================================
+// MINI SERVICES VIEW - MODERN DESIGN
+// Two-column layout with categories sidebar and content area
+// ============================================================
+.services-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: $spacing-xl;
+  min-height: 600px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Left sidebar with categories
+.categories-sidebar {
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .sidebar-title {
+    margin: 0 0 $spacing-md;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $color-border;
+  }
+}
+
+// Category buttons container
+.category-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  flex-grow: 1;
+}
+
+// Individual category button
+.category-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $border-radius-md;
+  color: $color-text-primary;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  .category-icon {
+    font-size: $font-size-xl;
+  }
+
+  .category-label {
+    font-weight: $font-weight-medium;
+  }
+
+  &:hover {
+    background: rgba($color-primary, 0.05);
+  }
+
+  &.active {
+    background: rgba($color-primary, 0.12);
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+}
+
+// Category info section (below buttons)
+.category-info {
+  padding: $spacing-md;
+  border-top: 1px solid $color-border;
+  margin-top: auto;
+
+  .info-title {
+    margin: 0 0 $spacing-xs;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+  }
+
+  .info-desc {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    line-height: $line-height-relaxed;
   }
 }
 

@@ -1,0 +1,159 @@
+/**
+ * SEO Mini-Services View
+ * Collection of specialized SEO analysis tools
+ */
+import React, { useState } from 'react';
+import Card from '../ui/Card';
+import KeywordDensityAnalyzer from '../miniservices/KeywordDensityAnalyzer';
+import LongTailKeywordGenerator from '../miniservices/LongTailKeywordGenerator';
+import KeywordDifficultyEstimator from '../miniservices/KeywordDifficultyEstimator';
+import KeywordClusterer from '../miniservices/KeywordClusterer';
+import LSIKeywordGenerator from '../miniservices/LSIKeywordGenerator';
+
+const MiniServices = () => {
+  // UI state
+  const [activeCategory, setActiveCategory] = useState('keywords');
+  const [activeTab, setActiveTab] = useState('density');
+
+  // Categories with their respective tabs
+  // Structured to easily add more categories in the future
+  const categories = [
+    {
+      id: 'keywords',
+      label: 'Keywords',
+      icon: '🎯',
+      description:
+        'Services related to keyword research, analysis and optimization',
+      tabs: [
+        { id: 'density', label: 'Keyword Density', icon: '🔍' },
+        { id: 'longtail', label: 'Long-tail Keywords', icon: '📏' },
+        { id: 'difficulty', label: 'Keyword Difficulty', icon: '⚖️' },
+        { id: 'clustering', label: 'Keyword Clustering', icon: '🔗' },
+        { id: 'lsi', label: 'LSI Keywords', icon: '🧠' },
+      ],
+    },
+    // Example of future categories (commented out for now)
+    /*
+    {
+      id: 'content',
+      label: 'Content',
+      icon: '📝',
+      description: 'Tools for content creation, analysis and optimization',
+      tabs: [
+        { id: 'readability', label: 'Readability', icon: '📖' },
+        { id: 'structure', label: 'Content Structure', icon: '🏗️' },
+        { id: 'topics', label: 'Topic Research', icon: '🔎' },
+      ],
+    },
+    {
+      id: 'technical',
+      label: 'Technical SEO',
+      icon: '⚙️',
+      description: 'Technical analysis and optimization tools',
+      tabs: [
+        { id: 'speed', label: 'Page Speed', icon: '⚡' },
+        { id: 'mobile', label: 'Mobile Optimization', icon: '📱' },
+        { id: 'schema', label: 'Schema Markup', icon: '🏷️' },
+      ],
+    },
+    {
+      id: 'backlinks',
+      label: 'Backlinks',
+      icon: '🔗',
+      description: 'Tools for analyzing and managing backlinks',
+      tabs: [
+        { id: 'analysis', label: 'Link Analysis', icon: '📊' },
+        { id: 'opportunities', label: 'Link Building', icon: '🔨' },
+      ],
+    },
+    */
+  ];
+
+  // Helper to get tabs for the current category
+  const currentCategory =
+    categories.find(c => c.id === activeCategory) || categories[0];
+  const tabs = currentCategory.tabs;
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'density':
+        return <KeywordDensityAnalyzer />;
+
+      case 'longtail':
+        return <LongTailKeywordGenerator />;
+
+      case 'difficulty':
+        return <KeywordDifficultyEstimator />;
+
+      case 'clustering':
+        return <KeywordClusterer />;
+
+      case 'lsi':
+        return <LSIKeywordGenerator />;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="view-container">
+      <div className="view-header">
+        <h1 className="view-title">SEO Mini-Services</h1>
+        <p className="view-subtitle">
+          Specialized tools for advanced SEO analysis and optimization
+        </p>
+      </div>
+
+      <Card className="mini-services-card">
+        <div className="services-grid">
+          <div className="categories-sidebar">
+            <h3 className="sidebar-title">Categories</h3>
+            <div className="category-buttons">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  className={`category-button ${activeCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveCategory(cat.id);
+                    // default to first tab of the newly selected category
+                    const firstTab =
+                      (cat.tabs && cat.tabs[0] && cat.tabs[0].id) || null;
+                    if (firstTab) setActiveTab(firstTab);
+                  }}
+                >
+                  {/* Future-proof: Using a placeholder icon that can be added to the category data later */}
+                  <span className="category-icon">{cat.icon || '📊'}</span>
+                  <span className="category-label">{cat.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="category-info">
+              <h4 className="info-title">{currentCategory.label}</h4>
+              <p className="info-desc">{currentCategory.description}</p>
+            </div>
+          </div>
+
+          <div className="content-container">
+            <div className="tabs-navigation">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <span className="tab-icon">{tab.icon}</span>
+                  <span className="tab-label">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="tab-content-area">{renderTabContent()}</div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default MiniServices;
