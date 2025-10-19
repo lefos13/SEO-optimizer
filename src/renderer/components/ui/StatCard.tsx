@@ -5,7 +5,13 @@
 import React from 'react';
 import Card from './Card';
 
-export type StatCardVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+export type StatCardVariant =
+  | 'default'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
 export type TrendDirection = 'up' | 'down';
 
 export interface StatCardProps {
@@ -33,7 +39,11 @@ const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <Card className={cardClasses}>
-      <div className="stat-card-header" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
+      <div
+        className="stat-card-header"
+        onClick={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
+      >
         {icon && <div className="stat-card-icon">{icon}</div>}
         <div className="stat-card-content">
           <div className="stat-card-title">{title}</div>

@@ -34,7 +34,11 @@ export interface AnalysisConfigProps {
   content?: string;
 }
 
-const AnalysisConfig: React.FC<AnalysisConfigProps> = ({ config, onChange, content = '' }) => {
+const AnalysisConfig: React.FC<AnalysisConfigProps> = ({
+  config,
+  onChange,
+  content = '',
+}) => {
   const [detectedType, setDetectedType] = useState<string | null>(null);
 
   const languages: Language[] = [
@@ -111,7 +115,10 @@ const AnalysisConfig: React.FC<AnalysisConfigProps> = ({ config, onChange, conte
     return null;
   };
 
-  const handleChange = (field: keyof AnalysisConfigState, value: string): void => {
+  const handleChange = (
+    field: keyof AnalysisConfigState,
+    value: string
+  ): void => {
     onChange({
       ...config,
       [field]: value,

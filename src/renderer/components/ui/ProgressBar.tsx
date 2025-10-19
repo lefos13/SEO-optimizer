@@ -4,7 +4,12 @@
  */
 import React from 'react';
 
-export type ProgressBarVariant = 'primary' | 'success' | 'info' | 'warning' | 'danger';
+export type ProgressBarVariant =
+  | 'primary'
+  | 'success'
+  | 'info'
+  | 'warning'
+  | 'danger';
 
 export interface ProgressBarProps {
   value: number;

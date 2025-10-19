@@ -11,7 +11,13 @@ import React from 'react';
 import ProgressBar from '../ui/ProgressBar';
 import Badge from '../ui/Badge';
 
-type StageId = 'init' | 'content' | 'keywords' | 'technical' | 'recommendations' | 'complete';
+type StageId =
+  | 'init'
+  | 'content'
+  | 'keywords'
+  | 'technical'
+  | 'recommendations'
+  | 'complete';
 
 interface Stage {
   id: StageId;
@@ -73,10 +79,7 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
         </div>
       </div>
 
-      <ProgressBar
-        value={overallProgress}
-        variant="primary"
-      />
+      <ProgressBar value={overallProgress} variant="primary" />
 
       {/* Stage Indicators */}
       <div className="progress-stages">

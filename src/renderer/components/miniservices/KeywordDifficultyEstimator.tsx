@@ -54,10 +54,10 @@ const KeywordDifficultyEstimator: React.FC = () => {
         .split(',')
         .map(k => k.trim())
         .filter(k => k);
-      const result = await window.electronAPI.keyword.estimateDifficulty(
+      const result = (await window.electronAPI.keyword.estimateDifficulty(
         keywordList,
         ''
-      ) as unknown as KeywordDifficultyResults;
+      )) as unknown as KeywordDifficultyResults;
       setResults(result);
       scrollToResults();
     } catch (err) {
@@ -146,7 +146,9 @@ const KeywordDifficultyEstimator: React.FC = () => {
                     }}
                   />
                 </div>
-                <p className="difficulty-recommendation">{est.recommendation}</p>
+                <p className="difficulty-recommendation">
+                  {est.recommendation}
+                </p>
               </div>
             ))}
           </div>

@@ -17,7 +17,13 @@ import Card from '../ui/Card';
 type Priority = 'critical' | 'high' | 'medium' | 'low';
 type Status = 'pending' | 'in-progress' | 'completed' | 'dismissed';
 type Effort = 'quick' | 'moderate' | 'significant';
-type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+type BadgeVariant =
+  | 'default'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
 
 interface RecommendationAction {
   id: number;

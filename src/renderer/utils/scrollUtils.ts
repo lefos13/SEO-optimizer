@@ -23,7 +23,11 @@ export interface ScrollOptions {
  * Type guard to check if an element is a scrollable element
  */
 function isElement(element: Element | Window): element is Element {
-  return element !== window && 'getBoundingClientRect' in element && 'scrollTo' in element;
+  return (
+    element !== window &&
+    'getBoundingClientRect' in element &&
+    'scrollTo' in element
+  );
 }
 
 /**
@@ -45,7 +49,8 @@ export const scrollToResults = (
     if (resultsElement) {
       // Find the scrollable container (.content-wrapper) instead of scrolling the window
       const scrollContainerElement = document.querySelector('.content-wrapper');
-      const scrollContainer: Element | Window = scrollContainerElement || window;
+      const scrollContainer: Element | Window =
+        scrollContainerElement || window;
 
       const elementPosition = resultsElement.getBoundingClientRect().top;
       const containerRect: { top: number } =
@@ -75,7 +80,9 @@ export const scrollToResults = (
         'Scrolling to className:',
         className,
         'in container:',
-        scrollContainer === window ? 'window' : (scrollContainer as Element).className
+        scrollContainer === window
+          ? 'window'
+          : (scrollContainer as Element).className
       );
     }
   }, 100); // Small delay to ensure DOM update
@@ -98,7 +105,8 @@ export const scrollToElement = (
     if (element) {
       // Find the scrollable container (.content-wrapper) instead of scrolling the window
       const scrollContainerElement = document.querySelector('.content-wrapper');
-      const scrollContainer: Element | Window = scrollContainerElement || window;
+      const scrollContainer: Element | Window =
+        scrollContainerElement || window;
 
       const elementPosition = element.getBoundingClientRect().top;
       const containerRect: { top: number } =

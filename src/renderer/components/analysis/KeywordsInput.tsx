@@ -27,14 +27,16 @@ export interface KeywordsInputProps {
   content?: string;
 }
 
-const KeywordsInput: React.FC<KeywordsInputProps> = ({ 
-  keywords = [], 
-  onChange, 
-  content = '' 
+const KeywordsInput: React.FC<KeywordsInputProps> = ({
+  keywords = [],
+  onChange,
+  content = '',
 }) => {
   const [inputValue, setInputValue] = useState<string>('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [keywordDensities, setKeywordDensities] = useState<Record<string, string>>({});
+  const [keywordDensities, setKeywordDensities] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     if (content && content.length > 100) {
@@ -56,10 +58,10 @@ const KeywordsInput: React.FC<KeywordsInputProps> = ({
     if (!content || keywords.length === 0) return;
 
     try {
-      const densities = await window.electronAPI.seo.calculateDensities(
+      const densities = (await window.electronAPI.seo.calculateDensities(
         content,
         keywords
-      ) as unknown as KeywordDensity[];
+      )) as unknown as KeywordDensity[];
 
       // Convert array to object for easy lookup
       const densityMap: Record<string, string> = {};

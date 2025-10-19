@@ -53,7 +53,9 @@ const getWordCount = (text: string): number => {
 const ReadabilityOverview: React.FC = () => {
   const [content, setContent] = useState<string>('');
   const [language, setLanguage] = useState<string>('en');
-  const [results, setResults] = useState<ReadabilityOverviewResults | null>(null);
+  const [results, setResults] = useState<ReadabilityOverviewResults | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,12 +78,12 @@ const ReadabilityOverview: React.FC = () => {
     setError(null);
 
     try {
-      const result = await window.electronAPI.readability.analyzeOverview(
+      const result = (await window.electronAPI.readability.analyzeOverview(
         trimmed,
         {
           language,
         }
-      ) as unknown as ReadabilityOverviewResults;
+      )) as unknown as ReadabilityOverviewResults;
       setResults(result);
       scrollToResults();
     } catch (err) {
@@ -152,7 +154,9 @@ const ReadabilityOverview: React.FC = () => {
               {Math.round(results.compositeScore.score || 0)}
             </div>
             <div className="score-label">{results.compositeScore.label}</div>
-            <div className="score-grade">{results.compositeScore.gradeLevel}</div>
+            <div className="score-grade">
+              {results.compositeScore.gradeLevel}
+            </div>
             <div className="score-meta">
               ≈ {results.summary.readingTimeMinutes} min •{' '}
               {results.summary.wordCount} words • {results.summary.language}

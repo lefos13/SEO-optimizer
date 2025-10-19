@@ -58,7 +58,11 @@ export type RecommendationPriority = 'critical' | 'high' | 'medium' | 'low';
 /**
  * Recommendation status
  */
-export type RecommendationStatus = 'pending' | 'inProgress' | 'completed' | 'dismissed';
+export type RecommendationStatus =
+  | 'pending'
+  | 'inProgress'
+  | 'completed'
+  | 'dismissed';
 
 /**
  * Recommendation effort levels
@@ -104,7 +108,12 @@ export function calculateCategoryScores(
     return {};
   }
 
-  const categories: IssueCategory[] = ['meta', 'content', 'technical', 'readability'];
+  const categories: IssueCategory[] = [
+    'meta',
+    'content',
+    'technical',
+    'readability',
+  ];
   const categoryScores: CategoryScores = {};
 
   categories.forEach(category => {
@@ -206,7 +215,9 @@ export function calculateRecommendationStats(
 
     // Count by status - normalize 'in-progress' to 'inProgress'
     const status: RecommendationStatus =
-      rec.status === 'in-progress' ? 'inProgress' : (rec.status as RecommendationStatus) || 'pending';
+      rec.status === 'in-progress'
+        ? 'inProgress'
+        : (rec.status as RecommendationStatus) || 'pending';
     stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
 
     // Count by effort

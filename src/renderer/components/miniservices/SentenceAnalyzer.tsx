@@ -82,12 +82,12 @@ const SentenceAnalyzer: React.FC = () => {
     setError(null);
 
     try {
-      const result = await window.electronAPI.readability.analyzeStructure(
+      const result = (await window.electronAPI.readability.analyzeStructure(
         trimmed,
         {
           language,
         }
-      ) as unknown as StructureResults;
+      )) as unknown as StructureResults;
       setResults(result);
       scrollToResults();
     } catch (err) {
@@ -241,7 +241,9 @@ const SentenceAnalyzer: React.FC = () => {
             {results.structure.paragraphs.items.slice(0, 4).map(item => (
               <div key={item.index} className="paragraph-item">
                 <div className="paragraph-meta">
-                  <span className="paragraph-index">Paragraph {item.index}</span>
+                  <span className="paragraph-index">
+                    Paragraph {item.index}
+                  </span>
                   <span className="paragraph-score">{item.readingEase}</span>
                 </div>
                 <div className="paragraph-details">

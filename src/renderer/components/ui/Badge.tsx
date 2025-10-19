@@ -4,7 +4,13 @@
  */
 import React from 'react';
 
-export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+export type BadgeVariant =
+  | 'default'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
 export type BadgeSize = 'small' | 'medium' | 'large';
 
 export interface BadgeProps {
