@@ -87,9 +87,9 @@ const ContentLengthOptimizer: React.FC = () => {
     setError(null);
 
     try {
-      const result = await window.electronAPI.content.optimizeLength(trimmed, {
+      const result = (await window.electronAPI.content.optimizeLength(trimmed, {
         targetType,
-      }) as unknown as ContentLengthResults;
+      })) as unknown as ContentLengthResults;
       setResults(result);
       scrollToResults();
     } catch (err) {

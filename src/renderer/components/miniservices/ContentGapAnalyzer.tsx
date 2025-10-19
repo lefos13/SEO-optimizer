@@ -82,10 +82,10 @@ const ContentGapAnalyzer: React.FC = () => {
         .split('\n')
         .map(t => t.trim())
         .filter(Boolean);
-      const result = await window.electronAPI.content.analyzeGaps(
+      const result = (await window.electronAPI.content.analyzeGaps(
         trimmed,
         topicList
-      ) as unknown as ContentGapResults;
+      )) as unknown as ContentGapResults;
       setResults(result);
       scrollToResults();
     } catch (err) {

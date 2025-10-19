@@ -92,10 +92,10 @@ const InternalLinkRecommender: React.FC = () => {
         })
         .filter((page): page is Page => page !== null);
 
-      const result = await window.electronAPI.content.recommendInternalLinks(
+      const result = (await window.electronAPI.content.recommendInternalLinks(
         trimmed,
         pages
-      ) as unknown as InternalLinkResults;
+      )) as unknown as InternalLinkResults;
       setResults(result);
       scrollToResults();
     } catch (err) {
@@ -186,7 +186,9 @@ const InternalLinkRecommender: React.FC = () => {
             <div className="metrics-grid">
               <div className="metric-item">
                 <span className="metric-label">Total Links:</span>
-                <span className="metric-value">{results.linkAnalysis.total}</span>
+                <span className="metric-value">
+                  {results.linkAnalysis.total}
+                </span>
               </div>
               <div className="metric-item">
                 <span className="metric-label">Internal Links:</span>

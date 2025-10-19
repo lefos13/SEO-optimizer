@@ -109,12 +109,12 @@ const LiveReadabilityScore: React.FC = () => {
     setLoading(true);
 
     try {
-      const payload = await window.electronAPI.readability.analyzeLiveScore(
+      const payload = (await window.electronAPI.readability.analyzeLiveScore(
         trimmed,
         {
           language,
         }
-      ) as unknown as LiveScoreResults;
+      )) as unknown as LiveScoreResults;
 
       setResults(payload);
       lastSignatureRef.current = signature;

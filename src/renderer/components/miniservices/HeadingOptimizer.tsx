@@ -82,10 +82,10 @@ const HeadingOptimizer: React.FC = () => {
         .split(',')
         .map(k => k.trim())
         .filter(Boolean);
-      const result = await window.electronAPI.content.optimizeHeadings(
+      const result = (await window.electronAPI.content.optimizeHeadings(
         trimmed,
         keywordList
-      ) as unknown as HeadingOptimizerResults;
+      )) as unknown as HeadingOptimizerResults;
       setResults(result);
       scrollToResults();
     } catch (err) {
@@ -261,19 +261,30 @@ const HeadingOptimizer: React.FC = () => {
               <h4>💡 Optimization Suggestions</h4>
               <div className="recommendations-list">
                 {results.suggestions.map((sug, idx) => {
-                  const getTypeInfo = (type: string): { icon: string; color: string } => {
-                    const types: Record<string, { icon: string; color: string }> = {
+                  const getTypeInfo = (
+                    type: string
+                  ): { icon: string; color: string } => {
+                    const types: Record<
+                      string,
+                      { icon: string; color: string }
+                    > = {
                       error: { icon: '❌', color: 'var(--error)' },
                       warning: { icon: '⚠️', color: 'var(--warning)' },
                       info: { icon: 'ℹ️', color: 'var(--info)' },
                       success: { icon: '✅', color: 'var(--success)' },
                     };
-                    return (types[type] || types.info) as { icon: string; color: string };
+                    return (types[type] || types.info) as {
+                      icon: string;
+                      color: string;
+                    };
                   };
                   const typeInfo = getTypeInfo(sug.type);
                   return (
                     <div key={idx} className="recommendation-item">
-                      <div className="rec-icon" style={{ color: typeInfo.color }}>
+                      <div
+                        className="rec-icon"
+                        style={{ color: typeInfo.color }}
+                      >
                         {typeInfo.icon}
                       </div>
                       <div className="rec-content">
