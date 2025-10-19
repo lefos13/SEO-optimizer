@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist/main",
+    "rootDir": "./src",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/main.ts",
+    "src/main/**/*",
+    "src/database/**/*",
+    "src/analyzers/**/*",
+    "src/utils/**/*",
+    "src/preload/**/*",
+    "src/types/**/*"
+  ],
+  "exclude": ["src/renderer/**/*", "node_modules", "dist", "build"]
+}

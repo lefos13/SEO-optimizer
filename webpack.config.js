@@ -18,6 +18,17 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.(ts|tsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.renderer.json',
+            transpileOnly: true,
+          },
+        },
+      },
+      {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
@@ -41,7 +52,16 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.json'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@types': path.resolve(__dirname, 'src/types'),
+      '@analyzers': path.resolve(__dirname, 'src/analyzers'),
+      '@database': path.resolve(__dirname, 'src/database'),
+      '@main': path.resolve(__dirname, 'src/main'),
+      '@renderer': path.resolve(__dirname, 'src/renderer'),
+      '@utils': path.resolve(__dirname, 'src/utils'),
+    },
   },
   plugins: [
     new HtmlWebpackPlugin({
