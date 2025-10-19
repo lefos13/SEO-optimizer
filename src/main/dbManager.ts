@@ -61,7 +61,9 @@ class DatabaseManager {
       }
 
       // Enable foreign keys
-      this.db.run('PRAGMA foreign_keys = ON');
+      if (this.db) {
+        this.db.run('PRAGMA foreign_keys = ON');
+      }
 
       this.createSchema();
       this.runMigrations();
@@ -105,7 +107,7 @@ class DatabaseManager {
         "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'"
       );
 
-      if (result.length > 0 && result[0].values.length > 0) {
+      if (result.length > 0 && result[0] && result[0].values.length > 0) {
         console.log('[DB] Schema already exists');
         return;
       }
@@ -329,8 +331,8 @@ class DatabaseManager {
         'SELECT MAX(version) as version FROM schema_version'
       );
       const currentVersion =
-        result.length > 0 && result[0].values.length > 0
-          ? (result[0].values[0][0] as number)
+        result.length > 0 && result[0] && result[0].values.length > 0
+          ? (result[0].values[0]?.[0] as number)
           : 0;
 
       console.log('[DB] Current schema version:', currentVersion);
@@ -418,8 +420,8 @@ class DatabaseManager {
       let lastID: number | null = null;
       if (sql.trim().toUpperCase().startsWith('INSERT')) {
         const lastIdResult = this.db.exec('SELECT last_insert_rowid() as id');
-        if (lastIdResult.length > 0 && lastIdResult[0].values.length > 0) {
-          lastID = lastIdResult[0].values[0][0] as number;
+        if (lastIdResult.length > 0 && lastIdResult[0] && lastIdResult[0].values.length > 0) {
+          lastID = lastIdResult[0].values[0]?.[0] as number;
         }
         console.log('[DB] ✅ INSERT query executed, lastID:', lastID);
       }
@@ -453,7 +455,7 @@ class DatabaseManager {
       }
 
       const result = this.db.exec(sql, params);
-      if (result.length === 0 || result[0].values.length === 0) {
+      if (result.length === 0 || !result[0] || result[0].values.length === 0) {
         return undefined;
       }
 
@@ -462,8 +464,13 @@ class DatabaseManager {
       const row = result[0].values[0];
       const obj: any = {};
 
-      for (let i = 0; i < columns.length; i++) {
-        obj[columns[i]] = row[i];
+      if (columns && row) {
+        for (let i = 0; i < columns.length; i++) {
+          const colName = columns[i];
+          if (colName !== undefined) {
+            obj[colName] = row[i];
+          }
+        }
       }
 
       return obj as T;
@@ -486,7 +493,7 @@ class DatabaseManager {
       }
 
       const result = this.db.exec(sql, params);
-      if (result.length === 0 || result[0].values.length === 0) {
+      if (result.length === 0 || !result[0] || result[0].values.length === 0) {
         return [];
       }
 
@@ -497,7 +504,10 @@ class DatabaseManager {
       return rows.map((row: any) => {
         const obj: any = {};
         for (let i = 0; i < columns.length; i++) {
-          obj[columns[i]] = row[i];
+          const colName = columns[i];
+          if (colName !== undefined) {
+            obj[colName] = row[i];
+          }
         }
         return obj as T;
       });
