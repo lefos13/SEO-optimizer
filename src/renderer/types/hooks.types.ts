@@ -115,7 +115,10 @@ export interface ValidationRules<T> {
 /**
  * Single validation rule
  */
-export type ValidationRule<T> = (value: any, values: T) => string | null | Promise<string | null>;
+export type ValidationRule<T> = (
+  value: any,
+  values: T
+) => string | null | Promise<string | null>;
 
 /**
  * Form options

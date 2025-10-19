@@ -420,7 +420,11 @@ class DatabaseManager {
       let lastID: number | null = null;
       if (sql.trim().toUpperCase().startsWith('INSERT')) {
         const lastIdResult = this.db.exec('SELECT last_insert_rowid() as id');
-        if (lastIdResult.length > 0 && lastIdResult[0] && lastIdResult[0].values.length > 0) {
+        if (
+          lastIdResult.length > 0 &&
+          lastIdResult[0] &&
+          lastIdResult[0].values.length > 0
+        ) {
           lastID = lastIdResult[0].values[0]?.[0] as number;
         }
         console.log('[DB] ✅ INSERT query executed, lastID:', lastID);

@@ -2,7 +2,7 @@
 
 **Project**: SEO Optimizer  
 **Started**: October 19, 2025  
-**Current Phase**: Phase 6 - Frontend Setup ✅ COMPLETE! Moving to Phase 7
+**Current Phase**: Phase 7 - Frontend Utilities ✅ COMPLETE! Moving to Phase 8
 
 ---
 
@@ -16,10 +16,10 @@
 | Phase 4: Backend - Analyzers      | ✅ Complete    | 100%       | All 9 files migrated (modular architecture) |
 | Phase 5: Backend - Main Process   | ✅ Complete    | 100%       | All 3 files migrated (main, preload, IPC)   |
 | Phase 6: Frontend - Setup         | ✅ Complete    | 100%       | React type definitions created              |
-| Phase 7: Frontend - Utilities     | ⬜ Not Started | 0%         | Utility files migration                     |
+| Phase 7: Frontend - Utilities     | ✅ Complete    | 100%       | All 3 utility files migrated                |
 | Phase 8: Frontend - Components    | ⬜ Not Started | 0%         | React components migration                  |
 
-**Overall Progress**: 75%
+**Overall Progress**: 83%
 
 ---
 
@@ -230,13 +230,94 @@
 
 ---
 
-## Phase 7: Frontend - Utilities & Services
+## Phase 7: Frontend - Utilities & Services ✅
 
-### Files to Migrate ⬜
+### Files to Migrate ✅
 
-- [ ] src/renderer/utils/dateUtils.js → dateUtils.ts
-- [ ] src/renderer/utils/scoreCalculator.js → scoreCalculator.ts
-- [ ] src/renderer/utils/scrollUtils.js → scrollUtils.ts
+- [x] src/renderer/utils/dateUtils.js → dateUtils.ts (194 lines)
+- [x] src/renderer/utils/scoreCalculator.js → scoreCalculator.ts (207 lines)
+- [x] src/renderer/utils/scrollUtils.js → scrollUtils.ts (131 lines)
+
+**Phase 7 Details**:
+
+**dateUtils.ts** (194 lines)
+
+- **DateInput type**: Flexible date parameter type (string | Date | null | undefined)
+- **Date Parsing Functions**:
+  - `parseDate()` - Parse ISO strings and Date objects with timezone handling
+  - Special SQLite datetime format handling (adds 'Z' suffix for UTC)
+  - Validates parsed dates and returns null for invalid inputs
+- **Date Formatting Functions**:
+  - `formatDate()` - Intl.DateTimeFormat with customizable options
+  - `formatTime()` - Time-only formatting (HH:MM:SS)
+  - `formatDateOnly()` - Date-only formatting (MMM DD, YYYY)
+- **Relative Date Functions**:
+  - `calculateTimeDiff()` - Human-readable time differences ("2 hours ago")
+  - `getRelativeDate()` - Shows time ago if <7 days, formatted date otherwise
+  - Handles future dates ("In the future")
+- **Type Safety**: All functions properly typed with strict null checking
+- **Enhanced Documentation**: Comprehensive JSDoc comments for IntelliSense
+
+**scoreCalculator.ts** (207 lines)
+
+- **Type Definitions**:
+  - `IssueSeverity`: 'error' | 'warning' | 'info'
+  - `IssueCategory`: 'meta' | 'content' | 'technical' | 'readability'
+  - `Grade`: 'A' | 'B' | 'C' | 'D' | 'F'
+  - `RecommendationPriority`: 'critical' | 'high' | 'medium' | 'low'
+  - `RecommendationStatus`: 'pending' | 'inProgress' | 'completed' | 'dismissed'
+  - `RecommendationEffort`: 'quick' | 'moderate' | 'significant'
+- **Interfaces**:
+  - `AnalysisIssue` - Individual issue with category and severity
+  - `AnalysisResults` - Analysis results with issues array
+  - `CategoryScore` - Score details (score, max, passed, total, errors, warnings)
+  - `CategoryScores` - Map of scores by category name
+  - `Recommendation` - Recommendation object with priority, status, effort
+  - `RecommendationStats` - Statistics grouped by priority, status, effort
+- **Score Calculation Functions**:
+  - `calculateCategoryScores()` - Analyzes issues and computes category scores
+  - Score formula: 100 - (errors × 10) - (warnings × 5)
+  - Returns CategoryScores object with all 4 categories
+- **Grade Functions**:
+  - `calculateGrade()` - Converts percentage to letter grade (A-F)
+  - `getGradeColor()` - Maps grades to hex color codes for UI
+- **Recommendation Functions**:
+  - `calculateRecommendationStats()` - Aggregates recommendation data
+  - Groups by priority, status, and effort levels
+  - Calculates total potential score increase
+- **Display Formatting**:
+  - `formatScore()` - Formats as "85/100"
+  - `formatPercentage()` - Formats as "85%"
+- **Type Safety**: Pure functions with comprehensive type checking
+
+**scrollUtils.ts** (131 lines)
+
+- **Triple-Slash Reference**: `/// <reference lib="dom" />` for DOM types
+- **Type Definitions**:
+  - `ScrollBehavior`: 'smooth' | 'auto'
+  - `ScrollOptions`: Interface with offset and behavior properties
+- **Type Guard**:
+  - `isElement()` - Narrows Element | Window to Element type
+- **Scroll Functions**:
+  - `scrollToResults()` - Scrolls to element by class name (default: 'results-card')
+  - `scrollToElement()` - Scrolls to element by ID
+  - Both support custom scroll containers (.content-wrapper) or window
+  - 100ms delay to ensure DOM updates before scrolling
+- **Position Calculation**:
+  - Handles both window and element scroll containers
+  - Calculates offset position accounting for container rect
+  - Uses getBoundingClientRect() with proper type narrowing
+- **Logging**: Console logging for debugging scroll behavior
+- **Type Safety**: Proper Element vs Window type handling with type assertions
+
+**Notes**:
+
+- Total: 532 lines of TypeScript utility code
+- Zero compilation errors across all files
+- DOM APIs properly typed with reference directive
+- Comprehensive JSDoc documentation
+- All functions handle null/undefined inputs gracefully
+- Pure functions with no side effects (except scrolling)
 
 ---
 
