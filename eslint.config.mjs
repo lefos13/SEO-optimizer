@@ -14,8 +14,8 @@ export default [
       sourceType: 'module',
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         // Browser globals
@@ -41,36 +41,39 @@ export default [
         global: 'readonly',
         module: 'readonly',
         require: 'readonly',
-        exports: 'readonly'
-      }
+        exports: 'readonly',
+      },
     },
     plugins: {
       react,
-      'react-hooks': reactHooks
+      'react-hooks': reactHooks,
     },
     rules: {
       ...js.configs.recommended.rules,
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       'no-console': ['off', { allow: ['warn', 'error'] }],
-      'no-unused-vars': ['error', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^React$',
-        caughtErrorsIgnorePattern: '^_'
-      }],
+      'no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^React$',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       'no-control-regex': 'off',
       'prefer-const': 'error',
       'no-var': 'error',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'warn',
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn'
+      'react-hooks/exhaustive-deps': 'warn',
     },
     settings: {
       react: {
-        version: 'detect'
-      }
-    }
+        version: 'detect',
+      },
+    },
   },
 
   // Configuration for main process files (Node.js environment)
@@ -91,14 +94,14 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
-        clearInterval: 'readonly'
-      }
+        clearInterval: 'readonly',
+      },
     },
     rules: {
       'no-console': 'off',
       'unicorn/prefer-top-level-await': 'off',
-      'no-await-in-loop': 'off'
-    }
+      'no-await-in-loop': 'off',
+    },
   },
 
   // TypeScript configuration
@@ -109,10 +112,14 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: ['./tsconfig.json', './tsconfig.main.json', './tsconfig.renderer.json'],
+        project: [
+          './tsconfig.json',
+          './tsconfig.main.json',
+          './tsconfig.renderer.json',
+        ],
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         // Browser globals
@@ -138,13 +145,13 @@ export default [
         global: 'readonly',
         module: 'readonly',
         require: 'readonly',
-        exports: 'readonly'
-      }
+        exports: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint,
       react,
-      'react-hooks': reactHooks
+      'react-hooks': reactHooks,
     },
     rules: {
       ...js.configs.recommended.rules,
@@ -152,11 +159,14 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       'no-console': ['off', { allow: ['warn', 'error'] }],
-      '@typescript-eslint/no-unused-vars': ['error', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^React$',
-        caughtErrorsIgnorePattern: '^_'
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^React$',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -166,13 +176,13 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off', // TypeScript handles this
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn'
+      'react-hooks/exhaustive-deps': 'warn',
     },
     settings: {
       react: {
-        version: 'detect'
-      }
-    }
+        version: 'detect',
+      },
+    },
   },
 
   // Configuration for main process files (Node.js environment)
@@ -193,14 +203,14 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
-        clearInterval: 'readonly'
-      }
+        clearInterval: 'readonly',
+      },
     },
     rules: {
       'no-console': 'off',
       'unicorn/prefer-top-level-await': 'off',
-      'no-await-in-loop': 'off'
-    }
+      'no-await-in-loop': 'off',
+    },
   },
 
   // Configuration for renderer process files (Browser environment)
@@ -222,9 +232,9 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         alert: 'readonly',
-        confirm: 'readonly'
-      }
-    }
+        confirm: 'readonly',
+      },
+    },
   },
 
   // Ignore patterns (replaces .eslintignore)
@@ -237,10 +247,10 @@ export default [
       '**/*.min.js',
       'coverage/**',
       'src/utils/dbExamples.js',
-      '**/*.d.ts'
-    ]
+      '**/*.d.ts',
+    ],
   },
 
   // Apply Prettier config to avoid conflicts
-  prettierConfig
+  prettierConfig,
 ];

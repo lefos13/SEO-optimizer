@@ -19,16 +19,21 @@ export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
 };
 
-export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = 
-  Pick<T, Exclude<keyof T, Keys>> & 
+export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
   {
     [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
   }[Keys];
 
-export type RequireOnlyOne<T, Keys extends keyof T = keyof T> =
-  Pick<T, Exclude<keyof T, Keys>> &
+export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
   {
-    [K in Keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, never>>;
+    [K in Keys]-?: Required<Pick<T, K>> &
+      Partial<Record<Exclude<Keys, K>, never>>;
   }[Keys];
 
 // ============================================================
@@ -49,7 +54,7 @@ export interface AsyncState<T> {
 // Result Types
 // ============================================================
 
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };
 
@@ -158,7 +163,7 @@ export interface SortableColumn<T = string> {
 // Filter Types
 // ============================================================
 
-export type FilterOperator = 
+export type FilterOperator =
   | 'equals'
   | 'notEquals'
   | 'contains'
@@ -269,10 +274,16 @@ export type NodeCallback<T = any> = (error: Error | null, result?: T) => void;
 export type KeyOf<T> = keyof T;
 export type ValueOf<T> = T[keyof T];
 
-export type PickByValue<T, V> = Pick<T, {
-  [K in keyof T]: T[K] extends V ? K : never;
-}[keyof T]>;
+export type PickByValue<T, V> = Pick<
+  T,
+  {
+    [K in keyof T]: T[K] extends V ? K : never;
+  }[keyof T]
+>;
 
-export type OmitByValue<T, V> = Pick<T, {
-  [K in keyof T]: T[K] extends V ? never : K;
-}[keyof T]>;
+export type OmitByValue<T, V> = Pick<
+  T,
+  {
+    [K in keyof T]: T[K] extends V ? never : K;
+  }[keyof T]
+>;

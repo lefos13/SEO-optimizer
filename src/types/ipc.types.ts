@@ -4,10 +4,10 @@
  */
 
 import type { AnalysisResult } from './seo.types';
-import type { 
-  AnalysisResultRow, 
+import type {
+  AnalysisResultRow,
   ProjectRow,
-  SaveAnalysisParams 
+  SaveAnalysisParams,
 } from './database.types';
 import type { KeywordSuggestion } from './analyzer.types';
 
@@ -20,48 +20,48 @@ export const IPC_CHANNELS = {
   SEO_ANALYZE: 'seo:analyze',
   SEO_ANALYZE_URL: 'seo:analyzeUrl',
   SEO_VALIDATE_CONTENT: 'seo:validateContent',
-  
+
   // Database - Analysis
   DB_SAVE_ANALYSIS: 'db:saveAnalysis',
   DB_GET_ANALYSIS: 'db:getAnalysis',
   DB_GET_ALL_ANALYSES: 'db:getAllAnalyses',
   DB_DELETE_ANALYSIS: 'db:deleteAnalysis',
   DB_GET_RECENT_ANALYSES: 'db:getRecentAnalyses',
-  
+
   // Database - Projects
   DB_CREATE_PROJECT: 'db:createProject',
   DB_GET_PROJECT: 'db:getProject',
   DB_GET_ALL_PROJECTS: 'db:getAllProjects',
   DB_UPDATE_PROJECT: 'db:updateProject',
   DB_DELETE_PROJECT: 'db:deleteProject',
-  
+
   // Database - Utility
   DB_RESET: 'db:reset',
   DB_GET_STATS: 'db:getStats',
-  
+
   // Keyword Services
   KEYWORD_SUGGEST: 'keyword:suggest',
   KEYWORD_EXTRACT: 'keyword:extract',
   KEYWORD_ANALYZE: 'keyword:analyze',
-  
+
   // Readability Services
   READABILITY_ANALYZE: 'readability:analyze',
   READABILITY_GET_METRICS: 'readability:getMetrics',
-  
+
   // Content Services
   CONTENT_OPTIMIZE: 'content:optimize',
   CONTENT_CHECK_QUALITY: 'content:checkQuality',
-  
+
   // URL Fetcher
   URL_FETCH: 'url:fetch',
   URL_PARSE: 'url:parse',
-  
+
   // Rules
   RULES_GET_ALL: 'rules:getAll',
   RULES_GET_BY_CATEGORY: 'rules:getByCategory',
 } as const;
 
-export type IPCChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];
+export type IPCChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 
 // ============================================================
 // IPC Request/Response Types
@@ -287,22 +287,64 @@ export type IPCHandler<TRequest = any, TResponse = any> = (
 
 export interface IPCHandlerMap {
   [IPC_CHANNELS.SEO_ANALYZE]: IPCHandler<SEOAnalyzeRequest, SEOAnalyzeResponse>;
-  [IPC_CHANNELS.SEO_ANALYZE_URL]: IPCHandler<SEOAnalyzeUrlRequest, SEOAnalyzeUrlResponse>;
-  [IPC_CHANNELS.DB_SAVE_ANALYSIS]: IPCHandler<DBSaveAnalysisRequest, DBSaveAnalysisResponse>;
-  [IPC_CHANNELS.DB_GET_ANALYSIS]: IPCHandler<DBGetAnalysisRequest, DBGetAnalysisResponse>;
-  [IPC_CHANNELS.DB_GET_ALL_ANALYSES]: IPCHandler<DBGetAllAnalysesRequest, DBGetAllAnalysesResponse>;
-  [IPC_CHANNELS.DB_DELETE_ANALYSIS]: IPCHandler<DBDeleteAnalysisRequest, DBDeleteAnalysisResponse>;
-  [IPC_CHANNELS.DB_CREATE_PROJECT]: IPCHandler<DBCreateProjectRequest, DBCreateProjectResponse>;
-  [IPC_CHANNELS.DB_GET_PROJECT]: IPCHandler<DBGetProjectRequest, DBGetProjectResponse>;
-  [IPC_CHANNELS.DB_GET_ALL_PROJECTS]: IPCHandler<void, DBGetAllProjectsResponse>;
-  [IPC_CHANNELS.DB_UPDATE_PROJECT]: IPCHandler<DBUpdateProjectRequest, DBUpdateProjectResponse>;
-  [IPC_CHANNELS.DB_DELETE_PROJECT]: IPCHandler<DBDeleteProjectRequest, DBDeleteProjectResponse>;
+  [IPC_CHANNELS.SEO_ANALYZE_URL]: IPCHandler<
+    SEOAnalyzeUrlRequest,
+    SEOAnalyzeUrlResponse
+  >;
+  [IPC_CHANNELS.DB_SAVE_ANALYSIS]: IPCHandler<
+    DBSaveAnalysisRequest,
+    DBSaveAnalysisResponse
+  >;
+  [IPC_CHANNELS.DB_GET_ANALYSIS]: IPCHandler<
+    DBGetAnalysisRequest,
+    DBGetAnalysisResponse
+  >;
+  [IPC_CHANNELS.DB_GET_ALL_ANALYSES]: IPCHandler<
+    DBGetAllAnalysesRequest,
+    DBGetAllAnalysesResponse
+  >;
+  [IPC_CHANNELS.DB_DELETE_ANALYSIS]: IPCHandler<
+    DBDeleteAnalysisRequest,
+    DBDeleteAnalysisResponse
+  >;
+  [IPC_CHANNELS.DB_CREATE_PROJECT]: IPCHandler<
+    DBCreateProjectRequest,
+    DBCreateProjectResponse
+  >;
+  [IPC_CHANNELS.DB_GET_PROJECT]: IPCHandler<
+    DBGetProjectRequest,
+    DBGetProjectResponse
+  >;
+  [IPC_CHANNELS.DB_GET_ALL_PROJECTS]: IPCHandler<
+    void,
+    DBGetAllProjectsResponse
+  >;
+  [IPC_CHANNELS.DB_UPDATE_PROJECT]: IPCHandler<
+    DBUpdateProjectRequest,
+    DBUpdateProjectResponse
+  >;
+  [IPC_CHANNELS.DB_DELETE_PROJECT]: IPCHandler<
+    DBDeleteProjectRequest,
+    DBDeleteProjectResponse
+  >;
   [IPC_CHANNELS.DB_RESET]: IPCHandler<void, DBResetResponse>;
   [IPC_CHANNELS.DB_GET_STATS]: IPCHandler<void, DBGetStatsResponse>;
-  [IPC_CHANNELS.KEYWORD_SUGGEST]: IPCHandler<KeywordSuggestRequest, KeywordSuggestResponse>;
-  [IPC_CHANNELS.KEYWORD_EXTRACT]: IPCHandler<KeywordExtractRequest, KeywordExtractResponse>;
-  [IPC_CHANNELS.READABILITY_ANALYZE]: IPCHandler<ReadabilityAnalyzeRequest, ReadabilityAnalyzeResponse>;
-  [IPC_CHANNELS.CONTENT_OPTIMIZE]: IPCHandler<ContentOptimizeRequest, ContentOptimizeResponse>;
+  [IPC_CHANNELS.KEYWORD_SUGGEST]: IPCHandler<
+    KeywordSuggestRequest,
+    KeywordSuggestResponse
+  >;
+  [IPC_CHANNELS.KEYWORD_EXTRACT]: IPCHandler<
+    KeywordExtractRequest,
+    KeywordExtractResponse
+  >;
+  [IPC_CHANNELS.READABILITY_ANALYZE]: IPCHandler<
+    ReadabilityAnalyzeRequest,
+    ReadabilityAnalyzeResponse
+  >;
+  [IPC_CHANNELS.CONTENT_OPTIMIZE]: IPCHandler<
+    ContentOptimizeRequest,
+    ContentOptimizeResponse
+  >;
   [IPC_CHANNELS.URL_FETCH]: IPCHandler<URLFetchRequest, URLFetchResponse>;
 }
 
@@ -316,14 +358,22 @@ export interface ElectronAPI {
     analyzeUrl: (data: SEOAnalyzeUrlRequest) => Promise<SEOAnalyzeUrlResponse>;
   };
   database: {
-    saveAnalysis: (data: DBSaveAnalysisRequest) => Promise<DBSaveAnalysisResponse>;
+    saveAnalysis: (
+      data: DBSaveAnalysisRequest
+    ) => Promise<DBSaveAnalysisResponse>;
     getAnalysis: (id: number) => Promise<DBGetAnalysisResponse>;
-    getAllAnalyses: (params?: DBGetAllAnalysesRequest) => Promise<DBGetAllAnalysesResponse>;
+    getAllAnalyses: (
+      params?: DBGetAllAnalysesRequest
+    ) => Promise<DBGetAllAnalysesResponse>;
     deleteAnalysis: (id: number) => Promise<DBDeleteAnalysisResponse>;
-    createProject: (data: DBCreateProjectRequest) => Promise<DBCreateProjectResponse>;
+    createProject: (
+      data: DBCreateProjectRequest
+    ) => Promise<DBCreateProjectResponse>;
     getProject: (id: number) => Promise<DBGetProjectResponse>;
     getAllProjects: () => Promise<DBGetAllProjectsResponse>;
-    updateProject: (data: DBUpdateProjectRequest) => Promise<DBUpdateProjectResponse>;
+    updateProject: (
+      data: DBUpdateProjectRequest
+    ) => Promise<DBUpdateProjectResponse>;
     deleteProject: (id: number) => Promise<DBDeleteProjectResponse>;
     reset: () => Promise<DBResetResponse>;
     getStats: () => Promise<DBGetStatsResponse>;
@@ -333,10 +383,14 @@ export interface ElectronAPI {
     extract: (data: KeywordExtractRequest) => Promise<KeywordExtractResponse>;
   };
   readability: {
-    analyze: (data: ReadabilityAnalyzeRequest) => Promise<ReadabilityAnalyzeResponse>;
+    analyze: (
+      data: ReadabilityAnalyzeRequest
+    ) => Promise<ReadabilityAnalyzeResponse>;
   };
   content: {
-    optimize: (data: ContentOptimizeRequest) => Promise<ContentOptimizeResponse>;
+    optimize: (
+      data: ContentOptimizeRequest
+    ) => Promise<ContentOptimizeResponse>;
   };
   url: {
     fetch: (data: URLFetchRequest) => Promise<URLFetchResponse>;

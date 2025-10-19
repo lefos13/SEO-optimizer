@@ -68,7 +68,10 @@ export interface SEORule {
   weight: number;
   title: string;
   description: string;
-  check: (content: ContentData, keywords?: ParsedKeyword[]) => Promise<RuleCheckResult>;
+  check: (
+    content: ContentData,
+    keywords?: ParsedKeyword[]
+  ) => Promise<RuleCheckResult>;
   recommendations: string[];
 }
 

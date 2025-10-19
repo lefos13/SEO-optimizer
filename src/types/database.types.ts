@@ -25,9 +25,32 @@ export interface DatabaseConnection {
 export interface DBAnalysisResult {
   id?: number;
   project_id?: number;
-  url?: string;
-  title: string;
   content: string;
+  language?: string;
+  overall_score?: number;
+  max_score?: number;
+  percentage?: number;
+  grade?: string;
+  passed_rules?: number;
+  failed_rules?: number;
+  warnings?: number;
+  category_scores?: string;
+  title?: string;
+  meta_description?: string;
+  keywords?: string;
+  url?: string;
+  created_at?: string;
+  updated_at?: string;
+  analysis_date?: string;
+  recommendations?: string; // JSON stringified
+  keyword_densities?: string; // JSON stringified
+}
+
+export interface AnalysisResultRow extends DBAnalysisResult {
+  id: number;
+  project_id: number;
+  content: string;
+  title: string;
   keywords: string;
   analysis_date: string;
   overall_score: number;
@@ -36,13 +59,8 @@ export interface DBAnalysisResult {
   content_score: number;
   technical_score: number;
   keyword_score: number;
-  recommendations: string; // JSON stringified
-  keyword_densities: string; // JSON stringified
-  created_at?: string;
-}
-
-export interface AnalysisResultRow extends DBAnalysisResult {
-  id: number;
+  recommendations: string;
+  keyword_densities: string;
   created_at: string;
 }
 
@@ -57,12 +75,14 @@ export interface ProjectData {
   url?: string;
   created_at?: string;
   updated_at?: string;
+  is_active?: boolean;
 }
 
 export interface ProjectRow extends ProjectData {
   id: number;
   created_at: string;
   updated_at: string;
+  is_active: boolean;
 }
 
 // ============================================================

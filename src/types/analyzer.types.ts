@@ -53,7 +53,7 @@ export interface ReadabilityMetrics {
   readingLevel: ReadingLevel;
 }
 
-export type ReadingLevel = 
+export type ReadingLevel =
   | 'very-easy'
   | 'easy'
   | 'fairly-easy'
