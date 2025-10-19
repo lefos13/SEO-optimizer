@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const KeywordDensityAnalyzer = () => {
   const [content, setContent] = useState('');
@@ -37,6 +38,7 @@ const KeywordDensityAnalyzer = () => {
         keywordList
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Keyword density analysis error:', err);

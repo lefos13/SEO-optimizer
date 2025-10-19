@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const KeywordDifficultyEstimator = () => {
   const [keywords, setKeywords] = useState('');
@@ -30,6 +31,7 @@ const KeywordDifficultyEstimator = () => {
         ''
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Estimation failed');
       console.error('Difficulty estimation error:', err);

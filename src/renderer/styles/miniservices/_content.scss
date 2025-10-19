@@ -403,6 +403,10 @@
 .content-structure-results {
   animation: cardEntrance 0.5s ease-out;
 
+  .metric-score {
+    border-radius: 0 !important;
+    padding: 5px 10px;
+  }
   .score-section {
     background: linear-gradient(
       135deg,

@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const LSIKeywordGenerator = () => {
   const [content, setContent] = useState('');
@@ -41,6 +42,7 @@ const LSIKeywordGenerator = () => {
         maxSuggestions
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'LSI generation failed');
       console.error('LSI generation error:', err);

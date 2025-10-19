@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const KeywordClusterer = () => {
   const [keywords, setKeywords] = useState('');
@@ -32,6 +33,7 @@ const KeywordClusterer = () => {
     try {
       const result = await window.electronAPI.keyword.cluster(keywordList, '');
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Clustering failed');
       console.error('Clustering error:', err);

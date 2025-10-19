@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const getWordCount = text => {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -44,6 +45,7 @@ const HeadingOptimizer = () => {
         keywordList
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Heading optimization error:', err);
@@ -129,177 +131,182 @@ const HeadingOptimizer = () => {
 
         {error && <div className="error-message">{error}</div>}
       </Card>
-
-      {results && (
-        <Card className="results-card animate-card heading-optimizer-results">
-          <div className="card-header">
-            <h3>🎯 Heading Optimization Results</h3>
-          </div>
-
-          {/* Overall Score */}
-          <div className="score-section">
-            <div className="composite-score">
-              <div className="score-details">
-                <h4>Heading Optimization Score</h4>
-                <p>
-                  Your headings are rated as{' '}
-                  <span style={{ color: getScoreColor(results.score.score) }}>
-                    {results.score.label}
-                  </span>
-                </p>
-              </div>
-              {/* <div
-                className="score-circle"
-                style={{ borderColor: getScoreColor(results.score.score) }}
-              >
-                <span className="score-value">{results.score.score}</span>
-                <span className="score-label">{results.score.label}</span>
-              </div> */}
+      <div className="results-container">
+        {results && (
+          <Card className="results-card animate-card heading-optimizer-results">
+            <div className="card-header">
+              <h3>🎯 Heading Optimization Results</h3>
             </div>
-          </div>
 
-          {/* Heading Structure */}
-          <div className="analysis-section">
-            <h4>📊 Heading Structure</h4>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">Total Headings:</span>
-                <span className="metric-value">{results.analysis.total}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">H1:</span>
-                <span className="metric-value">
-                  {results.analysis.h1Count}
-                  {results.analysis.hasH1 ? ' ✓' : ' ✗'}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">H2:</span>
-                <span className="metric-value">{results.analysis.h2Count}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">H3:</span>
-                <span className="metric-value">{results.analysis.h3Count}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Proper Hierarchy:</span>
-                <span className="metric-value">
-                  {results.analysis.hasProperHierarchy ? 'Yes ✓' : 'No ✗'}
-                </span>
+            {/* Overall Score */}
+            <div className="score-section">
+              <div className="composite-score">
+                <div className="score-details">
+                  <h4>Heading Optimization Score</h4>
+                  <p>
+                    Your headings are rated as{' '}
+                    <span style={{ color: getScoreColor(results.score.score) }}>
+                      {results.score.label}
+                    </span>
+                  </p>
+                </div>
+                <div
+                  className="score-circle"
+                  style={{ color: getScoreColor(results.score.score) }}
+                >
+                  <span className="score-value">{results.score.score}</span>
+                  <span className="score-label">{results.score.label}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Keyword Usage */}
-          {results.keywordUsage.totalKeywords > 0 && (
+            {/* Heading Structure */}
             <div className="analysis-section">
-              <h4>🎯 Keyword Usage in Headings</h4>
+              <h4>📊 Heading Structure</h4>
               <div className="metrics-grid">
                 <div className="metric-item">
-                  <span className="metric-label">Keywords in Headings:</span>
+                  <span className="metric-label">Total Headings:</span>
+                  <span className="metric-value">{results.analysis.total}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">H1:</span>
                   <span className="metric-value">
-                    {results.keywordUsage.keywordsInHeadings} /{' '}
-                    {results.keywordUsage.totalKeywords}
+                    {results.analysis.h1Count}
+                    {results.analysis.hasH1 ? ' ✓' : ' ✗'}
                   </span>
                 </div>
                 <div className="metric-item">
-                  <span className="metric-label">Coverage:</span>
+                  <span className="metric-label">H2:</span>
                   <span className="metric-value">
-                    {results.keywordUsage.percentage}%
+                    {results.analysis.h2Count}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">H3:</span>
+                  <span className="metric-value">
+                    {results.analysis.h3Count}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Proper Hierarchy:</span>
+                  <span className="metric-value">
+                    {results.analysis.hasProperHierarchy ? 'Yes ✓' : 'No ✗'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Keyword Usage */}
+            {results.keywordUsage.totalKeywords > 0 && (
+              <div className="analysis-section">
+                <h4>🎯 Keyword Usage in Headings</h4>
+                <div className="metrics-grid">
+                  <div className="metric-item">
+                    <span className="metric-label">Keywords in Headings:</span>
+                    <span className="metric-value">
+                      {results.keywordUsage.keywordsInHeadings} /{' '}
+                      {results.keywordUsage.totalKeywords}
+                    </span>
+                  </div>
+                  <div className="metric-item">
+                    <span className="metric-label">Coverage:</span>
+                    <span className="metric-value">
+                      {results.keywordUsage.percentage}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="keyword-usage-list">
+                  <h5>Keyword Details:</h5>
+                  <ul>
+                    {results.keywordUsage.usage.map((kw, idx) => (
+                      <li key={idx}>
+                        <strong>{kw.keyword}</strong>:{' '}
+                        {kw.inHeadings ? (
+                          <span className="text-success">
+                            Found ({kw.count}{' '}
+                            {kw.count === 1 ? 'time' : 'times'}) ✓
+                          </span>
+                        ) : (
+                          <span className="text-error">Not found ✗</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Length Analysis */}
+            <div className="analysis-section">
+              <h4>📏 Heading Length Analysis</h4>
+              <div className="metrics-grid">
+                <div className="metric-item">
+                  <span className="metric-label">Optimal Length:</span>
+                  <span className="metric-value">
+                    {results.lengthAnalysis.optimal}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Too Long (&gt;10 words):</span>
+                  <span className="metric-value">
+                    {results.lengthAnalysis.tooLong}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Too Short (&lt;3 words):</span>
+                  <span className="metric-value">
+                    {results.lengthAnalysis.tooShort}
                   </span>
                 </div>
               </div>
 
-              <div className="keyword-usage-list">
-                <h5>Keyword Details:</h5>
-                <ul>
-                  {results.keywordUsage.usage.map((kw, idx) => (
-                    <li key={idx}>
-                      <strong>{kw.keyword}</strong>:{' '}
-                      {kw.inHeadings ? (
-                        <span className="text-success">
-                          Found ({kw.count} {kw.count === 1 ? 'time' : 'times'})
-                          ✓
+              {results.lengthAnalysis.details.length > 0 && (
+                <div className="heading-details">
+                  <h5>Heading Details:</h5>
+                  <ul>
+                    {results.lengthAnalysis.details.map((h, idx) => (
+                      <li key={idx}>
+                        <strong>{h.level.toUpperCase()}</strong>: {h.text}{' '}
+                        <span className="text-muted">
+                          ({h.length} words)
+                          {h.length < 3 && ' - Too short'}
+                          {h.length > 10 && ' - Too long'}
+                          {h.length >= 3 && h.length <= 10 && ' ✓'}
                         </span>
-                      ) : (
-                        <span className="text-error">Not found ✗</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Length Analysis */}
-          <div className="analysis-section">
-            <h4>📏 Heading Length Analysis</h4>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">Optimal Length:</span>
-                <span className="metric-value">
-                  {results.lengthAnalysis.optimal}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Too Long (&gt;10 words):</span>
-                <span className="metric-value">
-                  {results.lengthAnalysis.tooLong}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Too Short (&lt;3 words):</span>
-                <span className="metric-value">
-                  {results.lengthAnalysis.tooShort}
-                </span>
-              </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
-            {results.lengthAnalysis.details.length > 0 && (
-              <div className="heading-details">
-                <h5>Heading Details:</h5>
-                <ul>
-                  {results.lengthAnalysis.details.map((h, idx) => (
-                    <li key={idx}>
-                      <strong>{h.level.toUpperCase()}</strong>: {h.text}{' '}
-                      <span className="text-muted">
-                        ({h.length} words)
-                        {h.length < 3 && ' - Too short'}
-                        {h.length > 10 && ' - Too long'}
-                        {h.length >= 3 && h.length <= 10 && ' ✓'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Suggestions */}
-          <div className="analysis-section">
-            <h4>💡 Optimization Suggestions</h4>
-            <div className="recommendations-list">
-              {results.suggestions.map((sug, idx) => {
-                const typeInfo = getRecommendationType(sug.type);
-                return (
-                  <div
-                    key={idx}
-                    className="recommendation-item"
-                    style={{ borderLeftColor: typeInfo.color }}
-                  >
-                    <span className="rec-icon">{typeInfo.icon}</span>
-                    <div className="rec-content">
-                      <strong>{sug.title}</strong>
-                      <p>{sug.message}</p>
-                      <span className="rec-category">{sug.category}</span>
+            {/* Suggestions */}
+            <div className="analysis-section">
+              <h4>💡 Optimization Suggestions</h4>
+              <div className="recommendations-list">
+                {results.suggestions.map((sug, idx) => {
+                  const typeInfo = getRecommendationType(sug.type);
+                  return (
+                    <div
+                      key={idx}
+                      className="recommendation-item"
+                      style={{ borderLeftColor: typeInfo.color }}
+                    >
+                      <span className="rec-icon">{typeInfo.icon}</span>
+                      <div className="rec-content">
+                        <strong>{sug.title}</strong>
+                        <p>{sug.message}</p>
+                        <span className="rec-category">{sug.category}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
+      </div>
     </MiniServiceWrapper>
   );
 };

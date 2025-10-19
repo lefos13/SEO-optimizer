@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const getWordCount = text => {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -42,6 +43,7 @@ const ReadabilityImprovements = () => {
         }
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Improvements analysis error:', err);

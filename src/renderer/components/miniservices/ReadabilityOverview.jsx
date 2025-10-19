@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const getWordCount = text => {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -43,6 +44,7 @@ const ReadabilityOverview = () => {
         }
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Readability overview analysis error:', err);

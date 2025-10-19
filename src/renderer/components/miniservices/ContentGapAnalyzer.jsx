@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const ContentGapAnalyzer = () => {
   const [content, setContent] = useState('');
@@ -43,6 +44,7 @@ const ContentGapAnalyzer = () => {
         topicList
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Content gap analysis error:', err);
@@ -128,132 +130,138 @@ const ContentGapAnalyzer = () => {
         {error && <div className="error-message">{error}</div>}
       </Card>
 
-      {results && (
-        <Card className="results-card">
-          <h3>📊 Content Gap Analysis</h3>
+      <div className="results-container">
+        {results && (
+          <Card className="results-card">
+            <h3>📊 Content Gap Analysis</h3>
 
-          {/* Score */}
-          <div className="score-section">
-            <div className="composite-score">
-              <div
-                className="score-circle"
-                style={{ borderColor: getScoreColor(results.score.score) }}
-              >
-                <span className="score-value">{results.score.score}</span>
-                <span className="score-label">{results.score.label}</span>
-              </div>
-              <div className="score-details">
-                <h4>Topic Coverage Score</h4>
-                <p>
-                  {results.meta.topicsCovered} of {results.meta.topicsProvided}{' '}
-                  topics covered
-                </p>
+            {/* Score */}
+            <div className="score-section">
+              <div className="composite-score">
+                <div
+                  className="score-circle"
+                  style={{ color: getScoreColor(results.score.score) }}
+                >
+                  <span className="score-value">{results.score.score}</span>
+                  <span className="score-label">{results.score.label}</span>
+                </div>
+                <div className="score-details">
+                  <h4>Topic Coverage Score</h4>
+                  <p>
+                    {results.meta.topicsCovered} of{' '}
+                    {results.meta.topicsProvided} topics covered
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Coverage Overview */}
-          <div className="analysis-section">
-            <h4>📋 Topic Coverage Overview</h4>
-            <div className="coverage-list">
-              {results.coverage.map((topic, idx) => (
-                <div
-                  key={idx}
-                  className="coverage-item"
-                  style={{
-                    borderLeftColor: topic.covered
-                      ? 'var(--success)'
-                      : 'var(--error)',
-                  }}
-                >
-                  <div className="coverage-header">
-                    <strong>{topic.topic}</strong>
-                    <span className="coverage-status">
-                      {topic.covered ? '✓ Covered' : '✗ Missing'}
-                    </span>
-                  </div>
-                  <div className="coverage-details">
-                    <div className="coverage-metric">
-                      <span>In Headings:</span>
-                      <span>{topic.inHeadings ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="coverage-metric">
-                      <span>Depth:</span>
-                      <span
-                        style={{
-                          color: getDepthColor(topic.depth),
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {topic.depth}
+            {/* Coverage Overview */}
+            <div className="analysis-section">
+              <h4>📋 Topic Coverage Overview</h4>
+              <div className="coverage-list">
+                {results.coverage.map((topic, idx) => (
+                  <div
+                    key={idx}
+                    className="coverage-item"
+                    style={{
+                      borderLeftColor: topic.covered
+                        ? 'var(--success)'
+                        : 'var(--error)',
+                    }}
+                  >
+                    <div className="coverage-header">
+                      <strong>{topic.topic}</strong>
+                      <span className="coverage-status">
+                        {topic.covered ? '✓ Covered' : '✗ Missing'}
                       </span>
                     </div>
-                    <div className="coverage-metric">
-                      <span>Relevance:</span>
-                      <span>{topic.relevance}%</span>
+                    <div className="coverage-details">
+                      <div className="coverage-metric">
+                        <span>In Headings:</span>
+                        <span>{topic.inHeadings ? 'Yes' : 'No'}</span>
+                      </div>
+                      <div className="coverage-metric">
+                        <span>Depth:</span>
+                        <span
+                          style={{
+                            color: getDepthColor(topic.depth),
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {topic.depth}
+                        </span>
+                      </div>
+                      <div className="coverage-metric">
+                        <span>Relevance:</span>
+                        <span>{topic.relevance}%</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Depth Analysis */}
-          <div className="analysis-section">
-            <h4>📊 Content Depth Analysis</h4>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">Words per Topic:</span>
-                <span className="metric-value">
-                  {results.depth.wordsPerTopic}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Depth Level:</span>
-                <span className="metric-value">{results.depth.depthLevel}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Deep Topics:</span>
-                <span className="metric-value">{results.depth.deepTopics}</span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Shallow Topics:</span>
-                <span className="metric-value">
-                  {results.depth.shallowTopics}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Gaps */}
-          {results.gaps.length > 0 && (
-            <div className="analysis-section">
-              <h4>⚠️ Missing Topics ({results.gaps.length})</h4>
-              <ul className="gaps-list">
-                {results.gaps.map((gap, idx) => (
-                  <li key={idx} className="gap-item">
-                    {gap.topic}
-                  </li>
                 ))}
-              </ul>
+              </div>
             </div>
-          )}
 
-          {/* Suggestions */}
-          <div className="analysis-section">
-            <h4>💡 Recommendations</h4>
-            <div className="recommendations-list">
-              {results.suggestions.map((sug, idx) => (
-                <div key={idx} className="recommendation-item">
-                  <strong>{sug.title}</strong>
-                  <p>{sug.message}</p>
-                  <span className="rec-category">{sug.category}</span>
+            {/* Depth Analysis */}
+            <div className="analysis-section">
+              <h4>📊 Content Depth Analysis</h4>
+              <div className="metrics-grid">
+                <div className="metric-item">
+                  <span className="metric-label">Words per Topic:</span>
+                  <span className="metric-value">
+                    {results.depth.wordsPerTopic}
+                  </span>
                 </div>
-              ))}
+                <div className="metric-item">
+                  <span className="metric-label">Depth Level:</span>
+                  <span className="metric-value">
+                    {results.depth.depthLevel}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Deep Topics:</span>
+                  <span className="metric-value">
+                    {results.depth.deepTopics}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Shallow Topics:</span>
+                  <span className="metric-value">
+                    {results.depth.shallowTopics}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </Card>
-      )}
+
+            {/* Gaps */}
+            {results.gaps.length > 0 && (
+              <div className="analysis-section">
+                <h4>⚠️ Missing Topics ({results.gaps.length})</h4>
+                <ul className="gaps-list">
+                  {results.gaps.map((gap, idx) => (
+                    <li key={idx} className="gap-item">
+                      {gap.topic}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Suggestions */}
+            <div className="analysis-section">
+              <h4>💡 Recommendations</h4>
+              <div className="recommendations-list">
+                {results.suggestions.map((sug, idx) => (
+                  <div key={idx} className="recommendation-item">
+                    <strong>{sug.title}</strong>
+                    <p>{sug.message}</p>
+                    <span className="rec-category">{sug.category}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
     </MiniServiceWrapper>
   );
 };

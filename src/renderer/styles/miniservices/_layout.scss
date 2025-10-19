@@ -19,7 +19,8 @@
   .mini-service-subcontent {
     display: flex;
     gap: 20px;
-    flex-direction: row;
+    flex-direction: column;
+    width: 100%;
   }
 }
 
@@ -154,6 +155,11 @@
 
     .card-body {
       padding: 1.5rem;
+      h3 {
+        padding: 15px;
+        border-bottom: 2px solid var(--accent-color);
+        margin-bottom: 10px;
+      }
     }
   }
 
@@ -222,22 +228,38 @@
           width: 120px;
           height: 120px;
           border-radius: 50%;
-          border: 6px solid var(--accent-color);
+          /* Use currentColor so inline `color` styles (or CSS variables) control the border */
+          border: 6px solid currentColor;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           position: relative;
+          box-sizing: border-box;
+          padding: 6px;
+          background: transparent;
+
+          /* default color falls back to accent if none provided */
+          color: var(--accent-color);
 
           .score-value {
-            font-size: 2.5rem;
+            font-size: 2rem;
+            line-height: 1;
             font-weight: 700;
-            color: var(--text-primary);
+            color: inherit; /* use currentColor for consistency */
+            display: block;
+            margin: 0;
           }
 
           .score-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
+            text-align: center;
+            margin-top: 4px;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
 
@@ -263,6 +285,14 @@
 
     .analysis-section {
       padding: 0 1.5rem 1.5rem;
+      h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(var(--border-color-rgb), 0.3);
+      }
 
       &:not(:last-child) {
         margin-bottom: 1rem;

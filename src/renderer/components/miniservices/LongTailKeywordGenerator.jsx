@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const LongTailKeywordGenerator = () => {
   const [content, setContent] = useState('');
@@ -52,6 +53,7 @@ const LongTailKeywordGenerator = () => {
         maxSuggestions
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Generation failed');
       console.error('Long-tail generation error:', err);

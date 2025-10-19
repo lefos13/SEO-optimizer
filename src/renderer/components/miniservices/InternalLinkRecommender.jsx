@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const InternalLinkRecommender = () => {
   const [content, setContent] = useState('');
@@ -50,6 +51,7 @@ const InternalLinkRecommender = () => {
         pages
       );
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Internal linking analysis error:', err);
@@ -127,117 +129,119 @@ const InternalLinkRecommender = () => {
         {error && <div className="error-message">{error}</div>}
       </Card>
 
-      {results && (
-        <Card className="results-card">
-          <h3>🔗 Internal Linking Analysis</h3>
+      <div className="results-container">
+        {results && (
+          <Card className="results-card">
+            <h3>🔗 Internal Linking Analysis</h3>
 
-          {/* Score */}
-          <div className="score-section">
-            <div className="composite-score">
-              <div
-                className="score-circle"
-                style={{ borderColor: getScoreColor(results.score.score) }}
-              >
-                <span className="score-value">{results.score.score}</span>
-                <span className="score-label">{results.score.label}</span>
-              </div>
-              <div className="score-details">
-                <h4>Internal Linking Score</h4>
+            {/* Score */}
+            <div className="score-section">
+              <div className="composite-score">
+                <div
+                  className="score-circle"
+                  style={{ color: getScoreColor(results.score.score) }}
+                >
+                  <span className="score-value">{results.score.score}</span>
+                  <span className="score-label">{results.score.label}</span>
+                </div>
+                <div className="score-details">
+                  <h4>Internal Linking Score</h4>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Current Links */}
-          <div className="analysis-section">
-            <h4>📊 Current Link Analysis</h4>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">Total Links:</span>
-                <span className="metric-value">
-                  {results.linkAnalysis.total}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Internal Links:</span>
-                <span className="metric-value">
-                  {results.linkAnalysis.internal}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">External Links:</span>
-                <span className="metric-value">
-                  {results.linkAnalysis.external}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Internal Ratio:</span>
-                <span className="metric-value">
-                  {results.linkAnalysis.ratio}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Anchor Text Analysis */}
-          <div className="analysis-section">
-            <h4>⚓ Anchor Text Quality</h4>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">Descriptive:</span>
-                <span className="metric-value">
-                  {results.anchorAnalysis.descriptive}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Generic:</span>
-                <span className="metric-value">
-                  {results.anchorAnalysis.generic}
-                </span>
-              </div>
-              <div className="metric-item">
-                <span className="metric-label">Empty:</span>
-                <span className="metric-value">
-                  {results.anchorAnalysis.empty}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Opportunities */}
-          {results.opportunities.length > 0 && (
+            {/* Current Links */}
             <div className="analysis-section">
-              <h4>💡 Linking Opportunities</h4>
-              <div className="opportunities-list">
-                {results.opportunities.map((opp, idx) => (
-                  <div key={idx} className="opportunity-item">
-                    <div className="opp-header">
-                      <strong>{opp.page}</strong>
-                      <span className="opp-relevance">
-                        Relevance: {opp.relevance}
-                      </span>
+              <h4>📊 Current Link Analysis</h4>
+              <div className="metrics-grid">
+                <div className="metric-item">
+                  <span className="metric-label">Total Links:</span>
+                  <span className="metric-value">
+                    {results.linkAnalysis.total}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Internal Links:</span>
+                  <span className="metric-value">
+                    {results.linkAnalysis.internal}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">External Links:</span>
+                  <span className="metric-value">
+                    {results.linkAnalysis.external}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Internal Ratio:</span>
+                  <span className="metric-value">
+                    {results.linkAnalysis.ratio}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Anchor Text Analysis */}
+            <div className="analysis-section">
+              <h4>⚓ Anchor Text Quality</h4>
+              <div className="metrics-grid">
+                <div className="metric-item">
+                  <span className="metric-label">Descriptive:</span>
+                  <span className="metric-value">
+                    {results.anchorAnalysis.descriptive}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Generic:</span>
+                  <span className="metric-value">
+                    {results.anchorAnalysis.generic}
+                  </span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-label">Empty:</span>
+                  <span className="metric-value">
+                    {results.anchorAnalysis.empty}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Opportunities */}
+            {results.opportunities.length > 0 && (
+              <div className="analysis-section">
+                <h4>💡 Linking Opportunities</h4>
+                <div className="opportunities-list">
+                  {results.opportunities.map((opp, idx) => (
+                    <div key={idx} className="opportunity-item">
+                      <div className="opp-header">
+                        <strong>{opp.page}</strong>
+                        <span className="opp-relevance">
+                          Relevance: {opp.relevance}
+                        </span>
+                      </div>
+                      <div className="opp-url">{opp.url}</div>
+                      <div className="opp-reason">{opp.reason}</div>
                     </div>
-                    <div className="opp-url">{opp.url}</div>
-                    <div className="opp-reason">{opp.reason}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            <div className="analysis-section">
+              <h4>📝 Recommendations</h4>
+              <div className="recommendations-list">
+                {results.recommendations.map((rec, idx) => (
+                  <div key={idx} className="recommendation-item">
+                    <strong>{rec.title}</strong>
+                    <p>{rec.message}</p>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Recommendations */}
-          <div className="analysis-section">
-            <h4>📝 Recommendations</h4>
-            <div className="recommendations-list">
-              {results.recommendations.map((rec, idx) => (
-                <div key={idx} className="recommendation-item">
-                  <strong>{rec.title}</strong>
-                  <p>{rec.message}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
+      </div>
     </MiniServiceWrapper>
   );
 };

@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import MiniServiceWrapper from './MiniServiceWrapper';
+import { scrollToResults } from '../../utils/scrollUtils';
 
 const getWordCount = text => {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -36,6 +37,7 @@ const ContentStructureAnalyzer = () => {
     try {
       const result = await window.electronAPI.content.analyzeStructure(trimmed);
       setResults(result);
+      scrollToResults();
     } catch (err) {
       setError(err.message || 'Analysis failed');
       console.error('Content structure analysis error:', err);
@@ -120,7 +122,7 @@ const ContentStructureAnalyzer = () => {
               <div
                 className="score-circle"
                 style={{
-                  borderColor: getScoreColor(results.score.score),
+                  color: getScoreColor(results.score.score),
                   boxShadow: `0 0 15px ${getScoreColor(results.score.score)}40`,
                   background: `linear-gradient(135deg, ${getScoreColor(results.score.score)}10, ${getScoreColor(results.score.score)}30)`,
                 }}

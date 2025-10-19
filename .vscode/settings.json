@@ -24,5 +24,8 @@
     "**/.yarn/**": true,
     "**/dist/**": true,
     "**/build/**": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
