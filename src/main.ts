@@ -13,7 +13,7 @@ if (isDev) {
       electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
       hardResetMethod: 'exit',
       // Watch these paths for changes
-      ignored: /node_modules|[/\\]\.|dist|build/
+      ignored: /node_modules|[/\\]\.|dist|build/,
     });
   } catch (err) {
     console.error('Error loading electron-reload:', err);
@@ -32,9 +32,9 @@ const createWindow = (): void => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload', 'preload.js')
+      preload: path.join(__dirname, 'preload', 'preload.js'),
     },
-    show: false // Don't show until ready
+    show: false, // Don't show until ready
   });
 
   // Load the main HTML file regardless of dev or packaged env
@@ -66,11 +66,11 @@ const createWindow = (): void => {
     const rendererWatcher = chokidar.watch(
       [
         path.join(__dirname, 'renderer', '**', '*'),
-        path.join(__dirname, '..', 'public', '**', '*')
+        path.join(__dirname, '..', 'public', '**', '*'),
       ],
       {
         ignoreInitial: true,
-        ignored: /node_modules|[/\\]\./
+        ignored: /node_modules|[/\\]\./,
       }
     );
 

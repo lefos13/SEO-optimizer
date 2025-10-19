@@ -18,25 +18,29 @@ export const LANGUAGE_CONFIG: Record<string, LanguageConfig> = {
     guidance: [
       {
         title: 'Use Short Sentences',
-        description: 'Keep sentences under 20 words for better readability.'
+        description: 'Keep sentences under 20 words for better readability.',
       },
       {
         title: 'Use Simple Words',
-        description: 'Replace complex words with simpler alternatives where possible.'
+        description:
+          'Replace complex words with simpler alternatives where possible.',
       },
       {
         title: 'Break Up Paragraphs',
-        description: 'Keep paragraphs to 3-5 sentences for better comprehension.'
+        description:
+          'Keep paragraphs to 3-5 sentences for better comprehension.',
       },
       {
         title: 'Use Active Voice',
-        description: 'Active voice makes your content more engaging and easier to read.'
+        description:
+          'Active voice makes your content more engaging and easier to read.',
       },
       {
         title: 'Include Transition Words',
-        description: 'Use transition words like "however", "therefore", and "additionally" to improve flow.'
-      }
-    ]
+        description:
+          'Use transition words like "however", "therefore", and "additionally" to improve flow.',
+      },
+    ],
   },
   EL: {
     code: 'el',
@@ -50,26 +54,31 @@ export const LANGUAGE_CONFIG: Record<string, LanguageConfig> = {
     guidance: [
       {
         title: 'Χρησιμοποιήστε Απλές Προτάσεις',
-        description: 'Κρατήστε τις προτάσεις κάτω από 20 λέξεις για καλύτερη αναγνωσιμότητα.'
+        description:
+          'Κρατήστε τις προτάσεις κάτω από 20 λέξεις για καλύτερη αναγνωσιμότητα.',
       },
       {
         title: 'Χρησιμοποιήστε Απλές Λέξεις',
-        description: 'Αντικαταστήστε πολύπλοκες λέξεις με απλούστερες εναλλακτικές όπου είναι δυνατόν.'
+        description:
+          'Αντικαταστήστε πολύπλοκες λέξεις με απλούστερες εναλλακτικές όπου είναι δυνατόν.',
       },
       {
         title: 'Χωρίστε τις Παραγράφους',
-        description: 'Κρατήστε τις παραγράφους στις 3-5 προτάσεις για καλύτερη κατανόηση.'
+        description:
+          'Κρατήστε τις παραγράφους στις 3-5 προτάσεις για καλύτερη κατανόηση.',
       },
       {
         title: 'Χρησιμοποιήστε Ενεργητική Φωνή',
-        description: 'Η ενεργητική φωνή κάνει το περιεχόμενό σας πιο ελκυστικό και ευανάγνωστο.'
+        description:
+          'Η ενεργητική φωνή κάνει το περιεχόμενό σας πιο ελκυστικό και ευανάγνωστο.',
       },
       {
         title: 'Συμπεριλάβετε Συνδετικές Λέξεις',
-        description: 'Χρησιμοποιήστε συνδετικές λέξεις όπως "ωστόσο", "επομένως", και "επιπλέον" για να βελτιώσετε τη ροή.'
-      }
-    ]
-  }
+        description:
+          'Χρησιμοποιήστε συνδετικές λέξεις όπως "ωστόσο", "επομένως", και "επιπλέον" για να βελτιώσετε τη ροή.',
+      },
+    ],
+  },
 };
 
 /**

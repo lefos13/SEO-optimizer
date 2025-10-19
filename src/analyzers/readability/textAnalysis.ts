@@ -19,10 +19,12 @@ export function tokenizeWords(text: string): string[] {
  */
 export function splitSentences(text: string): string[] {
   if (!text || typeof text !== 'string') return [];
-  
+
   // Split on sentence terminators, keeping terminators
-  const sentences = text.split(/([.!?]+\s+)/).filter((s: string) => s.trim().length > 0);
-  
+  const sentences = text
+    .split(/([.!?]+\s+)/)
+    .filter((s: string) => s.trim().length > 0);
+
   // Recombine sentences with their terminators
   const result: string[] = [];
   for (let i = 0; i < sentences.length; i++) {
@@ -33,7 +35,7 @@ export function splitSentences(text: string): string[] {
       }
     }
   }
-  
+
   return result.length > 0 ? result : [text];
 }
 
@@ -51,21 +53,24 @@ export function splitParagraphs(text: string): string[] {
 /**
  * Count syllables in a word
  */
-export function countSyllables(word: string, langConfig: LanguageConfig): number {
+export function countSyllables(
+  word: string,
+  langConfig: LanguageConfig
+): number {
   if (!word || typeof word !== 'string') return 0;
-  
+
   const cleanWord = word.toLowerCase().trim();
   if (cleanWord.length === 0) return 0;
-  
+
   // Count vowel groups
   const matches = cleanWord.match(langConfig.vowelGroups);
   let count = matches ? matches.length : 0;
-  
+
   // Adjust for silent 'e' in English
   if (langConfig.code === 'en' && cleanWord.endsWith('e') && count > 1) {
     count--;
   }
-  
+
   // Minimum one syllable per word
   return Math.max(count, 1);
 }
@@ -73,21 +78,33 @@ export function countSyllables(word: string, langConfig: LanguageConfig): number
 /**
  * Check if a word is complex (has more syllables than threshold)
  */
-export function isComplexWord(word: string, langConfig: LanguageConfig): boolean {
+export function isComplexWord(
+  word: string,
+  langConfig: LanguageConfig
+): boolean {
   return countSyllables(word, langConfig) >= langConfig.complexThreshold;
 }
 
 /**
  * Count total syllables in text
  */
-export function countTotalSyllables(words: string[], langConfig: LanguageConfig): number {
-  return words.reduce((sum: number, word: string) => sum + countSyllables(word, langConfig), 0);
+export function countTotalSyllables(
+  words: string[],
+  langConfig: LanguageConfig
+): number {
+  return words.reduce(
+    (sum: number, word: string) => sum + countSyllables(word, langConfig),
+    0
+  );
 }
 
 /**
  * Count complex words in array
  */
-export function countComplexWords(words: string[], langConfig: LanguageConfig): number {
+export function countComplexWords(
+  words: string[],
+  langConfig: LanguageConfig
+): number {
   return words.filter((word: string) => isComplexWord(word, langConfig)).length;
 }
 
@@ -105,10 +122,10 @@ export function calculateVocabularyRichness(words: string[]): number {
  */
 export function calculateMedian(numbers: number[]): number {
   if (numbers.length === 0) return 0;
-  
+
   const sorted = [...numbers].sort((a: number, b: number) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  
+
   if (sorted.length % 2 === 0) {
     return (sorted[mid - 1]! + sorted[mid]!) / 2;
   }
@@ -125,7 +142,10 @@ export function countCharacters(text: string): number {
 /**
  * Calculate average sentence length
  */
-export function calculateAverageSentenceLength(wordCount: number, sentenceCount: number): number {
+export function calculateAverageSentenceLength(
+  wordCount: number,
+  sentenceCount: number
+): number {
   if (sentenceCount === 0) return 0;
   return wordCount / sentenceCount;
 }
@@ -133,7 +153,10 @@ export function calculateAverageSentenceLength(wordCount: number, sentenceCount:
 /**
  * Calculate average syllables per word
  */
-export function calculateAverageSyllablesPerWord(syllableCount: number, wordCount: number): number {
+export function calculateAverageSyllablesPerWord(
+  syllableCount: number,
+  wordCount: number
+): number {
   if (wordCount === 0) return 0;
   return syllableCount / wordCount;
 }
@@ -141,7 +164,10 @@ export function calculateAverageSyllablesPerWord(syllableCount: number, wordCoun
 /**
  * Calculate complex word ratio
  */
-export function calculateComplexWordRatio(complexWordCount: number, wordCount: number): number {
+export function calculateComplexWordRatio(
+  complexWordCount: number,
+  wordCount: number
+): number {
   if (wordCount === 0) return 0;
   return complexWordCount / wordCount;
 }
@@ -157,12 +183,14 @@ export function calculateReadingTime(wordCount: number, wpm: number): number {
 /**
  * Get longest sentence from array
  */
-export function getLongestSentence(sentences: string[]): { text: string; length: number } | null {
+export function getLongestSentence(
+  sentences: string[]
+): { text: string; length: number } | null {
   if (sentences.length === 0) return null;
-  
+
   let longest = sentences[0]!;
   let maxWords = tokenizeWords(longest).length;
-  
+
   for (const sentence of sentences) {
     const wordCount = tokenizeWords(sentence).length;
     if (wordCount > maxWords) {
@@ -170,19 +198,21 @@ export function getLongestSentence(sentences: string[]): { text: string; length:
       longest = sentence;
     }
   }
-  
+
   return { text: longest, length: maxWords };
 }
 
 /**
  * Get shortest sentence from array
  */
-export function getShortestSentence(sentences: string[]): { text: string; length: number } | null {
+export function getShortestSentence(
+  sentences: string[]
+): { text: string; length: number } | null {
   if (sentences.length === 0) return null;
-  
+
   let shortest = sentences[0]!;
   let minWords = tokenizeWords(shortest).length;
-  
+
   for (const sentence of sentences) {
     const wordCount = tokenizeWords(sentence).length;
     if (wordCount < minWords && wordCount > 0) {
@@ -190,7 +220,7 @@ export function getShortestSentence(sentences: string[]): { text: string; length
       shortest = sentence;
     }
   }
-  
+
   return { text: shortest, length: minWords };
 }
 
@@ -204,7 +234,7 @@ export function filterSentencesByLength(
 ): Array<{ text: string; length: number }> {
   return sentences
     .map((text: string) => ({ text, length: tokenizeWords(text).length }))
-    .filter(({ length }) => 
+    .filter(({ length }) =>
       comparison === 'above' ? length > threshold : length < threshold
     );
 }
@@ -217,23 +247,25 @@ export function createLengthDistribution(
   bucketSize: number
 ): Array<{ range: string; count: number }> {
   if (lengths.length === 0) return [];
-  
+
   const max = Math.max(...lengths);
   const buckets: Array<{ range: string; count: number }> = [];
-  
+
   for (let i = 0; i <= max; i += bucketSize) {
     const start = i;
     const end = i + bucketSize - 1;
-    const count = lengths.filter((len: number) => len >= start && len <= end).length;
-    
+    const count = lengths.filter(
+      (len: number) => len >= start && len <= end
+    ).length;
+
     if (count > 0) {
       buckets.push({
         range: `${start}-${end}`,
-        count
+        count,
       });
     }
   }
-  
+
   return buckets;
 }
 

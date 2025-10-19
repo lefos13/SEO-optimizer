@@ -3,7 +3,11 @@
  * Implements: Flesch Reading Ease, Flesch-Kincaid, Gunning Fog, SMOG, Coleman-Liau, ARI
  */
 
-import type { LanguageConfig, ReadabilityFormula, FleschResult } from './readabilityTypes';
+import type {
+  LanguageConfig,
+  ReadabilityFormula,
+  FleschResult,
+} from './readabilityTypes';
 
 /**
  * Calculate Flesch Reading Ease score
@@ -14,7 +18,7 @@ export function calculateFleschReadingEase(
   langConfig: LanguageConfig
 ): number {
   const { a, b, c } = langConfig.fleschConstants;
-  return a - (b * avgSentenceLength) - (c * avgSyllablesPerWord);
+  return a - b * avgSentenceLength - c * avgSyllablesPerWord;
 }
 
 /**
@@ -65,7 +69,7 @@ export function calculateFleschKincaidGrade(
   avgSentenceLength: number,
   avgSyllablesPerWord: number
 ): number {
-  return (0.39 * avgSentenceLength) + (11.8 * avgSyllablesPerWord) - 15.59;
+  return 0.39 * avgSentenceLength + 11.8 * avgSyllablesPerWord - 15.59;
 }
 
 /**
@@ -75,7 +79,7 @@ export function calculateGunningFog(
   avgSentenceLength: number,
   complexWordRatio: number
 ): number {
-  return 0.4 * (avgSentenceLength + (100 * complexWordRatio));
+  return 0.4 * (avgSentenceLength + 100 * complexWordRatio);
 }
 
 /**
@@ -86,7 +90,7 @@ export function calculateSMOG(
   sentenceCount: number
 ): number {
   if (sentenceCount === 0) return 0;
-  return 1.0430 * Math.sqrt(complexWordCount * (30 / sentenceCount)) + 3.1291;
+  return 1.043 * Math.sqrt(complexWordCount * (30 / sentenceCount)) + 3.1291;
 }
 
 /**
@@ -98,7 +102,7 @@ export function calculateColemanLiau(
 ): number {
   const L = avgLettersPerWord * 100;
   const S = avgSentencesPerWord * 100;
-  return (0.0588 * L) - (0.296 * S) - 15.8;
+  return 0.0588 * L - 0.296 * S - 15.8;
 }
 
 /**
@@ -108,13 +112,17 @@ export function calculateARI(
   avgCharactersPerWord: number,
   avgSentenceLength: number
 ): number {
-  return (4.71 * avgCharactersPerWord) + (0.5 * avgSentenceLength) - 21.43;
+  return 4.71 * avgCharactersPerWord + 0.5 * avgSentenceLength - 21.43;
 }
 
 /**
  * Normalize score to 0-100 scale
  */
-export function normalizeScore(score: number, min: number, max: number): number {
+export function normalizeScore(
+  score: number,
+  min: number,
+  max: number
+): number {
   if (score <= min) return 100;
   if (score >= max) return 0;
   return Math.round(100 - ((score - min) / (max - min)) * 100);
@@ -162,7 +170,11 @@ export function calculateAllFormulas(
   const formulas: ReadabilityFormula[] = [];
 
   // 1. Flesch Reading Ease
-  const fleschScore = calculateFleschReadingEase(avgSentenceLength, avgSyllablesPerWord, langConfig);
+  const fleschScore = calculateFleschReadingEase(
+    avgSentenceLength,
+    avgSyllablesPerWord,
+    langConfig
+  );
   const fleschInterp = interpretFleschScore(fleschScore);
   formulas.push({
     id: 'flesch-reading-ease',
@@ -173,11 +185,14 @@ export function calculateAllFormulas(
     gradeLevel: fleschInterp.gradeLabel,
     gradeValue: fleschInterp.gradeValue,
     color: gradeToColor(fleschInterp.gradeValue),
-    type: 'ease'
+    type: 'ease',
   });
 
   // 2. Flesch-Kincaid Grade Level
-  const fkGrade = calculateFleschKincaidGrade(avgSentenceLength, avgSyllablesPerWord);
+  const fkGrade = calculateFleschKincaidGrade(
+    avgSentenceLength,
+    avgSyllablesPerWord
+  );
   formulas.push({
     id: 'flesch-kincaid-grade',
     label: 'Flesch-Kincaid Grade',
@@ -186,7 +201,7 @@ export function calculateAllFormulas(
     gradeLevel: `Grade ${Math.round(fkGrade)}`,
     gradeValue: Math.round(fkGrade),
     color: gradeToColor(fkGrade),
-    type: 'grade'
+    type: 'grade',
   });
 
   // 3. Gunning Fog Index
@@ -199,7 +214,7 @@ export function calculateAllFormulas(
     gradeLevel: `Grade ${Math.round(fogScore)}`,
     gradeValue: Math.round(fogScore),
     color: gradeToColor(fogScore),
-    type: 'grade'
+    type: 'grade',
   });
 
   // 4. SMOG Index
@@ -212,11 +227,14 @@ export function calculateAllFormulas(
     gradeLevel: `Grade ${Math.round(smogScore)}`,
     gradeValue: Math.round(smogScore),
     color: gradeToColor(smogScore),
-    type: 'grade'
+    type: 'grade',
   });
 
   // 5. Coleman-Liau Index
-  const colemanScore = calculateColemanLiau(avgCharactersPerWord, avgSentencesPerWord);
+  const colemanScore = calculateColemanLiau(
+    avgCharactersPerWord,
+    avgSentencesPerWord
+  );
   formulas.push({
     id: 'coleman-liau',
     label: 'Coleman-Liau Index',
@@ -225,7 +243,7 @@ export function calculateAllFormulas(
     gradeLevel: `Grade ${Math.round(colemanScore)}`,
     gradeValue: Math.round(colemanScore),
     color: gradeToColor(colemanScore),
-    type: 'grade'
+    type: 'grade',
   });
 
   // 6. Automated Readability Index
@@ -238,7 +256,7 @@ export function calculateAllFormulas(
     gradeLevel: `Grade ${Math.round(ariScore)}`,
     gradeValue: Math.round(ariScore),
     color: gradeToColor(ariScore),
-    type: 'grade'
+    type: 'grade',
   });
 
   return formulas;
@@ -257,11 +275,14 @@ export function calculateCompositeScore(formulas: ReadabilityFormula[]): {
     return { score: 0, label: 'Unknown', color: 'gray', gradeLevel: 'N/A' };
   }
 
-  const avgNormalized = formulas.reduce((sum, f) => sum + f.normalized, 0) / formulas.length;
+  const avgNormalized =
+    formulas.reduce((sum, f) => sum + f.normalized, 0) / formulas.length;
   const gradeFormulas = formulas.filter(f => f.type === 'grade');
-  const avgGrade = gradeFormulas.length > 0
-    ? gradeFormulas.reduce((sum, f) => sum + f.gradeValue, 0) / gradeFormulas.length
-    : 0;
+  const avgGrade =
+    gradeFormulas.length > 0
+      ? gradeFormulas.reduce((sum, f) => sum + f.gradeValue, 0) /
+        gradeFormulas.length
+      : 0;
 
   let label = '';
   if (avgNormalized >= 80) label = 'Very Easy';
@@ -274,6 +295,6 @@ export function calculateCompositeScore(formulas: ReadabilityFormula[]): {
     score: Math.round(avgNormalized),
     label,
     color: gradeToColor(avgGrade),
-    gradeLevel: gradeToLabel(avgGrade)
+    gradeLevel: gradeToLabel(avgGrade),
   };
 }

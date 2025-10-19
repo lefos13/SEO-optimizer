@@ -9,7 +9,7 @@ import type {
   ParagraphAnalysis,
   Recommendation,
   ReadingLevels,
-  Summary
+  Summary,
 } from './readabilityTypes';
 import * as textAnalysis from './textAnalysis';
 import type { LanguageConfig } from './readabilityTypes';
@@ -36,31 +36,44 @@ export function calculateTotals(
     characters,
     syllables,
     complexWords,
-    averageSentenceLength: textAnalysis.calculateAverageSentenceLength(words.length, sentences.length),
-    averageSyllablesPerWord: textAnalysis.calculateAverageSyllablesPerWord(syllables, words.length),
-    complexWordRatio: textAnalysis.calculateComplexWordRatio(complexWords, words.length),
-    vocabularyRichness
+    averageSentenceLength: textAnalysis.calculateAverageSentenceLength(
+      words.length,
+      sentences.length
+    ),
+    averageSyllablesPerWord: textAnalysis.calculateAverageSyllablesPerWord(
+      syllables,
+      words.length
+    ),
+    complexWordRatio: textAnalysis.calculateComplexWordRatio(
+      complexWords,
+      words.length
+    ),
+    vocabularyRichness,
   };
 }
 
 /**
  * Analyze sentence structure
  */
-export function analyzeSentences(
-  text: string
-): SentenceAnalysis {
+export function analyzeSentences(text: string): SentenceAnalysis {
   const sentences = textAnalysis.splitSentences(text);
-  const lengths = sentences.map((s: string) => textAnalysis.tokenizeWords(s).length);
+  const lengths = sentences.map(
+    (s: string) => textAnalysis.tokenizeWords(s).length
+  );
 
   return {
     count: sentences.length,
-    averageLength: lengths.length > 0 ? lengths.reduce((sum: number, len: number) => sum + len, 0) / lengths.length : 0,
+    averageLength:
+      lengths.length > 0
+        ? lengths.reduce((sum: number, len: number) => sum + len, 0) /
+          lengths.length
+        : 0,
     medianLength: textAnalysis.calculateMedian(lengths),
     longestSentence: textAnalysis.getLongestSentence(sentences),
     shortestSentence: textAnalysis.getShortestSentence(sentences),
     longSentences: textAnalysis.filterSentencesByLength(sentences, 25, 'above'),
     shortSentences: textAnalysis.filterSentencesByLength(sentences, 5, 'below'),
-    distribution: textAnalysis.createLengthDistribution(lengths, 5)
+    distribution: textAnalysis.createLengthDistribution(lengths, 5),
   };
 }
 
@@ -78,11 +91,11 @@ export function analyzeParagraphs(
     const avgSentenceLength = words.length / Math.max(sentences.length, 1);
     const syllables = textAnalysis.countTotalSyllables(words, langConfig);
     const avgSyllablesPerWord = syllables / Math.max(words.length, 1);
-    
+
     // Calculate Flesch Reading Ease for this paragraph
     const { a, b, c } = langConfig.fleschConstants;
-    const readingEase = a - (b * avgSentenceLength) - (c * avgSyllablesPerWord);
-    
+    const readingEase = a - b * avgSentenceLength - c * avgSyllablesPerWord;
+
     let label = '';
     if (readingEase >= 80) label = 'Very Easy';
     else if (readingEase >= 60) label = 'Easy';
@@ -97,7 +110,7 @@ export function analyzeParagraphs(
       sentences: sentences.length,
       averageSentenceLength: avgSentenceLength,
       readingEase: Math.round(readingEase),
-      label
+      label,
     };
   });
 
@@ -106,12 +119,22 @@ export function analyzeParagraphs(
 
   return {
     count: paragraphs.length,
-    averageWords: wordCounts.length > 0 ? wordCounts.reduce((sum: number, count: number) => sum + count, 0) / wordCounts.length : 0,
-    averageSentences: sentenceCounts.length > 0 ? sentenceCounts.reduce((sum: number, count: number) => sum + count, 0) / sentenceCounts.length : 0,
+    averageWords:
+      wordCounts.length > 0
+        ? wordCounts.reduce((sum: number, count: number) => sum + count, 0) /
+          wordCounts.length
+        : 0,
+    averageSentences:
+      sentenceCounts.length > 0
+        ? sentenceCounts.reduce(
+            (sum: number, count: number) => sum + count,
+            0
+          ) / sentenceCounts.length
+        : 0,
     longParagraphs: items.filter(p => p.words > 150),
     shortParagraphs: items.filter(p => p.words < 30 && p.words > 0),
     items,
-    distribution: textAnalysis.createLengthDistribution(wordCounts, 50)
+    distribution: textAnalysis.createLengthDistribution(wordCounts, 50),
   };
 }
 
@@ -130,7 +153,7 @@ export function generateRecommendations(
     recommendations.push({
       type: 'warning',
       title: 'Content Too Short',
-      message: `Your content has only ${totals.words} words. Aim for at least 100 words for meaningful readability analysis.`
+      message: `Your content has only ${totals.words} words. Aim for at least 100 words for meaningful readability analysis.`,
     });
   }
 
@@ -139,13 +162,13 @@ export function generateRecommendations(
     recommendations.push({
       type: 'critical',
       title: 'Sentences Too Long',
-      message: `Average sentence length is ${Math.round(totals.averageSentenceLength)} words. Try to keep sentences under 20 words for better readability.`
+      message: `Average sentence length is ${Math.round(totals.averageSentenceLength)} words. Try to keep sentences under 20 words for better readability.`,
     });
   } else if (totals.averageSentenceLength < 10) {
     recommendations.push({
       type: 'info',
       title: 'Sentences Very Short',
-      message: `Average sentence length is ${Math.round(totals.averageSentenceLength)} words. While short sentences are good, varying sentence length can improve flow.`
+      message: `Average sentence length is ${Math.round(totals.averageSentenceLength)} words. While short sentences are good, varying sentence length can improve flow.`,
     });
   }
 
@@ -154,7 +177,7 @@ export function generateRecommendations(
     recommendations.push({
       type: 'warning',
       title: 'Too Many Complex Words',
-      message: `${Math.round(totals.complexWordRatio * 100)}% of words are complex. Consider using simpler alternatives where possible.`
+      message: `${Math.round(totals.complexWordRatio * 100)}% of words are complex. Consider using simpler alternatives where possible.`,
     });
   }
 
@@ -163,7 +186,7 @@ export function generateRecommendations(
     recommendations.push({
       type: 'warning',
       title: 'Long Paragraphs Detected',
-      message: `${structure.paragraphs.longParagraphs.length} paragraph(s) have more than 150 words. Break them into smaller chunks for better readability.`
+      message: `${structure.paragraphs.longParagraphs.length} paragraph(s) have more than 150 words. Break them into smaller chunks for better readability.`,
     });
   }
 
@@ -172,7 +195,7 @@ export function generateRecommendations(
     recommendations.push({
       type: 'info',
       title: 'Limited Vocabulary Diversity',
-      message: 'Consider using more varied vocabulary to keep readers engaged.'
+      message: 'Consider using more varied vocabulary to keep readers engaged.',
     });
   }
 
@@ -181,13 +204,14 @@ export function generateRecommendations(
     recommendations.push({
       type: 'success',
       title: 'Excellent Readability',
-      message: 'Your content is very easy to read and understand!'
+      message: 'Your content is very easy to read and understand!',
     });
   } else if (compositeScore < 30) {
     recommendations.push({
       type: 'critical',
       title: 'Readability Needs Improvement',
-      message: 'Your content is difficult to read. Focus on shorter sentences and simpler words.'
+      message:
+        'Your content is difficult to read. Focus on shorter sentences and simpler words.',
     });
   }
 
@@ -197,26 +221,31 @@ export function generateRecommendations(
 /**
  * Determine reading levels and audience fit
  */
-export function determineReadingLevels(
-  gradeValue: number
-): ReadingLevels {
+export function determineReadingLevels(gradeValue: number): ReadingLevels {
   const educationStages = [
     { label: 'Elementary School', range: '1st-5th grade', min: 1, max: 5 },
     { label: 'Middle School', range: '6th-8th grade', min: 6, max: 8 },
     { label: 'High School', range: '9th-12th grade', min: 9, max: 12 },
     { label: 'College', range: 'Undergraduate', min: 13, max: 16 },
-    { label: 'Graduate', range: 'Graduate level', min: 17, max: 20 }
+    { label: 'Graduate', range: 'Graduate level', min: 17, max: 20 },
   ];
 
-  const currentStage = educationStages.find(stage => 
-    gradeValue >= stage.min && gradeValue <= stage.max
-  ) || educationStages[educationStages.length - 1]!;
+  const currentStage =
+    educationStages.find(
+      stage => gradeValue >= stage.min && gradeValue <= stage.max
+    ) || educationStages[educationStages.length - 1]!;
 
   const audienceFit = [
     { audience: 'General Public', suitable: gradeValue <= 8 },
-    { audience: 'High School Students', suitable: gradeValue >= 7 && gradeValue <= 12 },
-    { audience: 'College Students', suitable: gradeValue >= 10 && gradeValue <= 16 },
-    { audience: 'Academic/Professional', suitable: gradeValue >= 13 }
+    {
+      audience: 'High School Students',
+      suitable: gradeValue >= 7 && gradeValue <= 12,
+    },
+    {
+      audience: 'College Students',
+      suitable: gradeValue >= 10 && gradeValue <= 16,
+    },
+    { audience: 'Academic/Professional', suitable: gradeValue >= 13 },
   ];
 
   return {
@@ -224,9 +253,9 @@ export function determineReadingLevels(
     recommendedLabel: currentStage.label,
     educationStages: educationStages.map(stage => ({
       label: stage.label,
-      range: stage.range
+      range: stage.range,
     })),
-    audienceFit
+    audienceFit,
   };
 }
 
@@ -238,8 +267,11 @@ export function generateSummary(
   compositeScore: number,
   langConfig: LanguageConfig
 ): Summary {
-  const readingTime = textAnalysis.calculateReadingTime(totals.words, langConfig.defaultWpm);
-  
+  const readingTime = textAnalysis.calculateReadingTime(
+    totals.words,
+    langConfig.defaultWpm
+  );
+
   let pacing = '';
   if (readingTime <= 2) pacing = 'Quick read';
   else if (readingTime <= 5) pacing = 'Short read';
@@ -257,6 +289,6 @@ export function generateSummary(
     pacing,
     audience,
     wordCount: totals.words,
-    language: langConfig.name
+    language: langConfig.name,
   };
 }

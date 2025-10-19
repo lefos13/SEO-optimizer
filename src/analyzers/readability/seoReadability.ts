@@ -10,7 +10,7 @@ import type {
   DynamicLanguageGuidance,
   SEOImpactIssue,
   SEOAdvice,
-  SEOStrength
+  SEOStrength,
 } from './readabilityTypes';
 
 /**
@@ -52,7 +52,7 @@ export function assessCrawlability(
         ? 'Well-structured content is easy for search engines to parse'
         : score >= 60
           ? 'Adequate structure for search engine indexing'
-          : 'Content structure may limit search engine understanding'
+          : 'Content structure may limit search engine understanding',
   };
 }
 
@@ -78,14 +78,16 @@ export function assessUserEngagement(
         ? 'Content is optimized for sustained user engagement'
         : score >= 55
           ? 'Content supports average engagement levels'
-          : 'Readability issues may increase bounce rate'
+          : 'Readability issues may increase bounce rate',
   };
 }
 
 /**
  * Assess mobile friendliness
  */
-export function assessMobileFriendliness(structure: StructureAnalysis): SEOAssessment {
+export function assessMobileFriendliness(
+  structure: StructureAnalysis
+): SEOAssessment {
   const avgParagraphWords = structure.paragraphs.averageWords;
   const score = Math.min(
     100,
@@ -104,7 +106,7 @@ export function assessMobileFriendliness(structure: StructureAnalysis): SEOAsses
         ? 'Short paragraphs and sentences perfect for mobile reading'
         : score >= 60
           ? 'Acceptable for mobile but could be more concise'
-          : 'Text blocks may be difficult to read on mobile devices'
+          : 'Text blocks may be difficult to read on mobile devices',
   };
 }
 
@@ -131,7 +133,7 @@ export function assessVoiceSearchReadiness(
         ? 'Conversational tone aligns with voice search queries'
         : score >= 55
           ? 'Partially optimized for voice search'
-          : 'Complex language limits voice search compatibility'
+          : 'Complex language limits voice search compatibility',
   };
 }
 
@@ -160,7 +162,7 @@ export function assessSnippetPotential(
         ? 'Content structure favors featured snippet selection'
         : score >= 55
           ? 'Some paragraphs may qualify for featured snippets'
-          : 'Current structure limits featured snippet eligibility'
+          : 'Current structure limits featured snippet eligibility',
   };
 }
 
@@ -189,15 +191,15 @@ export function getLanguageSpecificSEOAdvice(
         category: 'English Sentence Structure',
         finding: `Average sentence length of ${Math.round(structure.sentences.averageLength)} words exceeds English web standard`,
         impact: 'English readers expect concise, direct sentences online',
-        examples: []
+        examples: [],
       });
       advice.push({
         priority: 'medium',
         rule: 'Apply English Web Writing Standards',
-        reason:
-          'English web content performs best at 15-20 words per sentence',
-        action: 'Target 18-word average sentences. Use active voice and eliminate filler words.',
-        seoImpact: 'Better engagement from English-speaking markets'
+        reason: 'English web content performs best at 15-20 words per sentence',
+        action:
+          'Target 18-word average sentences. Use active voice and eliminate filler words.',
+        seoImpact: 'Better engagement from English-speaking markets',
       });
     }
 
@@ -207,14 +209,15 @@ export function getLanguageSpecificSEOAdvice(
         category: 'Keyword Diversity',
         finding: `Low vocabulary richness (${Math.round(totals.vocabularyRichness * 100)}%) suggests repetitive language`,
         impact: 'Limited semantic keyword coverage',
-        examples: []
+        examples: [],
       });
       advice.push({
         priority: 'low',
         rule: 'Expand Semantic Keyword Coverage',
         reason: 'Varied vocabulary captures more long-tail search queries',
-        action: 'Use synonyms and related terms to broaden topical relevance without keyword stuffing.',
-        seoImpact: 'Improved semantic SEO and featured snippet potential'
+        action:
+          'Use synonyms and related terms to broaden topical relevance without keyword stuffing.',
+        seoImpact: 'Improved semantic SEO and featured snippet potential',
       });
     }
   } else if (languageCode === 'el') {
@@ -225,15 +228,15 @@ export function getLanguageSpecificSEOAdvice(
         category: 'Greek Paragraph Length',
         finding: `Greek paragraphs average ${Math.round(structure.paragraphs.averageWords)} words - exceeds web standard`,
         impact: 'Greek readers expect shorter, focused web paragraphs',
-        examples: []
+        examples: [],
       });
       advice.push({
         priority: 'high',
         rule: 'Adapt to Greek Web Reading Patterns',
-        reason:
-          'Greek online content performs best with 50-80 word paragraphs',
-        action: 'Break paragraphs at natural thought boundaries. Use bullet points for lists.',
-        seoImpact: 'Better engagement from Greek-speaking audiences'
+        reason: 'Greek online content performs best with 50-80 word paragraphs',
+        action:
+          'Break paragraphs at natural thought boundaries. Use bullet points for lists.',
+        seoImpact: 'Better engagement from Greek-speaking audiences',
       });
     }
 
@@ -242,8 +245,9 @@ export function getLanguageSpecificSEOAdvice(
         priority: 'high',
         rule: 'Optimize for Greek Search Algorithms',
         reason: 'Greek search engines prioritize accessible content',
-        action: 'Simplify sentence structure. Use contemporary Greek vocabulary over archaic forms.',
-        seoImpact: 'Improved visibility in Greek search results'
+        action:
+          'Simplify sentence structure. Use contemporary Greek vocabulary over archaic forms.',
+        seoImpact: 'Improved visibility in Greek search results',
       });
     }
   }
@@ -265,7 +269,7 @@ export function generateDynamicLanguageGuidance(
     overallReadability: compositeScore.label,
     score: compositeScore.score,
     targetAudience: compositeScore.gradeLevel,
-    seoReadability: getSEOReadabilityLevel(compositeScore.score)
+    seoReadability: getSEOReadabilityLevel(compositeScore.score),
   };
 
   // Identify specific issues in the content
@@ -284,22 +288,23 @@ export function generateDynamicLanguageGuidance(
       impact: 'Users may abandon pages with dense, hard-to-scan content',
       examples: structure.sentences.longSentences.slice(0, 2).map(s => ({
         text: s.text.substring(0, 100) + (s.text.length > 100 ? '...' : ''),
-        wordCount: s.length
-      }))
+        wordCount: s.length,
+      })),
     });
     actionableAdvice.push({
       priority: 'critical',
       rule: 'Break Up Long Sentences for SEO',
       reason:
         'Search engines favor content that users can quickly scan and understand',
-      action: 'Split sentences over 25 words. Target 15-20 words per sentence for optimal web readability.',
-      seoImpact: 'Improved dwell time and reduced bounce rate'
+      action:
+        'Split sentences over 25 words. Target 15-20 words per sentence for optimal web readability.',
+      seoImpact: 'Improved dwell time and reduced bounce rate',
     });
   } else if (longSentenceRatio < 0.1) {
     strengthsIdentified.push({
       category: 'Sentence Length',
       strength: 'Well-controlled sentence length throughout content',
-      benefit: 'Users can easily scan and extract information'
+      benefit: 'Users can easily scan and extract information',
     });
   }
 
@@ -314,22 +319,23 @@ export function generateDynamicLanguageGuidance(
       impact: 'Large text blocks reduce scannability and mobile readability',
       examples: structure.paragraphs.longParagraphs.slice(0, 2).map(p => ({
         text: p.text.substring(0, 100) + (p.text.length > 100 ? '...' : ''),
-        wordCount: p.words
-      }))
+        wordCount: p.words,
+      })),
     });
     actionableAdvice.push({
       priority: 'high',
       rule: 'Optimize Paragraph Length for Web',
       reason:
         'Mobile users and search engine crawlers prefer shorter, focused paragraphs',
-      action: 'Break paragraphs into 40-80 word chunks. Use subheadings to improve content hierarchy.',
-      seoImpact: 'Better featured snippet eligibility and mobile SEO'
+      action:
+        'Break paragraphs into 40-80 word chunks. Use subheadings to improve content hierarchy.',
+      seoImpact: 'Better featured snippet eligibility and mobile SEO',
     });
   } else if (structure.paragraphs.averageWords <= 80) {
     strengthsIdentified.push({
       category: 'Paragraph Structure',
       strength: 'Paragraphs are well-sized for web consumption',
-      benefit: 'Mobile-friendly and search engine optimized'
+      benefit: 'Mobile-friendly and search engine optimized',
     });
   }
 
@@ -340,21 +346,21 @@ export function generateDynamicLanguageGuidance(
       category: 'Vocabulary Complexity',
       finding: `${Math.round(totals.complexWordRatio * 100)}% of words are complex (3+ syllables)`,
       impact: 'Technical jargon may limit organic search reach',
-      examples: []
+      examples: [],
     });
     actionableAdvice.push({
       priority: 'medium',
       rule: 'Simplify Vocabulary for Broader Reach',
-      reason:
-        'Search engines prioritize content accessible to wider audiences',
-      action: 'Replace complex terms with simpler alternatives. Use jargon only when targeting specialist searches.',
-      seoImpact: 'Expanded keyword targeting and voice search optimization'
+      reason: 'Search engines prioritize content accessible to wider audiences',
+      action:
+        'Replace complex terms with simpler alternatives. Use jargon only when targeting specialist searches.',
+      seoImpact: 'Expanded keyword targeting and voice search optimization',
     });
   } else if (totals.complexWordRatio < 0.12) {
     strengthsIdentified.push({
       category: 'Vocabulary',
       strength: 'Accessible vocabulary suitable for general audiences',
-      benefit: 'Better voice search compatibility'
+      benefit: 'Better voice search compatibility',
     });
   }
 
@@ -367,15 +373,16 @@ export function generateDynamicLanguageGuidance(
       category: 'Sentence Variety',
       finding: `${Math.round(sentenceVariety * 100)}% of sentences are very short (≤8 words)`,
       impact: 'Choppy rhythm may reduce engagement time',
-      examples: []
+      examples: [],
     });
     actionableAdvice.push({
       priority: 'low',
       rule: 'Balance Sentence Lengths',
       reason:
         'Mix of short and medium sentences creates engaging reading rhythm',
-      action: 'Combine some short sentences or add supporting details to create 12-18 word sentences.',
-      seoImpact: 'Improved user engagement metrics'
+      action:
+        'Combine some short sentences or add supporting details to create 12-18 word sentences.',
+      seoImpact: 'Improved user engagement metrics',
     });
   }
 
@@ -386,22 +393,23 @@ export function generateDynamicLanguageGuidance(
       category: 'Overall Readability',
       finding: `Readability score of ${compositeScore.score} is below recommended threshold`,
       impact: 'Low readability directly correlates with high bounce rates',
-      examples: []
+      examples: [],
     });
     actionableAdvice.push({
       priority: 'critical',
       rule: 'Improve Overall Readability for SEO Performance',
       reason:
         'Google considers user engagement signals; poor readability hurts rankings',
-      action: 'Apply sentence and paragraph improvements. Target a score above 60 for optimal SEO.',
+      action:
+        'Apply sentence and paragraph improvements. Target a score above 60 for optimal SEO.',
       seoImpact:
-        'Better rankings, featured snippet opportunities, and user satisfaction'
+        'Better rankings, featured snippet opportunities, and user satisfaction',
     });
   } else if (compositeScore.score >= 70) {
     strengthsIdentified.push({
       category: 'Overall Readability',
       strength: 'Excellent readability score for web content',
-      benefit: 'Strong foundation for SEO success and user engagement'
+      benefit: 'Strong foundation for SEO success and user engagement',
     });
   }
 
@@ -435,7 +443,7 @@ export function generateDynamicLanguageGuidance(
     featuredSnippetPotential: assessSnippetPotential(
       structure,
       compositeScore.score
-    )
+    ),
   };
 
   // If no issues found, add general best practices
@@ -444,29 +452,39 @@ export function generateDynamicLanguageGuidance(
       priority: 'maintenance',
       rule: 'Maintain Current Standards',
       reason: 'Your content meets readability best practices',
-      action: 'Continue using clear language, varied sentence structure, and focused paragraphs.',
-      seoImpact: 'Sustained organic performance'
+      action:
+        'Continue using clear language, varied sentence structure, and focused paragraphs.',
+      seoImpact: 'Sustained organic performance',
     });
   }
 
   // Sort by severity/priority
-  const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-  specificIssues.sort((a, b) => severityOrder[a.severity]! - severityOrder[b.severity]!);
+  const severityOrder: Record<string, number> = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+  };
+  specificIssues.sort(
+    (a, b) => severityOrder[a.severity]! - severityOrder[b.severity]!
+  );
 
   const priorityOrder: Record<string, number> = {
     critical: 0,
     high: 1,
     medium: 2,
     low: 3,
-    maintenance: 4
+    maintenance: 4,
   };
-  actionableAdvice.sort((a, b) => priorityOrder[a.priority]! - priorityOrder[b.priority]!);
+  actionableAdvice.sort(
+    (a, b) => priorityOrder[a.priority]! - priorityOrder[b.priority]!
+  );
 
   return {
     contentAnalysis,
     seoImpact,
     specificIssues,
     actionableAdvice,
-    strengthsIdentified
+    strengthsIdentified,
   };
 }

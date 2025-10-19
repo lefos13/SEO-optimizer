@@ -6,11 +6,21 @@
 import * as htmlParser from './htmlParser';
 import type {
   ReadabilityAnalysisResult,
-  LanguageGuidance
+  LanguageGuidance,
 } from './readability/readabilityTypes';
 import { getLanguageConfig } from './readability/languageConfig';
-import { calculateAllFormulas, calculateCompositeScore } from './readability/readabilityFormulas';
-import { calculateTotals, analyzeSentences, analyzeParagraphs, generateRecommendations, determineReadingLevels, generateSummary } from './readability/readabilityScoring';
+import {
+  calculateAllFormulas,
+  calculateCompositeScore,
+} from './readability/readabilityFormulas';
+import {
+  calculateTotals,
+  analyzeSentences,
+  analyzeParagraphs,
+  generateRecommendations,
+  determineReadingLevels,
+  generateSummary,
+} from './readability/readabilityScoring';
 import { generateDynamicLanguageGuidance } from './readability/seoReadability';
 import * as textAnalysis from './readability/textAnalysis';
 
@@ -18,7 +28,10 @@ export class ReadabilityServices {
   /**
    * Analyze readability using multiple formulas and structural insights
    */
-  static analyze(content: string, options: { language?: string } = {}): ReadabilityAnalysisResult {
+  static analyze(
+    content: string,
+    options: { language?: string } = {}
+  ): ReadabilityAnalysisResult {
     const start = Date.now();
     const languageCode = (options.language || 'en').toLowerCase();
     const langConfig = getLanguageConfig(languageCode);
@@ -69,16 +82,19 @@ export class ReadabilityServices {
 
     // Calculate composite score
     const compositeScore = calculateCompositeScore(formulas);
-    const readingTime = textAnalysis.calculateReadingTime(totals.words, langConfig.defaultWpm);
+    const readingTime = textAnalysis.calculateReadingTime(
+      totals.words,
+      langConfig.defaultWpm
+    );
     const compositeWithTime = {
       ...compositeScore,
-      readingTimeMinutes: readingTime
+      readingTimeMinutes: readingTime,
     };
 
     // Analyze structure
     const structure = {
       sentences: analyzeSentences(sanitized),
-      paragraphs: analyzeParagraphs(sanitized, langConfig)
+      paragraphs: analyzeParagraphs(sanitized, langConfig),
     };
 
     // Generate recommendations
@@ -90,9 +106,11 @@ export class ReadabilityServices {
 
     // Determine reading levels
     const gradeFormulas = formulas.filter(f => f.type === 'grade');
-    const avgGrade = gradeFormulas.length > 0
-      ? gradeFormulas.reduce((sum, f) => sum + f.gradeValue, 0) / gradeFormulas.length
-      : 0;
+    const avgGrade =
+      gradeFormulas.length > 0
+        ? gradeFormulas.reduce((sum, f) => sum + f.gradeValue, 0) /
+          gradeFormulas.length
+        : 0;
     const readingLevels = determineReadingLevels(avgGrade);
 
     // Generate summary
@@ -102,7 +120,7 @@ export class ReadabilityServices {
     const languageGuidance: LanguageGuidance = {
       language: langConfig.name,
       notes: this._buildLanguageNotes(langConfig),
-      rules: langConfig.guidance
+      rules: langConfig.guidance,
     };
 
     // Collect warnings
@@ -114,8 +132,9 @@ export class ReadabilityServices {
         languageName: langConfig.name,
         timestamp: new Date().toISOString(),
         processingTimeMs: Date.now() - start,
-        isInsufficient: totals.words < langConfig.minWords || totals.sentences < 3,
-        warnings
+        isInsufficient:
+          totals.words < langConfig.minWords || totals.sentences < 3,
+        warnings,
       },
       totals,
       compositeScore: compositeWithTime,
@@ -124,7 +143,7 @@ export class ReadabilityServices {
       recommendations,
       languageGuidance,
       readingLevels,
-      summary
+      summary,
     };
   }
 
@@ -138,14 +157,17 @@ export class ReadabilityServices {
       compositeScore: full.compositeScore,
       formulas: full.formulas,
       totals: full.totals,
-      summary: full.summary
+      summary: full.summary,
     };
   }
 
   /**
    * Get structure-specific data (sentences and paragraphs)
    */
-  static analyzeStructure(content: string, options: { language?: string } = {}) {
+  static analyzeStructure(
+    content: string,
+    options: { language?: string } = {}
+  ) {
     const full = this.analyze(content, options);
     return {
       meta: full.meta,
@@ -154,64 +176,73 @@ export class ReadabilityServices {
         words: full.totals.words,
         sentences: full.totals.sentences,
         paragraphs: full.totals.paragraphs,
-        averageSentenceLength: full.totals.averageSentenceLength
-      }
+        averageSentenceLength: full.totals.averageSentenceLength,
+      },
     };
   }
 
   /**
    * Get reading level data (grades and audience fit)
    */
-  static analyzeReadingLevels(content: string, options: { language?: string } = {}) {
+  static analyzeReadingLevels(
+    content: string,
+    options: { language?: string } = {}
+  ) {
     const full = this.analyze(content, options);
     return {
       meta: full.meta,
       readingLevels: full.readingLevels,
       compositeScore: {
         gradeLevel: full.compositeScore.gradeLevel,
-        label: full.compositeScore.label
+        label: full.compositeScore.label,
       },
       formulas: full.formulas.map(f => ({
         id: f.id,
         label: f.label,
         gradeLevel: f.gradeLevel,
-        gradeValue: f.gradeValue
-      }))
+        gradeValue: f.gradeValue,
+      })),
     };
   }
 
   /**
    * Get improvement recommendations
    */
-  static analyzeImprovements(content: string, options: { language?: string } = {}) {
+  static analyzeImprovements(
+    content: string,
+    options: { language?: string } = {}
+  ) {
     const full = this.analyze(content, options);
     return {
       meta: full.meta,
       recommendations: full.recommendations,
       compositeScore: {
         score: full.compositeScore.score,
-        label: full.compositeScore.label
+        label: full.compositeScore.label,
       },
       totals: {
         words: full.totals.words,
         complexWordRatio: full.totals.complexWordRatio,
-        averageSentenceLength: full.totals.averageSentenceLength
+        averageSentenceLength: full.totals.averageSentenceLength,
       },
       structure: {
         sentences: {
-          longSentences: full.structure.sentences.longSentences
+          longSentences: full.structure.sentences.longSentences,
         },
         paragraphs: {
-          longParagraphs: full.structure.paragraphs.longParagraphs
-        }
-      }
+          longParagraphs: full.structure.paragraphs.longParagraphs,
+        },
+      },
     };
   }
 
   /**
    * Get language-specific guidance with dynamic content analysis
    */
-  static analyzeLanguageGuidance(content: string, options: { language?: string } = {}) {
+  static analyzeLanguageGuidance(
+    content: string,
+    options: { language?: string } = {}
+  ) {
     const full = this.analyze(content, options);
 
     // Generate dynamic, content-specific language guidance
@@ -227,7 +258,7 @@ export class ReadabilityServices {
       compositeScore: {
         score: full.compositeScore.score,
         label: full.compositeScore.label,
-        gradeLevel: full.compositeScore.gradeLevel
+        gradeLevel: full.compositeScore.gradeLevel,
       },
       totals: {
         words: full.totals.words,
@@ -235,7 +266,7 @@ export class ReadabilityServices {
         paragraphs: full.totals.paragraphs,
         averageSentenceLength: full.totals.averageSentenceLength,
         complexWordRatio: full.totals.complexWordRatio,
-        vocabularyRichness: full.totals.vocabularyRichness
+        vocabularyRichness: full.totals.vocabularyRichness,
       },
       languageGuidance: {
         language: full.meta.languageName,
@@ -243,42 +274,45 @@ export class ReadabilityServices {
         seoImpact: dynamicGuidance.seoImpact,
         specificIssues: dynamicGuidance.specificIssues,
         actionableAdvice: dynamicGuidance.actionableAdvice,
-        strengthsIdentified: dynamicGuidance.strengthsIdentified
+        strengthsIdentified: dynamicGuidance.strengthsIdentified,
       },
       structure: {
         sentences: {
           count: full.structure.sentences.count,
           averageLength: full.structure.sentences.averageLength,
-          longSentences: full.structure.sentences.longSentences.slice(0, 3)
+          longSentences: full.structure.sentences.longSentences.slice(0, 3),
         },
         paragraphs: {
           count: full.structure.paragraphs.count,
           averageWords: full.structure.paragraphs.averageWords,
-          longParagraphs: full.structure.paragraphs.longParagraphs.slice(0, 3)
-        }
-      }
+          longParagraphs: full.structure.paragraphs.longParagraphs.slice(0, 3),
+        },
+      },
     };
   }
 
   /**
    * Get live scoring data (minimal payload for real-time updates)
    */
-  static analyzeLiveScore(content: string, options: { language?: string } = {}) {
+  static analyzeLiveScore(
+    content: string,
+    options: { language?: string } = {}
+  ) {
     const full = this.analyze(content, options);
     return {
       meta: {
         timestamp: full.meta.timestamp,
         language: full.meta.language,
         isInsufficient: full.meta.isInsufficient,
-        processingTimeMs: full.meta.processingTimeMs
+        processingTimeMs: full.meta.processingTimeMs,
       },
       compositeScore: full.compositeScore,
       totals: {
         words: full.totals.words,
         sentences: full.totals.sentences,
-        averageSentenceLength: full.totals.averageSentenceLength
+        averageSentenceLength: full.totals.averageSentenceLength,
       },
-      summary: full.summary
+      summary: full.summary,
     };
   }
 
@@ -301,7 +335,7 @@ export class ReadabilityServices {
         timestamp: new Date().toISOString(),
         processingTimeMs: Date.now() - start,
         isInsufficient: true,
-        warnings: [reason]
+        warnings: [reason],
       },
       totals: {
         words: 0,
@@ -313,14 +347,14 @@ export class ReadabilityServices {
         averageSentenceLength: 0,
         averageSyllablesPerWord: 0,
         complexWordRatio: 0,
-        vocabularyRichness: 0
+        vocabularyRichness: 0,
       },
       compositeScore: {
         score: 0,
         label: 'N/A',
         color: 'gray',
         gradeLevel: 'N/A',
-        readingTimeMinutes: 0
+        readingTimeMinutes: 0,
       },
       formulas: [],
       structure: {
@@ -332,7 +366,7 @@ export class ReadabilityServices {
           shortestSentence: null,
           longSentences: [],
           shortSentences: [],
-          distribution: []
+          distribution: [],
         },
         paragraphs: {
           count: 0,
@@ -341,34 +375,34 @@ export class ReadabilityServices {
           longParagraphs: [],
           shortParagraphs: [],
           items: [],
-          distribution: []
-        }
+          distribution: [],
+        },
       },
       recommendations: [
         {
           type: 'warning',
           title: 'Insufficient Content',
-          message: reason
-        }
+          message: reason,
+        },
       ],
       languageGuidance: {
         language: langConfig.name,
         notes: '',
-        rules: langConfig.guidance
+        rules: langConfig.guidance,
       },
       readingLevels: {
         recommendedGrade: 0,
         recommendedLabel: 'N/A',
         educationStages: [],
-        audienceFit: []
+        audienceFit: [],
       },
       summary: {
         readingTimeMinutes: 0,
         pacing: 'N/A',
         audience: 'N/A',
         wordCount: 0,
-        language: langConfig.name
-      }
+        language: langConfig.name,
+      },
     };
   }
 
@@ -376,13 +410,18 @@ export class ReadabilityServices {
    * Strip HTML fallback when parser fails
    */
   private static _stripFallback(raw: string): string {
-    return raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return raw
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**
    * Build language-specific notes
    */
-  private static _buildLanguageNotes(langConfig: ReturnType<typeof getLanguageConfig>): string {
+  private static _buildLanguageNotes(
+    langConfig: ReturnType<typeof getLanguageConfig>
+  ): string {
     if (langConfig.code === 'en') {
       return 'English content is analyzed using US English readability standards. Aim for 60+ readability score for general audiences.';
     } else if (langConfig.code === 'el') {
@@ -396,7 +435,14 @@ export class ReadabilityServices {
    */
   private static _collectWarnings(
     totals: ReturnType<typeof calculateTotals>,
-    structure: ReturnType<typeof analyzeSentences> & { paragraphs: ReturnType<typeof analyzeParagraphs> } | { sentences: ReturnType<typeof analyzeSentences>; paragraphs: ReturnType<typeof analyzeParagraphs> },
+    structure:
+      | (ReturnType<typeof analyzeSentences> & {
+          paragraphs: ReturnType<typeof analyzeParagraphs>;
+        })
+      | {
+          sentences: ReturnType<typeof analyzeSentences>;
+          paragraphs: ReturnType<typeof analyzeParagraphs>;
+        },
     langConfig: ReturnType<typeof getLanguageConfig>
   ): string[] {
     const warnings: string[] = [];
@@ -413,7 +459,8 @@ export class ReadabilityServices {
       );
     }
 
-    const structureSentences = 'sentences' in structure ? structure.sentences : structure;
+    const structureSentences =
+      'sentences' in structure ? structure.sentences : structure;
     if (structureSentences.count > 0 && structureSentences.averageLength > 30) {
       warnings.push(
         'Average sentence length exceeds 30 words. Consider breaking up long sentences.'
