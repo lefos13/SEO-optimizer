@@ -12,7 +12,13 @@ import ProgressBar from '../ui/ProgressBar';
 import Badge from '../ui/Badge';
 
 type Grade = 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D+' | 'D' | 'F';
-type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+type BadgeVariant =
+  | 'default'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
 
 interface CategoryScore {
   score: number;

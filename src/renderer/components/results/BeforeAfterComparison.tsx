@@ -60,7 +60,8 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({
 
   const calculateChange = (before: number, after: number): ChangeResult => {
     const diff = after - before;
-    const percentChange = before !== 0 ? parseFloat(((diff / before) * 100).toFixed(1)) : 0;
+    const percentChange =
+      before !== 0 ? parseFloat(((diff / before) * 100).toFixed(1)) : 0;
     return { diff, percentChange };
   };
 
