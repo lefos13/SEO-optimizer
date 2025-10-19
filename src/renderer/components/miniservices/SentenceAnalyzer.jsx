@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import Card from '../ui/Card';
-import MiniServiceWrapper from './MiniServiceWrapper';
+import MiniServiceContainer from './MiniServiceContainer';
 import { scrollToResults } from '../../utils/scrollUtils';
 
 const getWordCount = text => {
@@ -57,224 +57,210 @@ const SentenceAnalyzer = () => {
     setError(null);
   };
 
-  return (
-    <MiniServiceWrapper
-      title="🧱 Sentence & Paragraph Analyzer"
-      description="Examine sentence lengths, pacing, and paragraph structure for optimal readability."
-    >
-      <Card className="input-card">
-        <h3>Content & Settings</h3>
+  // Render functions
+  const renderInputs = () => (
+    <>
+      <div className="form-group">
+        <label htmlFor="sentence-content">Content to Analyze</label>
+        <textarea
+          id="sentence-content"
+          rows="8"
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="Paste your content here..."
+          className="form-control"
+        />
+        <small className="form-help">Word count: {wordCount} words</small>
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="sentence-content">Content to Analyze</label>
-          <textarea
-            id="sentence-content"
-            rows="8"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Paste your content here..."
-            className="form-control"
-          />
-          <small className="form-help">Word count: {wordCount} words</small>
+      <div className="form-group">
+        <label htmlFor="sentence-language">Content Language</label>
+        <select
+          id="sentence-language"
+          value={language}
+          onChange={e => setLanguage(e.target.value)}
+          className="form-control"
+        >
+          <option value="en">English</option>
+          <option value="el">Greek</option>
+        </select>
+      </div>
+
+      {error && (
+        <div className="alert alert-error">
+          <span className="alert-icon">⚠️</span>
+          {error}
+        </div>
+      )}
+    </>
+  );
+
+  const renderResults = () => (
+    <>
+      <Card className="results-card" title="Sentence Insights">
+        <div className="stats-grid">
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.sentences.count}
+            </div>
+            <div className="stat-label">Total Sentences</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.sentences.averageLength}
+            </div>
+            <div className="stat-label">Avg Length</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.sentences.medianLength}
+            </div>
+            <div className="stat-label">Median Length</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.sentences.longSentences.length}
+            </div>
+            <div className="stat-label">Long Sentences</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.sentences.shortSentences.length}
+            </div>
+            <div className="stat-label">Short Sentences</div>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="sentence-language">Content Language</label>
-          <select
-            id="sentence-language"
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            className="form-control"
-          >
-            <option value="en">English</option>
-            <option value="el">Greek</option>
-          </select>
+        <div className="distribution-grid">
+          {results.structure.sentences.distribution.map(bucket => (
+            <div key={bucket.range} className="distribution-item">
+              <div className="distribution-range">{bucket.range} words</div>
+              <div className="distribution-count">{bucket.count}</div>
+            </div>
+          ))}
         </div>
 
-        {error && (
-          <div className="alert alert-error">
-            <span className="alert-icon">⚠️</span>
-            {error}
+        {results.structure.sentences.longestSentence && (
+          <div className="structure-highlight">
+            <h4>
+              Longest Sentence (
+              {results.structure.sentences.longestSentence.length} words)
+            </h4>
+            <p>{results.structure.sentences.longestSentence.text}</p>
           </div>
         )}
-
-        <div className="button-group">
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !content.trim()}
-            className="btn btn-primary"
-          >
-            {loading ? 'Analyzing...' : 'Analyze Structure'}
-          </button>
-
-          {results && (
-            <button onClick={handleClear} className="btn btn-secondary">
-              Clear Results
-            </button>
-          )}
-        </div>
       </Card>
 
-      <div className="results-container">
-        {results && (
-          <>
-            <Card className="results-card" title="Sentence Insights">
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.sentences.count}
-                  </div>
-                  <div className="stat-label">Total Sentences</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.sentences.averageLength}
-                  </div>
-                  <div className="stat-label">Avg Length</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.sentences.medianLength}
-                  </div>
-                  <div className="stat-label">Median Length</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.sentences.longSentences.length}
-                  </div>
-                  <div className="stat-label">Long Sentences</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.sentences.shortSentences.length}
-                  </div>
-                  <div className="stat-label">Short Sentences</div>
-                </div>
-              </div>
-
-              <div className="distribution-grid">
-                {results.structure.sentences.distribution.map(bucket => (
-                  <div key={bucket.range} className="distribution-item">
-                    <div className="distribution-range">
-                      {bucket.range} words
-                    </div>
-                    <div className="distribution-count">{bucket.count}</div>
-                  </div>
-                ))}
-              </div>
-
-              {results.structure.sentences.longestSentence && (
-                <div className="structure-highlight">
-                  <h4>
-                    Longest Sentence (
-                    {results.structure.sentences.longestSentence.length} words)
-                  </h4>
-                  <p>{results.structure.sentences.longestSentence.text}</p>
-                </div>
-              )}
-            </Card>
-
-            <Card className="results-card" title="Paragraph Insights">
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.paragraphs.count}
-                  </div>
-                  <div className="stat-label">Total Paragraphs</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.paragraphs.averageWords}
-                  </div>
-                  <div className="stat-label">Avg Words</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.paragraphs.averageSentences}
-                  </div>
-                  <div className="stat-label">Avg Sentences</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {results.structure.paragraphs.longParagraphs.length}
-                  </div>
-                  <div className="stat-label">Long Paragraphs</div>
-                </div>
-              </div>
-
-              <div className="distribution-grid">
-                {results.structure.paragraphs.distribution.map(bucket => (
-                  <div key={bucket.range} className="distribution-item">
-                    <div className="distribution-range">{bucket.range}</div>
-                    <div className="distribution-count">{bucket.count}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="paragraph-list">
-                {results.structure.paragraphs.items.slice(0, 4).map(item => (
-                  <div key={item.index} className="paragraph-item">
-                    <div className="paragraph-meta">
-                      <span className="paragraph-index">
-                        Paragraph {item.index}
-                      </span>
-                      <span className="paragraph-score">
-                        {item.readingEase}
-                      </span>
-                    </div>
-                    <div className="paragraph-details">
-                      <span>{item.words} words</span>
-                      <span>{item.sentences} sentences</span>
-                      <span>{item.label}</span>
-                    </div>
-                    <p>{item.text.substring(0, 150)}...</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </>
-        )}
-
-        {!results && !error && (
-          <Card className="info-card">
-            <div className="info-content">
-              <div className="info-icon">🧱</div>
-              <h3>Sentence & Paragraph Structure</h3>
-
-              <div className="info-section">
-                <h4>📏 Sentence Analysis</h4>
-                <p>
-                  Understand how your sentences vary in length. Longer sentences
-                  (20+ words) can fatigue readers, while very short sentences
-                  may seem choppy. A mix of lengths creates engaging rhythm.
-                </p>
-              </div>
-
-              <div className="info-section">
-                <h4>🏗️ Paragraph Pacing</h4>
-                <p>
-                  Longer paragraphs (120+ words) can overwhelm readers. Breaking
-                  content into focused sections of 40–120 words improves
-                  scannability and engagement.
-                </p>
-              </div>
-
-              <div className="info-section">
-                <h4>✨ Best Practices</h4>
-                <ul className="info-list">
-                  <li>
-                    Mix short (5–10 words) and medium (15–20 words) sentences
-                  </li>
-                  <li>Keep paragraphs under 120 words for web content</li>
-                  <li>Use one main idea per paragraph</li>
-                  <li>Start paragraphs with strong topic sentences</li>
-                </ul>
-              </div>
+      <Card className="results-card" title="Paragraph Insights">
+        <div className="stats-grid">
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.paragraphs.count}
             </div>
-          </Card>
-        )}
+            <div className="stat-label">Total Paragraphs</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.paragraphs.averageWords}
+            </div>
+            <div className="stat-label">Avg Words</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.paragraphs.averageSentences}
+            </div>
+            <div className="stat-label">Avg Sentences</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">
+              {results.structure.paragraphs.longParagraphs.length}
+            </div>
+            <div className="stat-label">Long Paragraphs</div>
+          </div>
+        </div>
+
+        <div className="distribution-grid">
+          {results.structure.paragraphs.distribution.map(bucket => (
+            <div key={bucket.range} className="distribution-item">
+              <div className="distribution-range">{bucket.range}</div>
+              <div className="distribution-count">{bucket.count}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="paragraph-list">
+          {results.structure.paragraphs.items.slice(0, 4).map(item => (
+            <div key={item.index} className="paragraph-item">
+              <div className="paragraph-meta">
+                <span className="paragraph-index">Paragraph {item.index}</span>
+                <span className="paragraph-score">{item.readingEase}</span>
+              </div>
+              <div className="paragraph-details">
+                <span>{item.words} words</span>
+                <span>{item.sentences} sentences</span>
+                <span>{item.label}</span>
+              </div>
+              <p>{item.text.substring(0, 150)}...</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </>
+  );
+
+  const renderInfoCard = () => (
+    <Card className="info-card">
+      <div className="info-content">
+        <div className="info-icon">🧱</div>
+        <h3>Sentence & Paragraph Structure</h3>
+
+        <div className="info-section">
+          <h4>📏 Sentence Analysis</h4>
+          <p>
+            Understand how your sentences vary in length. Longer sentences (20+
+            words) can fatigue readers, while very short sentences may seem
+            choppy. A mix of lengths creates engaging rhythm.
+          </p>
+        </div>
+
+        <div className="info-section">
+          <h4>🏗️ Paragraph Pacing</h4>
+          <p>
+            Longer paragraphs (120+ words) can overwhelm readers. Breaking
+            content into focused sections of 40–120 words improves scannability
+            and engagement.
+          </p>
+        </div>
+
+        <div className="info-section">
+          <h4>✨ Best Practices</h4>
+          <ul className="info-list">
+            <li>Mix short (5–10 words) and medium (15–20 words) sentences</li>
+            <li>Keep paragraphs under 120 words for web content</li>
+            <li>Use one main idea per paragraph</li>
+            <li>Start paragraphs with strong topic sentences</li>
+          </ul>
+        </div>
       </div>
-    </MiniServiceWrapper>
+    </Card>
+  );
+
+  return (
+    <MiniServiceContainer
+      title="🧱 Sentence & Paragraph Analyzer"
+      description="Examine sentence lengths, pacing, and paragraph structure for optimal readability."
+      onAnalyze={handleAnalyze}
+      onClear={handleClear}
+      loading={loading}
+      error={error}
+      results={results}
+      analyzeButtonText="Analyze Structure"
+      analyzeButtonDisabled={false}
+      inputCardTitle="Content & Settings"
+      renderInputs={renderInputs}
+      renderResults={renderResults}
+      renderInfoCard={renderInfoCard}
+    />
   );
 };
 
