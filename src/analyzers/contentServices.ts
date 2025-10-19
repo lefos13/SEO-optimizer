@@ -1114,14 +1114,14 @@ class ContentServices {
 
     while ((match = linkRegex.exec(content)) !== null) {
       const url = match[1];
-      const anchorText = match[2] ? match[2].replace(/<[^>]+>/g, '').trim() : '';
-      
+      const anchorText = match[2]
+        ? match[2].replace(/<[^>]+>/g, '').trim()
+        : '';
+
       if (!url) continue;
-      
+
       const isInternal =
-        url.startsWith('/') ||
-        url.startsWith('#') ||
-        url.includes('localhost');
+        url.startsWith('/') || url.startsWith('#') || url.includes('localhost');
 
       links.push({
         url,
@@ -1336,7 +1336,9 @@ class ContentServices {
   // HELPER METHODS - Content Length
   // ============================================================
 
-  private static _getIdealContentLength(targetType: string): ContentLengthRange {
+  private static _getIdealContentLength(
+    targetType: string
+  ): ContentLengthRange {
     const ranges: Record<string, ContentLengthRange> = {
       blog: { min: 1000, max: 2000, ideal: 1500 },
       guide: { min: 2000, max: 5000, ideal: 3000 },
@@ -1619,7 +1621,9 @@ class ContentServices {
     return suggestions;
   }
 
-  private static _calculateCoverageScore(coverage: TopicCoverage[]): ScoreResult {
+  private static _calculateCoverageScore(
+    coverage: TopicCoverage[]
+  ): ScoreResult {
     if (coverage.length === 0) return { score: 100, label: 'N/A' };
 
     const covered = coverage.filter(t => t.covered).length;

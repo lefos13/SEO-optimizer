@@ -1269,9 +1269,7 @@ export class KeywordServices {
     // Try to find a keyword that contains most of these words
     const bestMatch = keywords.find(keyword => {
       const keywordWords = new Set(keyword.toLowerCase().split(/\s+/));
-      const matchCount = topWords.filter(word =>
-        keywordWords.has(word)
-      ).length;
+      const matchCount = topWords.filter(word => keywordWords.has(word)).length;
       return matchCount >= Math.min(2, topWords.length);
     });
 
@@ -1462,8 +1460,7 @@ export class KeywordServices {
       // Filter out main keywords
       const mainKeywordsLower = mainKeywords.map(k => k.toLowerCase());
       const lsiCandidates = suggestions.filter(
-        (s: any) =>
-          !mainKeywordsLower.includes((s.keyword || s).toLowerCase())
+        (s: any) => !mainKeywordsLower.includes((s.keyword || s).toLowerCase())
       );
 
       console.log(
@@ -1473,11 +1470,7 @@ export class KeywordServices {
       // Score LSI candidates based on co-occurrence with main keywords
       const scored = lsiCandidates.map((candidate: any) => {
         const keyword = candidate.keyword || candidate;
-        const lsiScore = this._calculateLSIScore(
-          keyword,
-          mainKeywords,
-          text
-        );
+        const lsiScore = this._calculateLSIScore(keyword, mainKeywords, text);
         return {
           keyword,
           frequency: candidate.frequency || 0,

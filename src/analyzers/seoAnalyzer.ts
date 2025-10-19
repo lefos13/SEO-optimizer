@@ -13,7 +13,11 @@
  * - Actionable recommendations
  */
 
-import type { SEORule, SEOContentInput, SupportedLanguage } from '../types/seo.types';
+import type {
+  SEORule,
+  SEOContentInput,
+  SupportedLanguage,
+} from '../types/seo.types';
 import type { ParsedHTML } from '../types/analyzer.types';
 import * as htmlParser from './htmlParser';
 import * as seoRules from './seoRules';
@@ -197,7 +201,8 @@ export class SEOAnalyzer {
       console.log('[SEO-ANALYZER] ✅ Analysis complete!');
       return this.results;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error('[SEO-ANALYZER] ❌ Analysis failed:', error);
       throw new Error(`SEO Analysis failed: ${errorMessage}`);
     }
@@ -295,7 +300,10 @@ export class SEOAnalyzer {
    * @param rule - Rule definition
    * @param content - Content to analyze
    */
-  private async runRule(rule: SEORule, content: SEOContentInput): Promise<void> {
+  private async runRule(
+    rule: SEORule,
+    content: SEOContentInput
+  ): Promise<void> {
     try {
       const result = await rule.check(content);
 

@@ -24,7 +24,7 @@ export const PRIORITY = {
   LOW: 'low',
 } as const;
 
-export type PriorityType = typeof PRIORITY[keyof typeof PRIORITY];
+export type PriorityType = (typeof PRIORITY)[keyof typeof PRIORITY];
 
 /**
  * Effort estimation levels
@@ -35,7 +35,7 @@ export const EFFORT = {
   SIGNIFICANT: 'significant', // > 2 hours
 } as const;
 
-export type EffortType = typeof EFFORT[keyof typeof EFFORT];
+export type EffortType = (typeof EFFORT)[keyof typeof EFFORT];
 
 /**
  * Recommendation translations
@@ -96,7 +96,13 @@ export type LanguageCode = keyof typeof TRANSLATIONS;
 /**
  * Action type classifications
  */
-export type ActionType = 'add' | 'remove' | 'update' | 'optimize' | 'verify' | 'general';
+export type ActionType =
+  | 'add'
+  | 'remove'
+  | 'update'
+  | 'optimize'
+  | 'verify'
+  | 'general';
 
 /**
  * Recommendation action with classification
@@ -236,7 +242,7 @@ interface SpecificAction {
 /**
  * Translation object type
  */
-type TranslationObject = typeof TRANSLATIONS[LanguageCode];
+type TranslationObject = (typeof TRANSLATIONS)[LanguageCode];
 
 /**
  * Recommendation Engine Class
@@ -358,7 +364,10 @@ export class RecommendationEngine {
   /**
    * Generate actionable steps for a rule
    */
-  private generateActions(rule: SEORule, analysisResults: AnalysisResults): RecommendationAction[] {
+  private generateActions(
+    rule: SEORule,
+    analysisResults: AnalysisResults
+  ): RecommendationAction[] {
     const actions: RecommendationAction[] = [];
 
     // Use rule recommendations as base
@@ -408,7 +417,10 @@ export class RecommendationEngine {
   /**
    * Get specific actions based on rule ID and current content
    */
-  private getSpecificActions(ruleId: string, analysisResults: AnalysisResults): SpecificAction[] {
+  private getSpecificActions(
+    ruleId: string,
+    analysisResults: AnalysisResults
+  ): SpecificAction[] {
     const actions: SpecificAction[] = [];
     const metadata = analysisResults.metadata;
 
@@ -552,7 +564,10 @@ export class RecommendationEngine {
   /**
    * Estimate impact of fixing a rule
    */
-  private estimateImpact(rule: SEORule, analysisResults: AnalysisResults): ImpactEstimate {
+  private estimateImpact(
+    rule: SEORule,
+    analysisResults: AnalysisResults
+  ): ImpactEstimate {
     const currentScore = analysisResults.score;
     const maxScore = analysisResults.maxScore;
     const potentialIncrease = rule.weight;
@@ -590,7 +605,10 @@ export class RecommendationEngine {
   /**
    * Generate before/after example
    */
-  private generateExample(rule: SEORule, analysisResults: AnalysisResults): Example | null {
+  private generateExample(
+    rule: SEORule,
+    analysisResults: AnalysisResults
+  ): Example | null {
     const metadata = analysisResults.metadata;
 
     const examples: Record<string, Example> = {
@@ -744,7 +762,9 @@ export class RecommendationEngine {
   /**
    * Group recommendations by priority
    */
-  private groupByPriority(recommendations: Recommendation[]): RecommendationsByPriority {
+  private groupByPriority(
+    recommendations: Recommendation[]
+  ): RecommendationsByPriority {
     return {
       critical: recommendations.filter(r => r.priority === PRIORITY.CRITICAL),
       high: recommendations.filter(r => r.priority === PRIORITY.HIGH),
@@ -756,7 +776,9 @@ export class RecommendationEngine {
   /**
    * Group recommendations by category
    */
-  private groupByCategory(recommendations: Recommendation[]): Record<string, Recommendation[]> {
+  private groupByCategory(
+    recommendations: Recommendation[]
+  ): Record<string, Recommendation[]> {
     const grouped: Record<string, Recommendation[]> = {};
     recommendations.forEach(rec => {
       if (!grouped[rec.category]) {
@@ -770,7 +792,9 @@ export class RecommendationEngine {
   /**
    * Group recommendations by effort
    */
-  private groupByEffort(recommendations: Recommendation[]): RecommendationsByEffort {
+  private groupByEffort(
+    recommendations: Recommendation[]
+  ): RecommendationsByEffort {
     return {
       quick: recommendations.filter(r => r.effort === EFFORT.QUICK),
       moderate: recommendations.filter(r => r.effort === EFFORT.MODERATE),
@@ -781,7 +805,9 @@ export class RecommendationEngine {
   /**
    * Identify quick wins (high impact, low effort)
    */
-  private identifyQuickWins(recommendations: Recommendation[]): Recommendation[] {
+  private identifyQuickWins(
+    recommendations: Recommendation[]
+  ): Recommendation[] {
     return recommendations
       .filter(rec => {
         return (
@@ -802,7 +828,10 @@ export class RecommendationEngine {
   /**
    * Get translated text
    */
-  public translate(key: keyof TranslationObject, subkey: string | null = null): string {
+  public translate(
+    key: keyof TranslationObject,
+    subkey: string | null = null
+  ): string {
     if (subkey) {
       return (this.translations[key] as any)?.[subkey] || subkey;
     }

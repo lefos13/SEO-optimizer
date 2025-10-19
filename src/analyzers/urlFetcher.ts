@@ -99,7 +99,9 @@ export async function fetchUrl(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorCode =
-      error instanceof Error && 'code' in error ? (error.code as string) : undefined;
+      error instanceof Error && 'code' in error
+        ? (error.code as string)
+        : undefined;
 
     return {
       success: false,
