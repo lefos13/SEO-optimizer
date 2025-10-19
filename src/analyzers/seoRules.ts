@@ -3,7 +3,11 @@
  * Contains all SEO analysis rules with weights and recommendations
  */
 
-import type { SEORule, RuleCheckResult, SEOContentInput } from '../types/seo.types';
+import type {
+  SEORule,
+  RuleCheckResult,
+  SEOContentInput,
+} from '../types/seo.types';
 
 const rules: SEORule[] = [
   // ============================================================
@@ -541,7 +545,7 @@ const rules: SEORule[] = [
     check: async (content: SEOContentInput): Promise<RuleCheckResult> => {
       const html = content.html || '';
       const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-      
+
       if (!text) {
         return { passed: true, message: 'No content to analyze' };
       }
@@ -770,7 +774,7 @@ const rules: SEORule[] = [
       const schemaTypes = [
         hasJsonLd && 'JSON-LD',
         hasMicrodata && 'Microdata',
-        hasRDFa && 'RDFa'
+        hasRDFa && 'RDFa',
       ].filter(Boolean);
 
       const message = hasSchema
@@ -1081,7 +1085,8 @@ const rules: SEORule[] = [
       const metaTags = content.metaTags || {};
       const viewport = metaTags.viewport;
 
-      const passed = viewport !== null && viewport !== undefined && viewport.length > 0;
+      const passed =
+        viewport !== null && viewport !== undefined && viewport.length > 0;
       const message = passed
         ? `Viewport configured: ${viewport}`
         : 'Viewport meta tag is missing';
@@ -1106,7 +1111,8 @@ const rules: SEORule[] = [
       const metaTags = content.metaTags || {};
       const canonical = metaTags.canonical;
 
-      const passed = canonical !== null && canonical !== undefined && canonical.length > 0;
+      const passed =
+        canonical !== null && canonical !== undefined && canonical.length > 0;
       const message = passed
         ? `Canonical URL defined: ${canonical}`
         : 'Canonical URL not specified';
@@ -1251,7 +1257,8 @@ const rules: SEORule[] = [
       const metaTags = content.metaTags || {};
       const language = metaTags.language;
 
-      const passed = language !== null && language !== undefined && language.length > 0;
+      const passed =
+        language !== null && language !== undefined && language.length > 0;
       const message = passed
         ? `Language declared: ${language}`
         : 'HTML language attribute not set';
@@ -1276,7 +1283,8 @@ const rules: SEORule[] = [
       const metaTags = content.metaTags || {};
       const charset = metaTags.charset;
 
-      const passed = charset !== null && charset !== undefined && charset.length > 0;
+      const passed =
+        charset !== null && charset !== undefined && charset.length > 0;
       const isUtf8 = charset && charset.toLowerCase() === 'utf-8';
 
       let message = 'Character encoding not declared';

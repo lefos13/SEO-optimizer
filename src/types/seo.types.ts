@@ -58,7 +58,12 @@ export interface ParsedContent {
 // SEO Rules
 // ============================================================
 
-export type RuleCategory = 'meta' | 'content' | 'technical' | 'keywords' | 'readability';
+export type RuleCategory =
+  | 'meta'
+  | 'content'
+  | 'technical'
+  | 'keywords'
+  | 'readability';
 export type RuleSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 export interface RuleCheckResult {

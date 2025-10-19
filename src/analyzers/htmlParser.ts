@@ -228,7 +228,8 @@ export function extractLinks(html: string): LinkInfo[] {
 
     // Extract link text
     const textMatch = /<a[^>]*>([\s\S]*?)<\/a>/i.exec(linkTag);
-    const text = textMatch && textMatch[1] ? stripHtmlTags(textMatch[1]).trim() : '';
+    const text =
+      textMatch && textMatch[1] ? stripHtmlTags(textMatch[1]).trim() : '';
 
     // Extract rel attribute
     const relMatch = /rel=["']([^"']+)["']/i.exec(linkTag);
