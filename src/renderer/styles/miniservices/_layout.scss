@@ -1,0 +1,415 @@
+/**
+ * Mini-Services Layout Styles
+ * Core layout structure for mini-services pages
+ */
+
+@use '../variables' as *;
+
+// ============================================================
+// MINI SERVICE LAYOUT
+// ============================================================
+
+.mini-service-content {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+
+  .mini-service-subcontent {
+    display: flex;
+    gap: 20px;
+    flex-direction: row;
+  }
+}
+
+.mini-service-header {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+}
+
+// ============================================================
+// INPUT CARDS - Enhanced Modern Design
+// ============================================================
+
+.input-card {
+  margin-bottom: 1.5rem;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    135deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent-color);
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::before {
+      content: '⚙️';
+      font-size: 1.4rem;
+    }
+  }
+}
+
+// ============================================================
+// RESULTS CONTAINER
+// ============================================================
+
+.results-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+  transition: all 0.3s ease-in-out;
+
+  // Modern glass-morphism effect for cards
+  .card {
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: $border-radius-xl;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+    animation: cardEntrance 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+
+    @for $i from 1 through 10 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
+      }
+    }
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+      border-color: var(--accent-color);
+    }
+
+    .card-header {
+      position: relative;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: linear-gradient(
+        90deg,
+        rgba(var(--accent-color-rgb), 0.15),
+        rgba(var(--accent-color-rgb), 0.05)
+      );
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--accent-color);
+      }
+
+      h3,
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: $font-weight-semibold;
+        margin: 0;
+        background: linear-gradient(
+          90deg,
+          var(--text-primary),
+          var(--accent-color)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  // Enhanced content area styling
+  .summary-card,
+  .results-card {
+    margin-top: 1.5rem;
+    background: linear-gradient(
+      135deg,
+      var(--bg-secondary) 0%,
+      var(--bg-tertiary) 100%
+    );
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .card-header {
+      position: relative;
+      padding: 1.2rem 1.5rem;
+      background: linear-gradient(
+        90deg,
+        rgba(var(--accent-color-rgb), 0.15),
+        rgba(var(--accent-color-rgb), 0.05)
+      );
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--accent-color);
+      }
+    }
+
+    .score-section {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+
+      .composite-score {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+
+        .score-circle {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 6px solid var(--accent-color);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+
+          .score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+          }
+
+          .score-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+          }
+        }
+
+        .score-details {
+          h4 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+          }
+
+          p {
+            color: var(--text-secondary);
+            margin: 0;
+
+            strong {
+              color: var(--accent-color);
+            }
+          }
+        }
+      }
+    }
+
+    .analysis-section {
+      padding: 0 1.5rem 1.5rem;
+
+      &:not(:last-child) {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .section-header {
+        margin-bottom: 1rem;
+
+        h4 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid rgba(var(--border-color-rgb), 0.3);
+        }
+      }
+
+      .issue-items {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+  }
+
+  .animate-card {
+    animation: cardEntrance 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  // Other cards
+  .info-card {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(
+        circle,
+        rgba(var(--accent-color-rgb), 0.1) 0%,
+        rgba(var(--accent-color-rgb), 0) 70%
+      );
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 0;
+    }
+  }
+
+  // Enhanced analysis summary styles
+  .content-analysis-summary {
+    padding: 0.5rem;
+    background: rgba(var(--bg-secondary-rgb), 0.5);
+    border-radius: $border-radius-lg;
+    backdrop-filter: blur(5px);
+
+    .analysis-row {
+      padding: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(var(--border-color-rgb), 0.2);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .analysis-label {
+        font-weight: $font-weight-medium;
+        color: var(--text-secondary);
+      }
+
+      .analysis-value {
+        font-weight: $font-weight-bold;
+        color: var(--text-secondary);
+        background: linear-gradient(
+          90deg,
+          var(--accent-color),
+          var(--info-color)
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        text-align: right;
+      }
+    }
+  }
+}
+
+// ============================================================
+// STATS GRID
+// ============================================================
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+// ============================================================
+// RESPONSIVE LAYOUT ADJUSTMENTS
+// ============================================================
+
+@media (max-width: 1024px) {
+  .mini-service-subcontent {
+    flex-direction: column;
+  }
+
+  .input-card {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .mini-service-content {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,669 @@
+/**
+ * Mini-Services Keywords Category Styles
+ * Styles for keyword analysis tools: density, longtail, difficulty, clustering, LSI
+ */
+
+@use '../variables' as *;
+
+// ============================================================
+// KEYWORD DENSITY ANALYZER
+// ============================================================
+
+.density-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.density-item {
+  padding: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.density-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.density-keyword {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.keyword-type-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--accent-color);
+  color: white;
+  border-radius: 12px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.density-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.density-details {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-item {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 500;
+}
+
+// Density bar visualization
+.density-bar-container {
+  margin: 1rem 0;
+}
+
+.density-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+
+  .optimal-range {
+    color: var(--success-color);
+    font-weight: 600;
+  }
+}
+
+.density-bar-track {
+  position: relative;
+  height: 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.optimal-zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(16, 185, 129, 0.15);
+  border-left: 2px solid var(--success-color);
+  border-right: 2px solid var(--success-color);
+}
+
+.density-marker {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 3px solid white;
+}
+
+// Position distribution
+.position-distribution {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.distribution-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.distribution-track {
+  position: relative;
+  height: 30px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.position-dot {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// Distribution sections
+.distribution-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-item {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.section-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-total {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.section-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.section-keyword {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 16px;
+  font-size: 0.85rem;
+}
+
+.keyword-name {
+  color: var(--text-primary);
+}
+
+.keyword-count {
+  background: var(--accent-color);
+  color: white;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// ============================================================
+// LONG-TAIL KEYWORDS
+// ============================================================
+
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.filter-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+
+  &:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+  }
+
+  &.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+  }
+}
+
+.longtail-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.longtail-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.longtail-rank {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.longtail-content {
+  flex: 1;
+}
+
+.longtail-phrase {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.longtail-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.metric {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.metric-label {
+  color: var(--text-secondary);
+}
+
+.metric-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.score-badge {
+  background: var(--accent-color);
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+}
+
+.longtail-score-bar,
+.lsi-score-bar {
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color), var(--success-color));
+  transition: width 0.3s;
+}
+
+// ============================================================
+// KEYWORD DIFFICULTY ESTIMATOR
+// ============================================================
+
+.difficulty-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.difficulty-item {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.difficulty-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.difficulty-keyword {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.difficulty-badge {
+  padding: 0.4rem 0.75rem;
+  border-radius: 16px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.difficulty-bar {
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.difficulty-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.difficulty-recommendation {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insight-section {
+  h4 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: 0.5rem;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// ============================================================
+// KEYWORD CLUSTERING
+// ============================================================
+
+.cluster-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cluster-item {
+  padding: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.cluster-header {
+  margin-bottom: 1rem;
+}
+
+.cluster-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cluster-icon {
+  font-size: 1.25rem;
+}
+
+.cluster-primary {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cluster-quality-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+
+  &.quality-high {
+    background: var(--success-color);
+    color: white;
+  }
+
+  &.quality-medium {
+    background: var(--warning-color);
+    color: white;
+  }
+
+  &.quality-low {
+    background: var(--error-color);
+    color: white;
+  }
+}
+
+.cluster-suggested-name {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--accent-color-rgb), 0.1),
+    rgba(var(--success-color-rgb), 0.1)
+  );
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border-left: 3px solid var(--accent-color);
+
+  strong {
+    color: var(--accent-color);
+  }
+}
+
+.cluster-theme {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(var(--info-color-rgb), 0.1);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  display: inline-block;
+
+  strong {
+    color: var(--info-color);
+  }
+}
+
+.cluster-common-words {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.cluster-related {
+  strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.related-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.related-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.related-keyword {
+  color: var(--text-primary);
+}
+
+.similarity-badge {
+  padding: 0.2rem 0.6rem;
+  background: var(--success-color);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cluster-standalone {
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.standalone-badge {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.clustering-options {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+
+  h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.option-item {
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 0.85rem;
+
+  strong {
+    color: var(--accent-color);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+}
+
+// ============================================================
+// LSI KEYWORDS
+// ============================================================
+
+.lsi-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lsi-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.lsi-rank {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.lsi-content {
+  flex: 1;
+}
+
+.lsi-keyword {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lsi-type-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+  font-weight: 500;
+
+  &.phrase {
+    background: var(--accent-color);
+    color: white;
+  }
+
+  &.word {
+    background: var(--success-color);
+    color: white;
+  }
+}
+
+.lsi-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
