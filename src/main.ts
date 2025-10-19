@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron/main';
 import path from 'node:path';
 import dbManager from './main/dbManager';
+import { registerHandlers } from './main/ipcHandlers';
 
 // Enable hot reload in development mode
 const isDev = process.argv.includes('--dev');
@@ -87,7 +88,7 @@ app.whenReady().then(async () => {
     await dbManager.initialize();
 
     // Register IPC handlers
-    IPCHandlers.registerHandlers();
+    registerHandlers();
 
     console.log('[APP] Application initialized successfully');
   } catch (error) {
