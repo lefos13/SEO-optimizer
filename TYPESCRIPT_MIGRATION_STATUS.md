@@ -184,6 +184,24 @@ _No issues reported yet_
 
 ---
 
+## Migration Guidelines
+
+### Modularization Rule for Large Files
+
+**Rule**: When migrating files over 1,000 lines, split them into smaller, focused modules instead of creating monolithic TypeScript files.
+
+**Benefits**:
+
+- Each module stays under 500 lines for better maintainability
+- Clear separation of concerns
+- Better testability (test modules independently)
+- Improved code organization and discoverability
+- Easier to extend and modify
+
+**Example**: `readabilityServices.js` (1,493 lines) was split into 8 focused modules (types, config, formulas, scoring, SEO, utils, main orchestrator, index).
+
+---
+
 ## Notes & Decisions
 
 ### October 19, 2025
@@ -192,6 +210,7 @@ _No issues reported yet_
 - Decided on phased approach starting with backend
 - Will maintain .js and .ts files side-by-side during migration
 - Testing after each phase to ensure no regressions
+- **Added modularization rule**: Files over 1,000 lines should be split into smaller modules
 
 **Phase 1 Completed**:
 
