@@ -1,8 +1,5 @@
 import dbManager from './dbManager';
-import type {
-  ProjectRow,
-  AnalysisResultRow,
-} from '../types/database.types';
+import type { ProjectRow, AnalysisResultRow } from '../types/database.types';
 
 /**
  * Project creation input
@@ -165,7 +162,9 @@ class DatabaseOperations {
    */
   static getProject(projectId: number): ProjectRow | undefined {
     try {
-      return dbManager.get<ProjectRow>('SELECT * FROM projects WHERE id = ?', [projectId]);
+      return dbManager.get<ProjectRow>('SELECT * FROM projects WHERE id = ?', [
+        projectId,
+      ]);
     } catch (error) {
       throw new Error(`Failed to get project: ${(error as Error).message}`);
     }
@@ -203,9 +202,17 @@ class DatabaseOperations {
    * @param updates Updated fields
    * @returns Updated project
    */
-  static updateProject(projectId: number, updates: UpdateProjectInput): ProjectRow {
+  static updateProject(
+    projectId: number,
+    updates: UpdateProjectInput
+  ): ProjectRow {
     try {
-      const allowedFields: (keyof UpdateProjectInput)[] = ['name', 'description', 'url', 'is_active'];
+      const allowedFields: (keyof UpdateProjectInput)[] = [
+        'name',
+        'description',
+        'url',
+        'is_active',
+      ];
       const updateFields: string[] = [];
       const params: any[] = [];
 
@@ -246,7 +253,9 @@ class DatabaseOperations {
    */
   static deleteProject(projectId: number): boolean {
     try {
-      const result = dbManager.run('DELETE FROM projects WHERE id = ?', [projectId]);
+      const result = dbManager.run('DELETE FROM projects WHERE id = ?', [
+        projectId,
+      ]);
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Failed to delete project: ${(error as Error).message}`);
@@ -325,7 +334,10 @@ class DatabaseOperations {
    */
   static getAnalysis(analysisId: number): AnalysisResultRow | undefined {
     try {
-      return dbManager.get<AnalysisResultRow>('SELECT * FROM analyses WHERE id = ?', [analysisId]);
+      return dbManager.get<AnalysisResultRow>(
+        'SELECT * FROM analyses WHERE id = ?',
+        [analysisId]
+      );
     } catch (error) {
       throw new Error(`Failed to get analysis: ${(error as Error).message}`);
     }
@@ -337,7 +349,10 @@ class DatabaseOperations {
    * @param options Filter and pagination options
    * @returns Array of analyses
    */
-  static getProjectAnalyses(projectId: number, options: Pick<QueryOptions, 'limit' | 'offset'> = {}): AnalysisResultRow[] {
+  static getProjectAnalyses(
+    projectId: number,
+    options: Pick<QueryOptions, 'limit' | 'offset'> = {}
+  ): AnalysisResultRow[] {
     const { limit = 100, offset = 0 } = options;
 
     try {
@@ -349,7 +364,9 @@ class DatabaseOperations {
         [projectId, limit, offset]
       );
     } catch (error) {
-      throw new Error(`Failed to get project analyses: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to get project analyses: ${(error as Error).message}`
+      );
     }
   }
 
@@ -359,7 +376,10 @@ class DatabaseOperations {
    * @param updates Updated fields
    * @returns Updated analysis
    */
-  static updateAnalysis(analysisId: number, updates: UpdateAnalysisInput): AnalysisResultRow {
+  static updateAnalysis(
+    analysisId: number,
+    updates: UpdateAnalysisInput
+  ): AnalysisResultRow {
     try {
       const allowedFields: (keyof UpdateAnalysisInput)[] = [
         'title',
@@ -416,7 +436,9 @@ class DatabaseOperations {
    */
   static deleteAnalysis(analysisId: number): boolean {
     try {
-      const result = dbManager.run('DELETE FROM analyses WHERE id = ?', [analysisId]);
+      const result = dbManager.run('DELETE FROM analyses WHERE id = ?', [
+        analysisId,
+      ]);
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Failed to delete analysis: ${(error as Error).message}`);
@@ -461,7 +483,9 @@ class DatabaseOperations {
    */
   static getSeoRule(ruleId: number): SeoRuleRow | undefined {
     try {
-      return dbManager.get<SeoRuleRow>('SELECT * FROM seo_rules WHERE id = ?', [ruleId]);
+      return dbManager.get<SeoRuleRow>('SELECT * FROM seo_rules WHERE id = ?', [
+        ruleId,
+      ]);
     } catch (error) {
       throw new Error(`Failed to get SEO rule: ${(error as Error).message}`);
     }
@@ -472,7 +496,9 @@ class DatabaseOperations {
    * @param options Filter options
    * @returns Array of rules
    */
-  static getAllSeoRules(options: { category?: string | null; isActive?: boolean | null } = {}): SeoRuleRow[] {
+  static getAllSeoRules(
+    options: { category?: string | null; isActive?: boolean | null } = {}
+  ): SeoRuleRow[] {
     const { category = null, isActive = true } = options;
 
     try {
@@ -516,7 +542,9 @@ class DatabaseOperations {
         [category]
       );
     } catch (error) {
-      throw new Error(`Failed to get rules by category: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to get rules by category: ${(error as Error).message}`
+      );
     }
   }
 
@@ -526,9 +554,18 @@ class DatabaseOperations {
    * @param updates Updated fields
    * @returns Updated rule
    */
-  static updateSeoRule(ruleId: number, updates: Partial<CreateSeoRuleInput & { is_active: boolean }>): SeoRuleRow {
+  static updateSeoRule(
+    ruleId: number,
+    updates: Partial<CreateSeoRuleInput & { is_active: boolean }>
+  ): SeoRuleRow {
     try {
-      const allowedFields = ['category', 'name', 'description', 'weight', 'is_active'];
+      const allowedFields = [
+        'category',
+        'name',
+        'description',
+        'weight',
+        'is_active',
+      ];
       const updateFields: string[] = [];
       const params: any[] = [];
 
@@ -567,7 +604,9 @@ class DatabaseOperations {
    */
   static deleteSeoRule(ruleId: number): boolean {
     try {
-      const result = dbManager.run('DELETE FROM seo_rules WHERE id = ?', [ruleId]);
+      const result = dbManager.run('DELETE FROM seo_rules WHERE id = ?', [
+        ruleId,
+      ]);
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Failed to delete SEO rule: ${(error as Error).message}`);
@@ -581,15 +620,25 @@ class DatabaseOperations {
    * @param resultData Result information
    * @returns Created result with id
    */
-  static createMiniServiceResult(resultData: CreateMiniServiceResultInput): MiniServiceResultRow {
-    const { analysis_id, rule_id, score, status, message, details } = resultData;
+  static createMiniServiceResult(
+    resultData: CreateMiniServiceResultInput
+  ): MiniServiceResultRow {
+    const { analysis_id, rule_id, score, status, message, details } =
+      resultData;
 
     try {
       const result = dbManager.run(
         `INSERT INTO mini_service_results
          (analysis_id, rule_id, score, status, message, details)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [analysis_id, rule_id, score || 0, status || 'pending', message, details]
+        [
+          analysis_id,
+          rule_id,
+          score || 0,
+          status || 'pending',
+          message,
+          details,
+        ]
       );
 
       return {
@@ -604,7 +653,9 @@ class DatabaseOperations {
         updated_at: new Date().toISOString(),
       };
     } catch (error) {
-      throw new Error(`Failed to create mini service result: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to create mini service result: ${(error as Error).message}`
+      );
     }
   }
 
@@ -613,11 +664,18 @@ class DatabaseOperations {
    * @param resultId Result ID
    * @returns Result data or undefined
    */
-  static getMiniServiceResult(resultId: number): MiniServiceResultRow | undefined {
+  static getMiniServiceResult(
+    resultId: number
+  ): MiniServiceResultRow | undefined {
     try {
-      return dbManager.get<MiniServiceResultRow>('SELECT * FROM mini_service_results WHERE id = ?', [resultId]);
+      return dbManager.get<MiniServiceResultRow>(
+        'SELECT * FROM mini_service_results WHERE id = ?',
+        [resultId]
+      );
     } catch (error) {
-      throw new Error(`Failed to get mini service result: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to get mini service result: ${(error as Error).message}`
+      );
     }
   }
 
@@ -637,7 +695,9 @@ class DatabaseOperations {
         [analysisId]
       );
     } catch (error) {
-      throw new Error(`Failed to get analysis results: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to get analysis results: ${(error as Error).message}`
+      );
     }
   }
 
@@ -649,7 +709,9 @@ class DatabaseOperations {
    */
   static updateMiniServiceResult(
     resultId: number,
-    updates: Partial<Pick<MiniServiceResultRow, 'score' | 'status' | 'message' | 'details'>>
+    updates: Partial<
+      Pick<MiniServiceResultRow, 'score' | 'status' | 'message' | 'details'>
+    >
   ): MiniServiceResultRow {
     try {
       const allowedFields = ['score', 'status', 'message', 'details'];
@@ -682,7 +744,9 @@ class DatabaseOperations {
       }
       return result;
     } catch (error) {
-      throw new Error(`Failed to update mini service result: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to update mini service result: ${(error as Error).message}`
+      );
     }
   }
 
@@ -693,10 +757,15 @@ class DatabaseOperations {
    */
   static deleteMiniServiceResult(resultId: number): boolean {
     try {
-      const result = dbManager.run('DELETE FROM mini_service_results WHERE id = ?', [resultId]);
+      const result = dbManager.run(
+        'DELETE FROM mini_service_results WHERE id = ?',
+        [resultId]
+      );
       return result.changes > 0;
     } catch (error) {
-      throw new Error(`Failed to delete mini service result: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to delete mini service result: ${(error as Error).message}`
+      );
     }
   }
 
@@ -707,10 +776,15 @@ class DatabaseOperations {
    */
   static deleteAnalysisResults(analysisId: number): number {
     try {
-      const result = dbManager.run('DELETE FROM mini_service_results WHERE analysis_id = ?', [analysisId]);
+      const result = dbManager.run(
+        'DELETE FROM mini_service_results WHERE analysis_id = ?',
+        [analysisId]
+      );
       return result.changes;
     } catch (error) {
-      throw new Error(`Failed to delete analysis results: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to delete analysis results: ${(error as Error).message}`
+      );
     }
   }
 }

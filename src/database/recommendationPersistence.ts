@@ -143,12 +143,16 @@ export function saveRecommendations(
   const recommendations = enhancedRecommendations.recommendations;
   let savedCount = 0;
 
-  console.log(`[PERSISTENCE] Saving ${recommendations.length} recommendations...`);
+  console.log(
+    `[PERSISTENCE] Saving ${recommendations.length} recommendations...`
+  );
 
   recommendations.forEach((rec, index) => {
     try {
       // Insert main recommendation
-      console.log(`[PERSISTENCE] Inserting recommendation ${index + 1}/${recommendations.length}`);
+      console.log(
+        `[PERSISTENCE] Inserting recommendation ${index + 1}/${recommendations.length}`
+      );
 
       db.run(
         `INSERT INTO recommendations (
@@ -181,7 +185,11 @@ export function saveRecommendations(
 
       if (recommendationId) {
         // Insert actions
-        if (rec.actions && Array.isArray(rec.actions) && rec.actions.length > 0) {
+        if (
+          rec.actions &&
+          Array.isArray(rec.actions) &&
+          rec.actions.length > 0
+        ) {
           rec.actions.forEach(action => {
             db.run(
               `INSERT INTO recommendation_actions (
@@ -213,7 +221,11 @@ export function saveRecommendations(
         }
 
         // Insert resources
-        if (rec.resources && Array.isArray(rec.resources) && rec.resources.length > 0) {
+        if (
+          rec.resources &&
+          Array.isArray(rec.resources) &&
+          rec.resources.length > 0
+        ) {
           rec.resources.forEach(resource => {
             db.run(
               `INSERT INTO recommendation_resources (
@@ -227,7 +239,10 @@ export function saveRecommendations(
         savedCount++;
       }
     } catch (error) {
-      console.error(`[PERSISTENCE] Error saving recommendation ${index}:`, (error as Error).message);
+      console.error(
+        `[PERSISTENCE] Error saving recommendation ${index}:`,
+        (error as Error).message
+      );
     }
   });
 
@@ -241,7 +256,10 @@ export function saveRecommendations(
  * @param analysisId - Analysis ID
  * @returns Array of recommendations with related data
  */
-export function getRecommendations(db: SqlJsDatabase, analysisId: number): RecommendationRow[] {
+export function getRecommendations(
+  db: SqlJsDatabase,
+  analysisId: number
+): RecommendationRow[] {
   try {
     // Get all recommendations
     const recResult = db.exec(
@@ -249,7 +267,11 @@ export function getRecommendations(db: SqlJsDatabase, analysisId: number): Recom
       [analysisId]
     );
 
-    if (recResult.length === 0 || !recResult[0] || recResult[0].values.length === 0) {
+    if (
+      recResult.length === 0 ||
+      !recResult[0] ||
+      recResult[0].values.length === 0
+    ) {
       return [];
     }
 
@@ -289,7 +311,9 @@ export function getRecommendations(db: SqlJsDatabase, analysisId: number): Recom
         [rec.id]
       );
       rec.example =
-        exampleResult.length > 0 && exampleResult[0]?.values && exampleResult[0].values.length > 0
+        exampleResult.length > 0 &&
+        exampleResult[0]?.values &&
+        exampleResult[0].values.length > 0
           ? (() => {
               const example: any = {};
               exampleResult[0]!.columns.forEach((col, idx) => {
@@ -339,7 +363,10 @@ export function updateRecommendationStatus(
 ): boolean {
   try {
     // Update main status
-    db.run(`UPDATE recommendations SET status = ? WHERE id = ?`, [status, recommendationId]);
+    db.run(`UPDATE recommendations SET status = ? WHERE id = ?`, [
+      status,
+      recommendationId,
+    ]);
 
     // Insert into history
     db.run(
@@ -404,7 +431,10 @@ export function getQuickWins(
  * @param analysisId - Analysis ID
  * @returns Success status
  */
-export function deleteRecommendations(db: SqlJsDatabase, analysisId: number): boolean {
+export function deleteRecommendations(
+  db: SqlJsDatabase,
+  analysisId: number
+): boolean {
   try {
     db.run(`DELETE FROM recommendations WHERE analysis_id = ?`, [analysisId]);
     return true;

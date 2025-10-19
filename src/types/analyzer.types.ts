@@ -54,20 +54,20 @@ export interface ReadabilityMetrics {
 }
 
 export type ReadingLevel =
-  | 'very-easy'
-  | 'easy'
-  | 'fairly-easy'
-  | 'standard'
-  | 'fairly-difficult'
-  | 'difficult'
-  | 'very-difficult';
+  | 'Very Easy'
+  | 'Easy'
+  | 'Fairly Easy'
+  | 'Standard'
+  | 'Fairly Difficult'
+  | 'Difficult'
+  | 'Very Difficult'
+  | 'N/A';
 
 export interface ReadabilityScore {
   score: number;
-  grade: string;
-  level: ReadingLevel;
+  level: string;
   description: string;
-  recommendations: string[];
+  recommendations?: string[];
 }
 
 export interface TextStatistics {
@@ -131,51 +131,60 @@ export interface ContentOptimizationSuggestion {
 // HTML Parser Results
 // ============================================================
 
-export interface ParsedHTML {
+export interface HeadingsMap {
+  h1: string[];
+  h2: string[];
+  h3: string[];
+  h4: string[];
+  h5: string[];
+  h6: string[];
+}
+
+export interface ImageInfo {
+  src: string;
+  alt: string;
   title: string;
-  metaDescription: string;
-  metaKeywords: string;
-  headings: {
-    h1: string[];
-    h2: string[];
-    h3: string[];
-    h4: string[];
-    h5: string[];
-    h6: string[];
-  };
-  paragraphs: string[];
-  images: {
-    src: string;
-    alt: string | null;
-    title: string | null;
-  }[];
-  links: {
-    internal: { href: string; text: string }[];
-    external: { href: string; text: string }[];
-  };
-  scripts: string[];
-  styles: string[];
-  wordCount: number;
-  textContent: string;
+  hasAlt: boolean;
+  hasTitle: boolean;
+}
+
+export interface LinkInfo {
+  href: string;
+  text: string;
+  rel: string;
+  type: 'internal' | 'external' | 'email' | 'phone' | 'anchor';
+  hasText: boolean;
 }
 
 export interface MetaTags {
-  title?: string;
-  description?: string;
-  keywords?: string;
-  author?: string;
-  viewport?: string;
-  robots?: string;
-  canonical?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  ogUrl?: string;
-  twitterCard?: string;
-  twitterTitle?: string;
-  twitterDescription?: string;
-  twitterImage?: string;
-  [key: string]: string | undefined;
+  viewport: string | null;
+  canonical: string | null;
+  robots: string | null;
+  charset: string | null;
+  language: string | null;
+}
+
+export interface StructuralElements {
+  hasNav: boolean;
+  hasHeader: boolean;
+  hasFooter: boolean;
+  hasMain: boolean;
+  hasArticle: boolean;
+  semanticScore: number;
+}
+
+export interface ParsedHTML {
+  text: string;
+  html: string;
+  wordCount: number;
+  characterCount: number;
+  headings: HeadingsMap;
+  images: ImageInfo[];
+  links: LinkInfo[];
+  paragraphs: string[];
+  readability: ReadabilityScore;
+  metaTags: MetaTags;
+  structuralElements: StructuralElements;
 }
 
 // ============================================================

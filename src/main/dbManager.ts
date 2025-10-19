@@ -134,8 +134,12 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_projects_created_at ON projects(created_at);');
-      this.db.run('CREATE INDEX idx_projects_is_active ON projects(is_active);');
+      this.db.run(
+        'CREATE INDEX idx_projects_created_at ON projects(created_at);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_projects_is_active ON projects(is_active);'
+      );
 
       // Analyses table
       this.db.run(`
@@ -162,8 +166,12 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_analyses_project_id ON analyses(project_id);');
-      this.db.run('CREATE INDEX idx_analyses_created_at ON analyses(created_at);');
+      this.db.run(
+        'CREATE INDEX idx_analyses_project_id ON analyses(project_id);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_analyses_created_at ON analyses(created_at);'
+      );
 
       // SEO Rules table (for scoring rules and recommendations)
       this.db.run(`
@@ -178,8 +186,12 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_seo_rules_category ON seo_rules(category);');
-      this.db.run('CREATE INDEX idx_seo_rules_is_active ON seo_rules(is_active);');
+      this.db.run(
+        'CREATE INDEX idx_seo_rules_category ON seo_rules(category);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_seo_rules_is_active ON seo_rules(is_active);'
+      );
 
       // Mini Service Results table (individual analysis results)
       this.db.run(`
@@ -198,9 +210,15 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_mini_service_results_analysis_id ON mini_service_results(analysis_id);');
-      this.db.run('CREATE INDEX idx_mini_service_results_rule_id ON mini_service_results(rule_id);');
-      this.db.run('CREATE INDEX idx_mini_service_results_status ON mini_service_results(status);');
+      this.db.run(
+        'CREATE INDEX idx_mini_service_results_analysis_id ON mini_service_results(analysis_id);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_mini_service_results_rule_id ON mini_service_results(rule_id);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_mini_service_results_status ON mini_service_results(status);'
+      );
 
       // Recommendations table (for enhanced recommendations from recommendation engine)
       this.db.run(`
@@ -224,9 +242,15 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_recommendations_analysis_id ON recommendations(analysis_id);');
-      this.db.run('CREATE INDEX idx_recommendations_priority ON recommendations(priority);');
-      this.db.run('CREATE INDEX idx_recommendations_status ON recommendations(status);');
+      this.db.run(
+        'CREATE INDEX idx_recommendations_analysis_id ON recommendations(analysis_id);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_recommendations_priority ON recommendations(priority);'
+      );
+      this.db.run(
+        'CREATE INDEX idx_recommendations_status ON recommendations(status);'
+      );
 
       // Recommendation actions table
       this.db.run(`
@@ -243,7 +267,9 @@ class DatabaseManager {
         );
       `);
 
-      this.db.run('CREATE INDEX idx_recommendation_actions_rec_id ON recommendation_actions(recommendation_id);');
+      this.db.run(
+        'CREATE INDEX idx_recommendation_actions_rec_id ON recommendation_actions(recommendation_id);'
+      );
 
       // Recommendation examples table
       this.db.run(`
@@ -318,7 +344,11 @@ class DatabaseManager {
           if (!existingProject || existingProject.length === 0) {
             this.db.run(
               `INSERT INTO projects (name, description, url) VALUES (?, ?, ?)`,
-              ['Direct Input', 'Analyses performed on directly submitted content', 'N/A']
+              [
+                'Direct Input',
+                'Analyses performed on directly submitted content',
+                'N/A',
+              ]
             );
             console.log('[DB] Created default "Direct Input" project');
           }
@@ -368,7 +398,10 @@ class DatabaseManager {
    * @param params Query parameters
    * @returns Query result with changes and lastID
    */
-  run(sql: string, params: any[] = []): { changes: number; lastID: number | null } {
+  run(
+    sql: string,
+    params: any[] = []
+  ): { changes: number; lastID: number | null } {
     try {
       if (!this.db) {
         throw new Error('Database not initialized');
@@ -399,7 +432,10 @@ class DatabaseManager {
         lastID,
       };
     } catch (error) {
-      console.error('[DB] ❌ Error executing run query:', error, { sql, params });
+      console.error('[DB] ❌ Error executing run query:', error, {
+        sql,
+        params,
+      });
       throw error;
     }
   }
@@ -526,9 +562,16 @@ class DatabaseManager {
     rulesCount: number;
   } | null {
     try {
-      const projectCount = this.all<{ count: number }>('SELECT COUNT(*) as count FROM projects')[0]?.count || 0;
-      const analysisCount = this.all<{ count: number }>('SELECT COUNT(*) as count FROM analyses')[0]?.count || 0;
-      const rulesCount = this.all<{ count: number }>('SELECT COUNT(*) as count FROM seo_rules')[0]?.count || 0;
+      const projectCount =
+        this.all<{ count: number }>('SELECT COUNT(*) as count FROM projects')[0]
+          ?.count || 0;
+      const analysisCount =
+        this.all<{ count: number }>('SELECT COUNT(*) as count FROM analyses')[0]
+          ?.count || 0;
+      const rulesCount =
+        this.all<{ count: number }>(
+          'SELECT COUNT(*) as count FROM seo_rules'
+        )[0]?.count || 0;
 
       return {
         path: this.dbPath,

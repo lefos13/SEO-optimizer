@@ -58,8 +58,15 @@ export interface ParsedContent {
 // SEO Rules
 // ============================================================
 
-export type RuleCategory = 'meta' | 'content' | 'technical' | 'keywords';
+export type RuleCategory = 'meta' | 'content' | 'technical' | 'keywords' | 'readability';
 export type RuleSeverity = 'critical' | 'high' | 'medium' | 'low';
+
+export interface RuleCheckResult {
+  passed: boolean;
+  message: string;
+  warning?: boolean;
+  details?: any;
+}
 
 export interface SEORule {
   id: string;
@@ -68,17 +75,61 @@ export interface SEORule {
   weight: number;
   title: string;
   description: string;
-  check: (
-    content: ContentData,
-    keywords?: ParsedKeyword[]
-  ) => Promise<RuleCheckResult>;
+  check: (content: SEOContentInput) => Promise<RuleCheckResult>;
   recommendations: string[];
 }
 
-export interface RuleCheckResult {
-  passed: boolean;
-  message: string;
-  details?: any;
+export interface SEOContentInput {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  html?: string;
+  url?: string;
+  wordCount?: number;
+  characterCount?: number;
+  headings?: {
+    h1?: string[];
+    h2?: string[];
+    h3?: string[];
+    h4?: string[];
+    h5?: string[];
+    h6?: string[];
+  };
+  images?: Array<{
+    src?: string;
+    alt?: string;
+    title?: string;
+    hasAlt?: boolean;
+    hasTitle?: boolean;
+  }>;
+  links?: Array<{
+    href?: string;
+    text?: string;
+    rel?: string;
+    type?: string;
+    hasText?: boolean;
+  }>;
+  paragraphs?: string[];
+  readability?: {
+    score?: number;
+    level?: string;
+    description?: string;
+  };
+  metaTags?: {
+    viewport?: string | null;
+    canonical?: string | null;
+    robots?: string | null;
+    charset?: string | null;
+    language?: string | null;
+  };
+  structuralElements?: {
+    hasNav?: boolean;
+    hasHeader?: boolean;
+    hasFooter?: boolean;
+    hasMain?: boolean;
+    hasArticle?: boolean;
+    semanticScore?: number;
+  };
 }
 
 // ============================================================
