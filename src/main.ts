@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron/main';
 import path from 'node:path';
-import dbManager from './main/dbManager';
+import DatabaseManager from './main/dbManager';
 import { registerHandlers } from './main/ipcHandlers';
 
 // Enable hot reload in development mode
@@ -85,7 +85,7 @@ const createWindow = (): void => {
 app.whenReady().then(async () => {
   try {
     // Initialize database (async operation)
-    await dbManager.initialize();
+    await DatabaseManager.initialize();
 
     // Register IPC handlers
     registerHandlers();
@@ -108,7 +108,7 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   // Clean up database connection
-  dbManager.close();
+  DatabaseManager.close();
 
   if (process.platform !== 'darwin') {
     app.quit();

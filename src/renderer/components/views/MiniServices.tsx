@@ -21,6 +21,13 @@ import InternalLinkRecommender from '../miniservices/InternalLinkRecommender';
 import ContentLengthOptimizer from '../miniservices/ContentLengthOptimizer';
 import ContentGapAnalyzer from '../miniservices/ContentGapAnalyzer';
 import CompetitiveContentAnalyzer from '../miniservices/CompetitiveContentAnalyzer';
+import URLStructureAnalyzer from '../miniservices/URLStructureAnalyzer';
+import MetaTagGenerator from '../miniservices/MetaTagGenerator';
+import SchemaMarkupGenerator from '../miniservices/SchemaMarkupGenerator';
+import SitemapAnalyzer from '../miniservices/SitemapAnalyzer';
+import RedirectChainAnalyzer from '../miniservices/RedirectChainAnalyzer';
+import RobotsTxtAnalyzer from '../miniservices/RobotsTxtAnalyzer';
+import TechnicalSEOChecklist from '../miniservices/TechnicalSEOChecklist';
 
 interface Tab {
   id: string;
@@ -106,6 +113,22 @@ const MiniServices: React.FC = () => {
         { id: 'content-length', label: 'Length', icon: '📏' },
         { id: 'content-gaps', label: 'Topic Gaps', icon: '🔍' },
         { id: 'content-competitive', label: 'Competitive', icon: '📊' },
+      ],
+    },
+    {
+      id: 'technical',
+      label: 'Technical SEO',
+      icon: '⚙️',
+      description:
+        'Technical SEO tools for URLs, meta tags, schema markup, sitemaps, redirects, and robots.txt',
+      tabs: [
+        { id: 'technical-url', label: 'URL Analyzer', icon: '🔗' },
+        { id: 'technical-meta', label: 'Meta Tags', icon: '🏷️' },
+        { id: 'technical-schema', label: 'Schema Markup', icon: '📋' },
+        { id: 'technical-sitemap', label: 'Sitemap', icon: '🗺️' },
+        { id: 'technical-redirects', label: 'Redirects', icon: '↩️' },
+        { id: 'technical-robots', label: 'Robots.txt', icon: '🤖' },
+        { id: 'technical-checklist', label: 'Checklist', icon: '✅' },
       ],
     },
     // Example of future categories (commented out for now)
@@ -203,6 +226,27 @@ const MiniServices: React.FC = () => {
 
       case 'content-competitive':
         return <CompetitiveContentAnalyzer />;
+
+      case 'technical-url':
+        return <URLStructureAnalyzer />;
+
+      case 'technical-meta':
+        return <MetaTagGenerator />;
+
+      case 'technical-schema':
+        return <SchemaMarkupGenerator />;
+
+      case 'technical-sitemap':
+        return <SitemapAnalyzer />;
+
+      case 'technical-redirects':
+        return <RedirectChainAnalyzer />;
+
+      case 'technical-robots':
+        return <RobotsTxtAnalyzer />;
+
+      case 'technical-checklist':
+        return <TechnicalSEOChecklist />;
 
       default:
         return null;

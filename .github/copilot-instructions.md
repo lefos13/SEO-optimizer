@@ -12,6 +12,7 @@ FIRST AND MOST IMPORTANT RULE: NEVER generate extra doc files unless explicitly 
 - Implement proper error handling and validation
 - Add comprehensive comments for complex logic
 - Follow security best practices for Electron apps
+- **Keep files under 400 lines of code** - Break large files into smaller, focused modules for maintainability
 
 ### Architecture Principles
 
