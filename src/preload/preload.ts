@@ -221,7 +221,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       enhancedRecommendations: unknown[]
     ) =>
       ipcRenderer.invoke(
-        'seo:recommendations:save',
+        'seo:saveRecommendations',
         analysisId,
         enhancedRecommendations
       ),

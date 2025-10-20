@@ -138,11 +138,16 @@ class DatabaseOperations {
       const result = dbManager.run(
         `INSERT INTO projects (name, description, url)
          VALUES (?, ?, ?)`,
-        [name, description, url]
+        [name, description ?? null, url ?? null]
       );
 
+      const insertedId = result.lastID;
+      if (insertedId == null) {
+        throw new Error('Failed to retrieve inserted project id');
+      }
+
       return {
-        id: result.lastID!,
+        id: insertedId,
         name,
         description: description || undefined,
         url: url || undefined,
@@ -180,7 +185,7 @@ class DatabaseOperations {
 
     try {
       let query = 'SELECT * FROM projects';
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
 
       if (isActive !== null) {
         query += ' WHERE is_active = ?';
@@ -214,7 +219,7 @@ class DatabaseOperations {
         'is_active',
       ];
       const updateFields: string[] = [];
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
 
       Object.entries(updates).forEach(([key, value]) => {
         if (allowedFields.includes(key as keyof UpdateProjectInput)) {
@@ -289,15 +294,20 @@ class DatabaseOperations {
           project_id,
           content,
           language || 'en',
-          title,
-          meta_description,
-          keywords,
-          url,
+          title ?? null,
+          meta_description ?? null,
+          keywords ?? null,
+          url ?? null,
         ]
       );
 
+      const insertedId = result.lastID;
+      if (insertedId == null) {
+        throw new Error('Failed to retrieve inserted analysis id');
+      }
+
       return {
-        id: result.lastID!,
+        id: insertedId,
         project_id,
         content,
         title: title || '',
@@ -397,7 +407,7 @@ class DatabaseOperations {
         'url',
       ];
       const updateFields: string[] = [];
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
 
       Object.entries(updates).forEach(([key, value]) => {
         if (allowedFields.includes(key as keyof UpdateAnalysisInput)) {
@@ -459,11 +469,16 @@ class DatabaseOperations {
       const result = dbManager.run(
         `INSERT INTO seo_rules (category, name, description, weight)
          VALUES (?, ?, ?, ?)`,
-        [category, name, description, weight || 1.0]
+        [category, name, description ?? null, weight || 1.0]
       );
 
+      const insertedId = result.lastID;
+      if (insertedId == null) {
+        throw new Error('Failed to retrieve inserted seo rule id');
+      }
+
       return {
-        id: result.lastID!,
+        id: insertedId,
         category,
         name,
         description: description || '',
@@ -503,7 +518,7 @@ class DatabaseOperations {
 
     try {
       let query = 'SELECT * FROM seo_rules';
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
       const conditions: string[] = [];
 
       if (isActive !== null) {
@@ -567,12 +582,12 @@ class DatabaseOperations {
         'is_active',
       ];
       const updateFields: string[] = [];
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
 
       Object.entries(updates).forEach(([key, value]) => {
         if (allowedFields.includes(key)) {
           updateFields.push(`${key} = ?`);
-          params.push(value);
+          params.push(value as import('sql.js').SqlValue);
         }
       });
 
@@ -636,13 +651,18 @@ class DatabaseOperations {
           rule_id,
           score || 0,
           status || 'pending',
-          message,
-          details,
+          message ?? null,
+          details ?? null,
         ]
       );
 
+      const insertedId = result.lastID;
+      if (insertedId == null) {
+        throw new Error('Failed to retrieve inserted mini service result id');
+      }
+
       return {
-        id: result.lastID!,
+        id: insertedId,
         analysis_id,
         rule_id,
         score: score || 0,
@@ -716,7 +736,7 @@ class DatabaseOperations {
     try {
       const allowedFields = ['score', 'status', 'message', 'details'];
       const updateFields: string[] = [];
-      const params: any[] = [];
+      const params: import('sql.js').SqlValue[] = [];
 
       Object.entries(updates).forEach(([key, value]) => {
         if (allowedFields.includes(key)) {

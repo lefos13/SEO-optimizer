@@ -1348,7 +1348,9 @@ class ContentServices {
       pillar: { min: 3000, max: 10000, ideal: 5000 },
     };
 
-    return ranges[targetType] || ranges['blog']!;
+    const resolved: ContentLengthRange = (ranges[targetType] ??
+      ranges['blog']) as ContentLengthRange;
+    return resolved;
   }
 
   private static _analyzeContentLength(

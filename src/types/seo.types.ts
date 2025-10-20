@@ -70,7 +70,7 @@ export interface RuleCheckResult {
   passed: boolean;
   message: string;
   warning?: boolean;
-  details?: any;
+  details?: unknown;
 }
 
 export interface SEORule {

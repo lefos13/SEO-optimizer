@@ -1,4 +1,4 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+import initSqlJs, { Database as SqlJsDatabase, SqlValue } from 'sql.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -11,7 +11,7 @@ import type { DatabaseConfig } from '../types/database.types';
  */
 class DatabaseManager {
   private db: SqlJsDatabase | null = null;
-  private SQL: any = null;
+  private SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null;
   private isInitialized: boolean = false;
   private readonly dbPath: string;
 
@@ -402,7 +402,7 @@ class DatabaseManager {
    */
   run(
     sql: string,
-    params: any[] = []
+    params: SqlValue[] = []
   ): { changes: number; lastID: number | null } {
     try {
       if (!this.db) {
@@ -452,7 +452,7 @@ class DatabaseManager {
    * @param params Query parameters
    * @returns Single row
    */
-  get<T = any>(sql: string, params: any[] = []): T | undefined {
+  get<T = unknown>(sql: string, params: SqlValue[] = []): T | undefined {
     try {
       if (!this.db) {
         throw new Error('Database not initialized');
@@ -465,8 +465,8 @@ class DatabaseManager {
 
       // Convert sql.js format (columns + values) to object format
       const columns = result[0].columns;
-      const row = result[0].values[0];
-      const obj: any = {};
+      const row = (result[0].values as SqlValue[][])[0];
+      const obj: Record<string, unknown> = {};
 
       if (columns && row) {
         for (let i = 0; i < columns.length; i++) {
@@ -490,7 +490,7 @@ class DatabaseManager {
    * @param params Query parameters
    * @returns All matching rows
    */
-  all<T = any>(sql: string, params: any[] = []): T[] {
+  all<T = unknown>(sql: string, params: SqlValue[] = []): T[] {
     try {
       if (!this.db) {
         throw new Error('Database not initialized');
@@ -503,10 +503,10 @@ class DatabaseManager {
 
       // Convert sql.js format (columns + values) to array of objects
       const columns = result[0].columns;
-      const rows = result[0].values;
+      const rows = result[0].values as SqlValue[][];
 
-      return rows.map((row: any) => {
-        const obj: any = {};
+      return rows.map(row => {
+        const obj: Record<string, unknown> = {};
         for (let i = 0; i < columns.length; i++) {
           const colName = columns[i];
           if (colName !== undefined) {

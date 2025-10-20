@@ -3,6 +3,9 @@
  * Core types for database operations and schemas
  */
 
+import type { Database } from 'sql.js';
+import type { Recommendation, KeywordDensity } from './seo.types';
+
 // ============================================================
 // Database Configuration
 // ============================================================
@@ -14,7 +17,7 @@ export interface DatabaseConfig {
 }
 
 export interface DatabaseConnection {
-  db: any; // sql.js Database type
+  db: Database; // sql.js Database type from initSqlJs
   isConnected: boolean;
 }
 
@@ -114,13 +117,13 @@ export interface QueryParams {
   [key: string]: string | number | boolean | null;
 }
 
-export interface QueryResult<T = any> {
+export interface QueryResult<T = unknown> {
   rows: T[];
   rowCount: number;
 }
 
 export interface TransactionCallback<T> {
-  (db: any): Promise<T>;
+  (db: Database): Promise<T>;
 }
 
 // ============================================================
@@ -139,8 +142,8 @@ export interface SaveAnalysisParams {
   contentScore: number;
   technicalScore: number;
   keywordScore: number;
-  recommendations: any[];
-  keywordDensities: any[];
+  recommendations: Recommendation[];
+  keywordDensities: KeywordDensity[];
 }
 
 export interface UpdateProjectParams {

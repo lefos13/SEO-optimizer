@@ -18,7 +18,15 @@ import type {
   SEOContentInput,
   SupportedLanguage,
 } from '../types/seo.types';
-import type { ParsedHTML } from '../types/analyzer.types';
+import type {
+  ParsedHTML,
+  HeadingsMap,
+  ImageInfo,
+  LinkInfo,
+  MetaTags,
+  StructuralElements,
+} from '../types/analyzer.types';
+import type { RecommendationsResult } from './recommendationEngine';
 import * as htmlParser from './htmlParser';
 import * as seoRules from './seoRules';
 import { RecommendationEngine } from './recommendationEngine';
@@ -53,11 +61,11 @@ export interface AnalysisMetadata {
   url: string;
   wordCount: number;
   characterCount: number;
-  headings?: any;
-  images?: any;
-  links?: any;
-  metaTags?: any;
-  structuralElements?: any;
+  headings?: HeadingsMap;
+  images?: ImageInfo[];
+  links?: LinkInfo[];
+  metaTags?: MetaTags;
+  structuralElements?: StructuralElements;
 }
 
 export interface AnalysisResults {
@@ -73,7 +81,7 @@ export interface AnalysisResults {
   metadata: Partial<AnalysisMetadata>;
   categoryScores: Record<string, CategoryScore>;
   recommendationsByCategory?: Record<string, string[]>;
-  enhancedRecommendations?: any;
+  enhancedRecommendations?: RecommendationsResult | null;
 }
 
 export interface AnalysisInput {
@@ -107,6 +115,21 @@ export class SEOAnalyzer {
       metadata: {},
       categoryScores: {},
     };
+  }
+
+  /**
+   * Safely get or create a category score entry
+   */
+  private getOrCreateCategoryScore(category: string): CategoryScore {
+    if (!this.results.categoryScores[category]) {
+      this.results.categoryScores[category] = {
+        score: 0,
+        maxScore: 0,
+        passed: 0,
+        failed: 0,
+      };
+    }
+    return this.results.categoryScores[category];
   }
 
   /**
@@ -193,8 +216,8 @@ export class SEOAnalyzer {
       console.log('[SEO-ANALYZER] ✅ Recommendations generated:', {
         recommendationCount:
           this.results.enhancedRecommendations?.recommendations?.length || 0,
-        categoryScores: Object.keys(
-          this.results.enhancedRecommendations?.categoryScores || {}
+        categories: Object.keys(
+          this.results.enhancedRecommendations?.byCategory || {}
         ).length,
       });
 
@@ -317,7 +340,7 @@ export class SEOAnalyzer {
         };
       }
 
-      const categoryScore = this.results.categoryScores[rule.category]!; // Non-null assertion after initialization
+      const categoryScore = this.getOrCreateCategoryScore(rule.category);
 
       // Add to max score (overall and category)
       this.results.maxScore += rule.weight;
@@ -420,10 +443,9 @@ export class SEOAnalyzer {
     const grouped: Record<string, string[]> = {};
 
     this.results.recommendations.forEach(rec => {
-      if (!grouped[rec.category]) {
-        grouped[rec.category] = [];
-      }
-      grouped[rec.category]!.push(rec.recommendation); // Non-null assertion after initialization
+      const list = grouped[rec.category] ?? [];
+      list.push(rec.recommendation);
+      grouped[rec.category] = list;
     });
 
     return grouped;

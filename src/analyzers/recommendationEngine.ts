@@ -12,7 +12,7 @@
  */
 
 import type { SEORule } from '../types/seo.types';
-import type { AnalysisResults } from './seoAnalyzer';
+import type { AnalysisResults, AnalysisIssue } from './seoAnalyzer';
 
 /**
  * Recommendation priority levels
@@ -243,6 +243,7 @@ interface SpecificAction {
  * Translation object type
  */
 type TranslationObject = (typeof TRANSLATIONS)[LanguageCode];
+type TranslationRecord = Record<string, string | Record<string, string>>;
 
 /**
  * Recommendation Engine Class
@@ -312,7 +313,7 @@ export class RecommendationEngine {
    * @returns Enhanced recommendation
    */
   private createRecommendation(
-    issue: any,
+    issue: AnalysisIssue,
     rule: SEORule,
     analysisResults: AnalysisResults
   ): Recommendation {
@@ -498,7 +499,7 @@ export class RecommendationEngine {
   /**
    * Estimate effort required for a rule fix
    */
-  private estimateEffort(rule: SEORule, issue: any): EffortType {
+  private estimateEffort(rule: SEORule, issue: AnalysisIssue): EffortType {
     // Critical/High severity and high weight = more effort
     if (issue.severity === 'critical' && issue.impact >= 8) {
       return EFFORT.SIGNIFICANT;
@@ -781,10 +782,9 @@ export class RecommendationEngine {
   ): Record<string, Recommendation[]> {
     const grouped: Record<string, Recommendation[]> = {};
     recommendations.forEach(rec => {
-      if (!grouped[rec.category]) {
-        grouped[rec.category] = [];
-      }
-      grouped[rec.category]!.push(rec);
+      const arr = grouped[rec.category] ?? [];
+      arr.push(rec);
+      grouped[rec.category] = arr;
     });
     return grouped;
   }
@@ -833,8 +833,13 @@ export class RecommendationEngine {
     subkey: string | null = null
   ): string {
     if (subkey) {
-      return (this.translations[key] as any)?.[subkey] || subkey;
+      const v = (this.translations as TranslationRecord)[key] as
+        | Record<string, string>
+        | undefined;
+      return (v && v[subkey]) || subkey;
     }
-    return (this.translations[key] as any) || (key as string);
+    const val = (this.translations as TranslationRecord)[key];
+    if (!val) return key as string;
+    return typeof val === 'string' ? val : JSON.stringify(val);
   }
 }

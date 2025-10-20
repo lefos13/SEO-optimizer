@@ -1,56 +1,94 @@
 import { ipcMain } from 'electron';
 import DatabaseOperations from './dbOperations';
-
-/**
- * IPCHandlers - Central registration point for all IPC handlers
- *
- * Organizes handlers into categories:
- * - Database operations (projects, analyses, rules, results, stats)
- * - SEO analysis and recommendations
- * - Keyword services (density, long-tail, difficulty, clustering, LSI)
- * - Readability analysis (7 mini-services)
- * - Content optimization (6 services)
- */
+import dbManager from './dbManager';
+import SEOAnalyzer from '../analyzers/seoAnalyzer';
+import * as recommendationPersistence from '../database/recommendationPersistence';
+import * as keywordSuggestions from '../analyzers/keywordSuggestions';
+import * as urlFetcher from '../analyzers/urlFetcher';
+import { KeywordServices } from '../analyzers/keywordServices';
+import type { ClusteringOptions } from '../analyzers/keywordServices';
+import ReadabilityServices from '../analyzers/readabilityServices';
+import ContentServices from '../analyzers/contentServices';
 export class IPCHandlers {
   /**
    * Register all IPC handlers for main process
-   * Called during app initialization in main.ts
    */
   static registerHandlers(): void {
-    // ============ DATABASE OPERATIONS - PROJECTS ============
-    ipcMain.handle('db:project:create', async (_event, data: unknown) => {
+    /* Inserted compatibility handler will be placed inside this method */
+
+    // Accept both shapes for compatibility:
+    // - saveRecommendations: (analysisId, recommendationsArray)
+    // - seo:recommendations:save: (analysisId, { recommendations: [...] })
+    const handleSaveRecommendations = async (
+      _event: unknown,
+      analysisId: number,
+      payload: unknown
+    ) => {
       try {
-        console.log('[IPC] 📁 Creating new project...');
-        const result = await DatabaseOperations.createProject(
-          data as Parameters<typeof DatabaseOperations.createProject>[0]
+        console.log(
+          '[IPC] \ud83d\udcbe Saving recommendations for analysis:',
+          analysisId
         );
-        console.log('[IPC] ✅ Project created successfully:', result.id);
-        return result;
+
+        // Normalize payload to an array of recommendations
+        let recommendationsArray: Array<Record<string, unknown>> = [];
+
+        try {
+          if (Array.isArray(payload)) {
+            recommendationsArray = payload as Array<Record<string, unknown>>;
+          } else if (
+            payload &&
+            typeof payload === 'object' &&
+            Array.isArray(
+              (payload as unknown as { recommendations?: unknown })
+                .recommendations
+            )
+          ) {
+            recommendationsArray =
+              (
+                payload as unknown as {
+                  recommendations?: Array<Record<string, unknown>>;
+                }
+              ).recommendations || [];
+          }
+
+          console.log(
+            '[IPC] \ud83d\udcbe Incoming recommendations sample:',
+            recommendationsArray.slice(0, 5)
+          );
+        } catch (_err) {
+          // ignore logging errors
+        }
+
+        const db = await dbManager.getDb();
+        const saved = await recommendationPersistence.saveRecommendations(
+          db,
+          analysisId,
+          {
+            recommendations: recommendationsArray,
+          }
+        );
+
+        console.log(
+          '[IPC] \u2705 Recommendations saved successfully, count saved:',
+          saved
+        );
+        return { success: true };
       } catch (error) {
         console.error(
-          '[IPC] ❌ Failed to create project:',
+          '[IPC] \u274c Failed to save recommendations:',
           (error as Error).message
         );
         throw new Error(
-          `Failed to create project: ${(error as Error).message}`
+          `Failed to save recommendations: ${(error as Error).message}`
         );
       }
-    });
+    };
 
-    ipcMain.handle('db:project:get', async (_event, id: number) => {
-      try {
-        console.log('[IPC] 🔍 Fetching project:', id);
-        const result = await DatabaseOperations.getProject(id);
-        console.log('[IPC] ✅ Project fetched:', result?.name || 'Not found');
-        return result;
-      } catch (error) {
-        console.error(
-          '[IPC] ❌ Failed to fetch project:',
-          (error as Error).message
-        );
-        throw new Error(`Failed to fetch project: ${(error as Error).message}`);
-      }
-    });
+    // Register the normalized handler
+    ipcMain.handle('seo:saveRecommendations', handleSaveRecommendations);
+    ipcMain.handle('seo:recommendations:save', handleSaveRecommendations);
+    // (Removed stray syntax error lines)
 
     ipcMain.handle('db:project:getAll', async _event => {
       try {
@@ -434,8 +472,7 @@ export class IPCHandlers {
     ipcMain.handle('db:stats', async _event => {
       try {
         console.log('[IPC] 📊 Fetching database statistics...');
-        const dbManager = require('./dbManager');
-        const result = await dbManager.default.getStats();
+        const result = await dbManager.getStats();
         console.log('[IPC] ✅ Statistics fetched');
         return result;
       } catch (error) {
@@ -464,13 +501,18 @@ export class IPCHandlers {
             keywordCount: keywords?.length || 0,
           });
 
-          const SEOAnalyzer = require('../analyzers/seoAnalyzer');
           const analyzer = new SEOAnalyzer();
-          const result = analyzer.analyze(content, keywords, options);
+          const result = await analyzer.analyze({
+            html: content,
+            keywords: keywords.join(', '),
+            language: ((options as { language?: string })?.language || 'en') as
+              | 'en'
+              | 'el',
+          });
 
           console.log('[IPC] ✅ SEO analysis complete:', {
-            score: result.overallScore,
-            issuesFound: result.summary?.totalIssues || 0,
+            score: result.score,
+            issuesFound: result.issues.length,
           });
           return result;
         } catch (error) {
@@ -492,9 +534,6 @@ export class IPCHandlers {
             '[IPC] 📋 Fetching recommendations for analysis:',
             analysisId
           );
-          const dbManager = require('../database/dbManager');
-          const recommendationPersistence = require('../database/recommendationPersistence');
-
           const db = await dbManager.getDb();
           const recommendations =
             await recommendationPersistence.getRecommendations(db, analysisId);
@@ -503,6 +542,16 @@ export class IPCHandlers {
             '[IPC] ✅ Recommendations fetched:',
             recommendations.length
           );
+          try {
+            console.log(
+              '[IPC] ✅ Sample fetched recs:',
+              recommendations
+                .slice(0, 5)
+                .map(r => ({ id: r.id, title: r.title }))
+            );
+          } catch (_err) {
+            // ignore logging errors
+          }
           return recommendations;
         } catch (error) {
           console.error(
@@ -524,9 +573,6 @@ export class IPCHandlers {
             id: recommendationId,
             status,
           });
-          const dbManager = require('../database/dbManager');
-          const recommendationPersistence = require('../database/recommendationPersistence');
-
           const db = await dbManager.getDb();
           await recommendationPersistence.updateRecommendationStatus(
             db,
@@ -553,9 +599,6 @@ export class IPCHandlers {
       async (_event, analysisId: number, maxItems: number = 5) => {
         try {
           console.log('[IPC] ⚡ Fetching quick wins for analysis:', analysisId);
-          const dbManager = require('../database/dbManager');
-          const recommendationPersistence = require('../database/recommendationPersistence');
-
           const db = await dbManager.getDb();
           const quickWins = await recommendationPersistence.getQuickWins(
             db,
@@ -583,11 +626,10 @@ export class IPCHandlers {
       async (_event, htmlContent: string, keyword: string) => {
         try {
           console.log('[IPC] 📊 Calculating keyword density for:', keyword);
-          const htmlParser = require('../analyzers/htmlParser');
-          const density = htmlParser.calculateKeywordDensity(
-            htmlContent,
-            keyword
-          );
+          const analysis = KeywordServices.analyzeKeywordDensity(htmlContent, [
+            keyword,
+          ]);
+          const density = analysis.densityResults[0]?.density || 0;
 
           console.log('[IPC] ✅ Keyword density calculated:', density);
           return density;
@@ -612,10 +654,12 @@ export class IPCHandlers {
             keywords.length,
             'keywords'
           );
-          const htmlParser = require('../analyzers/htmlParser');
-          const densities = htmlParser.calculateKeywordDensities(
+          const analysis = KeywordServices.analyzeKeywordDensity(
             htmlContent,
             keywords
+          );
+          const densities = analysis.densityResults.map(
+            result => result.density
           );
 
           console.log('[IPC] ✅ Keyword densities calculated');
@@ -635,13 +679,24 @@ export class IPCHandlers {
     // ============ SEO KEYWORD SUGGESTIONS ============
     ipcMain.handle(
       'seo:suggestKeywords',
-      async (_event, content: string, options?: unknown) => {
+      async (
+        _event,
+        content: string,
+        options?: { maxSuggestions?: number } | number
+      ) => {
         try {
           console.log('[IPC] 🎯 Generating keyword suggestions...');
-          const keywordSuggestions = require('../analyzers/keywordSuggestions');
+          const maxSuggestions =
+            typeof options === 'number'
+              ? options
+              : options &&
+                  typeof options === 'object' &&
+                  'maxSuggestions' in options
+                ? (options as { maxSuggestions: number }).maxSuggestions
+                : 10;
           const suggestions = keywordSuggestions.suggestKeywords(
             content,
-            options
+            maxSuggestions
           );
 
           console.log(
@@ -661,44 +716,11 @@ export class IPCHandlers {
       }
     );
 
-    // ============ SEO RECOMMENDATION PERSISTENCE ============
-    ipcMain.handle(
-      'seo:saveRecommendations',
-      async (_event, analysisId: number, recommendations: unknown[]) => {
-        try {
-          console.log(
-            '[IPC] 💾 Saving recommendations for analysis:',
-            analysisId
-          );
-          const dbManager = require('../database/dbManager');
-          const recommendationPersistence = require('../database/recommendationPersistence');
-
-          const db = await dbManager.getDb();
-          await recommendationPersistence.saveRecommendations(
-            db,
-            analysisId,
-            recommendations
-          );
-
-          console.log('[IPC] ✅ Recommendations saved successfully');
-          return { success: true };
-        } catch (error) {
-          console.error(
-            '[IPC] ❌ Failed to save recommendations:',
-            (error as Error).message
-          );
-          throw new Error(
-            `Failed to save recommendations: ${(error as Error).message}`
-          );
-        }
-      }
-    );
+    // (save handler normalized and registered earlier)
 
     // ============ SEO URL FETCHER ============
     ipcMain.handle('seo:fetchUrl', async (_event, url: string) => {
       try {
-        const urlFetcher = require('../analyzers/urlFetcher');
-
         if (!urlFetcher.isValidUrl(url)) {
           throw new Error('Invalid URL provided');
         }
@@ -707,8 +729,8 @@ export class IPCHandlers {
         const result = await urlFetcher.fetchUrl(url);
 
         console.log('[IPC] ✅ URL fetched successfully:', {
-          contentLength: result.content?.length || 0,
-          hasMetadata: !!result.metadata,
+          contentLength: result.html?.length || 0,
+          hasTitle: !!result.title,
         });
         return result;
       } catch (error) {
@@ -729,7 +751,6 @@ export class IPCHandlers {
             contentLength: content?.length || 0,
             keywordCount: keywords?.length || 0,
           });
-          const KeywordServices = require('../analyzers/keywordServices');
           const result = KeywordServices.analyzeKeywordDensity(
             content,
             keywords
@@ -751,14 +772,20 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'keyword:generateLongTail',
-      async (_event, seedKeywords: string[], maxSuggestions: number = 10) => {
+      async (
+        _event,
+        content: string,
+        seedKeywords: string[] = [],
+        maxSuggestions: number = 10
+      ) => {
         try {
           console.log('[IPC] 🎯 Generating long-tail keywords:', {
+            contentLength: content?.length || 0,
             seedCount: seedKeywords?.length || 0,
             maxSuggestions,
           });
-          const KeywordServices = require('../analyzers/keywordServices');
           const result = KeywordServices.generateLongTailKeywords(
+            content,
             seedKeywords,
             maxSuggestions
           );
@@ -786,7 +813,6 @@ export class IPCHandlers {
           console.log('[IPC] 📊 Estimating keyword difficulty:', {
             keywordCount: keywords?.length || 0,
           });
-          const KeywordServices = require('../analyzers/keywordServices');
           const result = KeywordServices.estimateKeywordDifficulty(keywords);
 
           console.log('[IPC] ✅ Keyword difficulty estimated');
@@ -805,13 +831,16 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'keyword:cluster',
-      async (_event, keywords: string[], options?: unknown) => {
+      async (_event, keywords: string[], options?: ClusteringOptions) => {
         try {
           console.log('[IPC] 🔍 Clustering keywords:', {
             keywordCount: keywords?.length || 0,
           });
-          const KeywordServices = require('../analyzers/keywordServices');
-          const result = KeywordServices.clusterKeywords(keywords, options);
+          const result = KeywordServices.clusterKeywords(
+            keywords,
+            '',
+            options || {}
+          );
 
           console.log('[IPC] ✅ Keywords clustered:', {
             clusterCount: result.clusters?.length || 0,
@@ -843,7 +872,6 @@ export class IPCHandlers {
             mainKeywordsCount: mainKeywords?.length || 0,
             maxSuggestions,
           });
-          const KeywordServices = require('../analyzers/keywordServices');
           const result = KeywordServices.generateLSIKeywords(
             content,
             mainKeywords,
@@ -867,13 +895,12 @@ export class IPCHandlers {
     // ============ READABILITY SERVICES (MINI-SERVICES) ============
     ipcMain.handle(
       'readability:analyze',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 📖 Readability analysis requested:', {
             contentLength: content?.length || 0,
             language: (options as { language?: string })?.language || 'en',
           });
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyze(content, options);
 
           console.log('[IPC] ✅ Readability analysis complete:', {
@@ -895,10 +922,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeOverview',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 📊 Readability overview analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeOverview(content, options);
 
           console.log('[IPC] ✅ Overview analysis complete');
@@ -917,10 +943,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeStructure',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 🧱 Readability structure analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeStructure(content, options);
 
           console.log('[IPC] ✅ Structure analysis complete');
@@ -939,10 +964,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeReadingLevels',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 🎓 Reading levels analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeReadingLevels(
             content,
             options
@@ -964,10 +988,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeImprovements',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 💡 Improvements analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeImprovements(
             content,
             options
@@ -989,10 +1012,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeLanguageGuidance',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] 🌐 Language guidance analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeLanguageGuidance(
             content,
             options
@@ -1014,10 +1036,9 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'readability:analyzeLiveScore',
-      async (_event, content: string, options: unknown = {}) => {
+      async (_event, content: string, options: { language?: string } = {}) => {
         try {
           console.log('[IPC] ⚡ Live score analysis requested');
-          const ReadabilityServices = require('../analyzers/readabilityServices');
           const result = ReadabilityServices.analyzeLiveScore(content, options);
 
           console.log('[IPC] ✅ Live score analysis complete');
@@ -1038,10 +1059,13 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'content:analyzeStructure',
-      async (_event, content: string, options: unknown = {}) => {
+      async (
+        _event,
+        content: string,
+        options: Record<string, unknown> = {}
+      ) => {
         try {
           console.log('[IPC] 🏗️ Content structure analysis requested');
-          const ContentServices = require('../analyzers/contentServices');
           const result = ContentServices.analyzeContentStructure(
             content,
             options
@@ -1071,7 +1095,6 @@ export class IPCHandlers {
           console.log('[IPC] 📋 Heading optimization requested:', {
             keywordCount: keywords.length,
           });
-          const ContentServices = require('../analyzers/contentServices');
           const result = ContentServices.optimizeHeadings(content, keywords);
 
           console.log('[IPC] ✅ Heading optimization complete:', {
@@ -1093,12 +1116,19 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'content:recommendInternalLinks',
-      async (_event, content: string, existingPages: unknown[] = []) => {
+      async (
+        _event,
+        content: string,
+        existingPages: Array<{
+          title: string;
+          url: string;
+          keywords?: string[];
+        }> = []
+      ) => {
         try {
           console.log('[IPC] 🔗 Internal linking analysis requested:', {
             existingPages: existingPages.length,
           });
-          const ContentServices = require('../analyzers/contentServices');
           const result = ContentServices.recommendInternalLinks(
             content,
             existingPages
@@ -1123,13 +1153,16 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'content:optimizeLength',
-      async (_event, content: string, options: unknown = {}) => {
+      async (
+        _event,
+        content: string,
+        options: { targetType?: string } = {}
+      ) => {
         try {
           console.log('[IPC] 📏 Content length optimization requested:', {
             targetType:
               (options as { targetType?: string })?.targetType || 'blog',
           });
-          const ContentServices = require('../analyzers/contentServices');
           const result = ContentServices.optimizeContentLength(
             content,
             options
@@ -1159,7 +1192,6 @@ export class IPCHandlers {
           console.log('[IPC] 🔍 Content gap analysis requested:', {
             topics: topics.length,
           });
-          const ContentServices = require('../analyzers/contentServices');
           const result = ContentServices.analyzeContentGaps(content, topics);
 
           console.log('[IPC] ✅ Content gap analysis complete:', {
@@ -1181,15 +1213,28 @@ export class IPCHandlers {
 
     ipcMain.handle(
       'content:analyzeCompetitive',
-      async (_event, content: string, competitors: unknown[] = []) => {
+      async (
+        _event,
+        content: string,
+        competitors: Array<{
+          title: string;
+          content: string;
+          url?: string;
+        }> = []
+      ) => {
         try {
           console.log('[IPC] 📊 Competitive content analysis requested:', {
             competitors: competitors.length,
           });
-          const ContentServices = require('../analyzers/contentServices');
+          const normalizedCompetitors = competitors.map(c => ({
+            title: c.title,
+            content: c.content,
+            url: c.url || '',
+          }));
+
           const result = ContentServices.analyzeCompetitiveContent(
             content,
-            competitors
+            normalizedCompetitors
           );
 
           console.log('[IPC] ✅ Competitive content analysis complete:', {

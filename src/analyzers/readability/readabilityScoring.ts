@@ -230,12 +230,16 @@ export function determineReadingLevels(gradeValue: number): ReadingLevels {
     { label: 'Graduate', range: 'Graduate level', min: 17, max: 20 },
   ];
 
-  const currentStage =
-    educationStages.find(
-      stage => gradeValue >= stage.min && gradeValue <= stage.max
-    ) || educationStages[educationStages.length - 1]!;
+  const defaultStage = educationStages[educationStages.length - 1];
+  const found = educationStages.find(
+    stage => gradeValue >= stage.min && gradeValue <= stage.max
+  );
+  // Ensure currentStage is never undefined for downstream use
+  const currentStage = (found ?? defaultStage) as NonNullable<
+    typeof defaultStage
+  >;
 
-  const audienceFit = [
+  const audienceFit: ReadingLevels['audienceFit'] = [
     { audience: 'General Public', suitable: gradeValue <= 8 },
     {
       audience: 'High School Students',

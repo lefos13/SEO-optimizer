@@ -227,3 +227,35 @@ MIT
 ---
 
 **Status:** Phase 4 In Progress 🚧 | Content Optimization Services Added ✅ | Mini-Services Collection Complete 🎯
+
+## 🧰 Editor setup: make VS Code show the same eslint problems as `yarn lint`
+
+If the ESLint extension reports different problems than `yarn lint`, follow these steps to align them:
+
+1. Make sure dependencies are installed in the workspace root:
+
+```powershell
+yarn install
+```
+
+2. Reload VS Code window (Developer: Reload Window).
+
+3. Ensure the ESLint extension is installed and enabled. The workspace contains recommended settings in `.vscode/settings.json` which:
+
+- Uses workspace Node modules
+- Validates JS/TS/JSX/TSX files
+- Runs ESLint on save and applies auto-fixes
+
+4. If you still see mismatches:
+
+- Set `"eslint.debug": true` in `.vscode/settings.json` and check the "Output" panel > ESLint for how the extension locates config files.
+- Confirm the ESLint extension is using the workspace version (not a globally bundled engine). The Output panel will show the path.
+- Run `yarn lint --debug` in a terminal to compare the CLI resolver details.
+
+5. Common causes:
+
+- Missing node_modules in workspace
+- Different ESLint versions between CLI and extension
+- The extension not detecting the flat config; adjusting `eslint.workingDirectories` in `.vscode/settings.json` to the project root can help
+
+If you want, I can enable `eslint.debug` and help interpret the extension logs.

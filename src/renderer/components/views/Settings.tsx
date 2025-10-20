@@ -7,7 +7,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-const Settings = () => {
+const Settings: React.FC = () => {
   return (
     <div className="view-container">
       <div className="view-header">

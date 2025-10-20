@@ -465,9 +465,11 @@ export function generateDynamicLanguageGuidance(
     medium: 2,
     low: 3,
   };
-  specificIssues.sort(
-    (a, b) => severityOrder[a.severity]! - severityOrder[b.severity]!
-  );
+  specificIssues.sort((a, b) => {
+    const aScore = severityOrder[a.severity] ?? Number.MAX_SAFE_INTEGER;
+    const bScore = severityOrder[b.severity] ?? Number.MAX_SAFE_INTEGER;
+    return aScore - bScore;
+  });
 
   const priorityOrder: Record<string, number> = {
     critical: 0,
@@ -476,9 +478,11 @@ export function generateDynamicLanguageGuidance(
     low: 3,
     maintenance: 4,
   };
-  actionableAdvice.sort(
-    (a, b) => priorityOrder[a.priority]! - priorityOrder[b.priority]!
-  );
+  actionableAdvice.sort((a, b) => {
+    const aPriority = priorityOrder[a.priority] ?? Number.MAX_SAFE_INTEGER;
+    const bPriority = priorityOrder[b.priority] ?? Number.MAX_SAFE_INTEGER;
+    return aPriority - bPriority;
+  });
 
   return {
     contentAnalysis,

@@ -22,14 +22,28 @@ import ContentLengthOptimizer from '../miniservices/ContentLengthOptimizer';
 import ContentGapAnalyzer from '../miniservices/ContentGapAnalyzer';
 import CompetitiveContentAnalyzer from '../miniservices/CompetitiveContentAnalyzer';
 
-const MiniServices = () => {
+interface Tab {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+interface Category {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  tabs: Tab[];
+}
+
+const MiniServices: React.FC = () => {
   // UI state
-  const [activeCategory, setActiveCategory] = useState('keywords');
-  const [activeTab, setActiveTab] = useState('density');
+  const [activeCategory, setActiveCategory] = useState<string>('keywords');
+  const [activeTab, setActiveTab] = useState<string>('density');
 
   // Categories with their respective tabs
   // Structured to easily add more categories in the future
-  const categories = [
+  const categories: Category[] = [
     {
       id: 'keywords',
       label: 'Keywords',
@@ -132,11 +146,12 @@ const MiniServices = () => {
   ];
 
   // Helper to get tabs for the current category
-  const currentCategory =
-    categories.find(c => c.id === activeCategory) || categories[0];
-  const tabs = currentCategory.tabs;
+  const foundCategory = categories.find(c => c.id === activeCategory);
+  const currentCategory: Category = (foundCategory ||
+    categories[0]) as Category;
+  const tabs: Tab[] = currentCategory?.tabs || [];
 
-  const renderTabContent = () => {
+  const renderTabContent = (): React.ReactNode => {
     switch (activeTab) {
       case 'density':
         return <KeywordDensityAnalyzer />;

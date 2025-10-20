@@ -3,7 +3,7 @@
  * Type definitions for view components and their state management
  */
 
-import type { Recommendation } from './components.types';
+import type { RecommendationItem as Recommendation } from './components.types';
 
 // ============ VIEW STATE TYPES ============
 

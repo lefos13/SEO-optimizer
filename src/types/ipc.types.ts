@@ -9,6 +9,7 @@ import type {
   ProjectRow,
   SaveAnalysisParams,
 } from './database.types';
+import type { ReadabilityAnalysisResult } from '../analyzers/readability/readabilityTypes';
 import type { KeywordSuggestion } from './analyzer.types';
 
 // ============================================================
@@ -94,7 +95,7 @@ export interface SEOAnalyzeUrlResponse {
 }
 
 // Database - Analysis
-export interface DBSaveAnalysisRequest extends SaveAnalysisParams {}
+export type DBSaveAnalysisRequest = SaveAnalysisParams;
 
 export interface DBSaveAnalysisResponse {
   success: boolean;
@@ -232,12 +233,7 @@ export interface ReadabilityAnalyzeRequest {
 
 export interface ReadabilityAnalyzeResponse {
   success: boolean;
-  data?: {
-    score: number;
-    grade: string;
-    level: string;
-    metrics: any;
-  };
+  data?: ReadabilityAnalysisResult;
   error?: string;
 }
 
@@ -280,7 +276,7 @@ export interface URLFetchResponse {
 // IPC Handler Types
 // ============================================================
 
-export type IPCHandler<TRequest = any, TResponse = any> = (
+export type IPCHandler<TRequest = unknown, TResponse = unknown> = (
   event: Electron.IpcMainInvokeEvent,
   request: TRequest
 ) => Promise<TResponse>;

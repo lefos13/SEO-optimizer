@@ -15,16 +15,16 @@ export interface AsyncState<T> {
   data: T | null;
   loading: boolean;
   error: Error | null;
-  execute: (...args: any[]) => Promise<void>;
+  execute: (...args: unknown[]) => Promise<void>;
   reset: () => void;
 }
 
 /**
  * Async operation options
  */
-export interface AsyncOptions {
+export interface AsyncOptions<T = unknown> {
   immediate?: boolean;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
 }
 
@@ -43,10 +43,10 @@ export interface UseFetchResult<T> {
 /**
  * Fetch options
  */
-export interface FetchOptions {
+export interface FetchOptions<T = unknown> {
   immediate?: boolean;
   dependencies?: DependencyList;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
 }
 
@@ -116,7 +116,7 @@ export interface ValidationRules<T> {
  * Single validation rule
  */
 export type ValidationRule<T> = (
-  value: any,
+  value: unknown,
   values: T
 ) => string | null | Promise<string | null>;
 
@@ -166,7 +166,7 @@ export interface UseIPCQueryResult<T> {
 /**
  * Use IPC mutation result
  */
-export interface UseIPCMutationResult<TArgs extends any[], TResult> {
+export interface UseIPCMutationResult<TArgs extends unknown[], TResult> {
   mutate: (...args: TArgs) => Promise<TResult>;
   data: TResult | null;
   loading: boolean;

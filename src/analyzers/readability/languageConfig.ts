@@ -86,7 +86,8 @@ export const LANGUAGE_CONFIG: Record<string, LanguageConfig> = {
  */
 export function getLanguageConfig(langCode: string): LanguageConfig {
   const normalizedCode = langCode.toUpperCase();
-  return LANGUAGE_CONFIG[normalizedCode] || LANGUAGE_CONFIG['EN']!;
+  const defaultConfig = LANGUAGE_CONFIG['EN'];
+  return (LANGUAGE_CONFIG[normalizedCode] ?? defaultConfig) as LanguageConfig;
 }
 
 /**

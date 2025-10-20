@@ -16,38 +16,85 @@ import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import ContentInput from '../analysis/ContentInput';
 import KeywordsInput from '../analysis/KeywordsInput';
-import AnalysisConfig from '../analysis/AnalysisConfig';
+import AnalysisConfig, {
+  AnalysisConfigState,
+} from '../analysis/AnalysisConfig';
 import AnalysisProgress from '../analysis/AnalysisProgress';
 
-const Analysis = () => {
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  url?: string;
+  created_at: string;
+}
+
+interface AnalysisResult {
+  score: number;
+  maxScore: number;
+  percentage: number;
+  grade: string;
+  passedRules: number;
+  failedRules: number;
+  warnings: number;
+  issues?: unknown[];
+  recommendations?: unknown[];
+  enhancedRecommendations?: {
+    recommendations: unknown[];
+  };
+  categoryScores?: unknown;
+}
+
+interface SavedAnalysis {
+  id: number;
+  project_id: number;
+  content: string;
+  language: string;
+  title: string;
+  meta_description: string;
+  keywords: string;
+  url: string;
+}
+
+type AnalysisStage =
+  | 'init'
+  | 'content'
+  | 'keywords'
+  | 'technical'
+  | 'recommendations'
+  | 'complete';
+
+const Analysis: React.FC = () => {
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [content, setContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [keywords, setKeywords] = useState([]);
-  const [config, setConfig] = useState({
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null
+  );
+  const [content, setContent] = useState<string>('');
+  const [url, setUrl] = useState<string>('');
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [config, setConfig] = useState<AnalysisConfigState>({
     language: 'en',
     contentType: 'article',
   });
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentStage, setCurrentStage] = useState('init');
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
-  const [resetKey, setResetKey] = useState(0); // Force component remount on reset
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [currentStage, setCurrentStage] = useState<AnalysisStage>('init');
+  const [progress, setProgress] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [resetKey, setResetKey] = useState<number>(0); // Force component remount on reset
 
   // Load projects on mount
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadProjects = async (): Promise<void> => {
       try {
-        const projectsData = await window.electronAPI.projects.getAll({
+        const projectsData = (await window.electronAPI.projects.getAll({
           limit: 100,
-        });
+        })) as Project[];
         setProjects(projectsData || []);
         // Set first project as default
-        if (projectsData && projectsData.length > 0) {
+        if (projectsData && projectsData.length > 0 && projectsData[0]) {
           setSelectedProjectId(projectsData[0].id);
         }
       } catch (err) {
@@ -57,7 +104,7 @@ const Analysis = () => {
     loadProjects();
   }, []);
 
-  const validateInputs = () => {
+  const validateInputs = (): boolean => {
     if (!content || content.trim().length < 50) {
       setError('Please provide at least 50 characters of content to analyze.');
       return false;
@@ -67,7 +114,7 @@ const Analysis = () => {
     return true;
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (): Promise<void> => {
     if (!validateInputs()) {
       return;
     }
@@ -120,7 +167,9 @@ const Analysis = () => {
       // Call the SEO analyzer via IPC
 
       console.log('📤 [ANALYSIS] Calling SEO analyzer via IPC...');
-      const result = await window.electronAPI.seo.analyze(analysisData);
+      const result = (await window.electronAPI.seo.analyze(
+        analysisData
+      )) as AnalysisResult;
 
       console.log('✅ [ANALYSIS] SEO analyzer returned results:', {
         score: result.score,
@@ -167,15 +216,15 @@ const Analysis = () => {
       // Save analysis to database with correct schema fields
 
       console.log('💾 [ANALYSIS] Creating analysis record in database...');
-      const savedAnalysis = await window.electronAPI.analyses.create({
+      const savedAnalysis = (await window.electronAPI.analyses.create({
         project_id: projectId,
         content: htmlContent, // The HTML content we analyzed
         language: config.language || 'en',
-        title: analysisData.title || url || 'Direct Input',
-        meta_description: analysisData.description || '',
+        title: url || 'Direct Input',
+        meta_description: '',
         keywords: keywords.join(','), // Comma-separated keywords
         url: url || '', // The URL that was analyzed (empty string if direct input)
-      });
+      })) as SavedAnalysis;
 
       console.log('✅ [ANALYSIS] Analysis record created:', {
         id: savedAnalysis?.id,
@@ -220,7 +269,7 @@ const Analysis = () => {
         );
         await window.electronAPI.seo.saveRecommendations(
           savedAnalysis.id,
-          result.enhancedRecommendations
+          result.enhancedRecommendations.recommendations
         );
 
         console.log('✅ [ANALYSIS] Recommendations saved successfully');
@@ -250,8 +299,9 @@ const Analysis = () => {
       }
     } catch (err) {
       console.error('❌ [ANALYSIS] Analysis error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(
-        err.message ||
+        errorMessage ||
           'Analysis failed. Please check your content and try again.'
       );
       setIsAnalyzing(false);

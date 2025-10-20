@@ -385,31 +385,49 @@ class IPCHandlers {
       }
     );
 
-    ipcMain.handle(
-      'seo:recommendations:save',
-      (event, analysisId, enhancedRecommendations) => {
+    // Normalize saveRecommendations payload so callers can send either:
+    // - an array: (analysisId, [rec1, rec2])
+    // - an object: (analysisId, { recommendations: [...] })
+    const handleSaveRecommendations = (event, analysisId, payload) => {
+      try {
+        let recommendationsArray = [];
         try {
-          console.log('[IPC] seo:recommendations:save called:', {
-            analysisId,
-            recommendationCount:
-              enhancedRecommendations?.recommendations?.length || 0,
-          });
-          const dbManager = require('./dbManager');
-          const persistence = require('../database/recommendationPersistence');
-          const result = persistence.saveRecommendations(
-            dbManager.getDb(),
-            analysisId,
-            enhancedRecommendations
-          );
-
-          console.log('[IPC] ✅ Recommendations saved successfully');
-          return result;
-        } catch (error) {
-          console.error('[IPC] ❌ Save recommendations failed:', error.message);
-          throw new Error(`Save recommendations failed: ${error.message}`);
+          if (Array.isArray(payload)) {
+            recommendationsArray = payload;
+          } else if (
+            payload &&
+            typeof payload === 'object' &&
+            Array.isArray(payload.recommendations)
+          ) {
+            recommendationsArray = payload.recommendations;
+          }
+        } catch (_e) {
+          // ignore
         }
+
+        console.log('[IPC] seo:recommendations:save called:', {
+          analysisId,
+          recommendationCount: recommendationsArray.length,
+        });
+
+        const dbManager = require('./dbManager');
+        const persistence = require('../database/recommendationPersistence');
+        const result = persistence.saveRecommendations(
+          dbManager.getDb(),
+          analysisId,
+          { recommendations: recommendationsArray }
+        );
+
+        console.log('[IPC] ✅ Recommendations saved successfully');
+        return result;
+      } catch (error) {
+        console.error('[IPC] ❌ Save recommendations failed:', error.message);
+        throw new Error(`Save recommendations failed: ${error.message}`);
       }
-    );
+    };
+
+    ipcMain.handle('seo:recommendations:save', handleSaveRecommendations);
+    ipcMain.handle('seo:saveRecommendations', handleSaveRecommendations);
 
     // ============ URL FETCHER ============
     ipcMain.handle('seo:fetchUrl', async (event, url, options = {}) => {

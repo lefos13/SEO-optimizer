@@ -146,6 +146,8 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        // Electron globals
+        Electron: 'readonly',
       },
     },
     plugins: {
@@ -159,6 +161,7 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       'no-console': ['off', { allow: ['warn', 'error'] }],
+      'no-undef': 'off', // TypeScript handles undefined variables
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

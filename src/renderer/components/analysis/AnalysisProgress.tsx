@@ -57,7 +57,7 @@ const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
 
   const getCurrentStageInfo = (): Stage => {
     const found = stages.find(s => s.id === currentStage);
-    return found ?? stages[0]!;
+    return (found ?? stages[0]) as Stage;
   };
 
   const stageInfo = getCurrentStageInfo();

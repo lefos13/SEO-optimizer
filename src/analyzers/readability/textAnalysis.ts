@@ -127,9 +127,11 @@ export function calculateMedian(numbers: number[]): number {
   const mid = Math.floor(sorted.length / 2);
 
   if (sorted.length % 2 === 0) {
-    return (sorted[mid - 1]! + sorted[mid]!) / 2;
+    const left = sorted[mid - 1] ?? 0;
+    const right = sorted[mid] ?? 0;
+    return (left + right) / 2;
   }
-  return sorted[mid]!;
+  return sorted[mid] ?? 0;
 }
 
 /**
@@ -188,7 +190,7 @@ export function getLongestSentence(
 ): { text: string; length: number } | null {
   if (sentences.length === 0) return null;
 
-  let longest = sentences[0]!;
+  let longest = sentences[0] ?? '';
   let maxWords = tokenizeWords(longest).length;
 
   for (const sentence of sentences) {
@@ -210,7 +212,7 @@ export function getShortestSentence(
 ): { text: string; length: number } | null {
   if (sentences.length === 0) return null;
 
-  let shortest = sentences[0]!;
+  let shortest = sentences[0] ?? '';
   let minWords = tokenizeWords(shortest).length;
 
   for (const sentence of sentences) {

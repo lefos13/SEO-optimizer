@@ -28,7 +28,6 @@ interface Stats {
 export interface ResultsFilterProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
-  onSortChange: (sortBy: string) => void;
   onSearchChange: (search: string) => void;
   categories?: string[];
   stats?: Stats;
@@ -37,19 +36,12 @@ export interface ResultsFilterProps {
 const ResultsFilter: React.FC<ResultsFilterProps> = ({
   filters,
   onFilterChange,
-  onSortChange,
   onSearchChange,
   categories = [],
   stats = {},
 }) => {
   const priorities = ['critical', 'high', 'medium', 'low'];
   const statuses = ['pending', 'in-progress', 'completed', 'dismissed'];
-  const sortOptions = [
-    { value: 'priority', label: 'Priority' },
-    { value: 'impact', label: 'Impact' },
-    { value: 'category', label: 'Category' },
-    { value: 'status', label: 'Status' },
-  ];
 
   const toggleFilter = (filterType: keyof Filters, value: string): void => {
     const currentFilters = (filters[filterType] || []) as string[];
@@ -202,22 +194,6 @@ const ResultsFilter: React.FC<ResultsFilterProps> = ({
               );
             })}
           </div>
-        </div>
-
-        {/* Sort Options */}
-        <div className="filter-group">
-          <label className="filter-label">Sort By</label>
-          <select
-            className="filter-select"
-            value={filters.sortBy || 'priority'}
-            onChange={e => onSortChange(e.target.value)}
-          >
-            {sortOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
     </div>

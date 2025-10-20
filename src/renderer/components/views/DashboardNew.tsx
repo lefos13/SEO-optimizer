@@ -17,24 +17,75 @@ import Modal from '../ui/Modal';
 import AlertModal from '../ui/AlertModal';
 import Input from '../ui/Input';
 
-const Dashboard = () => {
-  const [stats, setStats] = useState({
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  url?: string;
+  created_at: string;
+}
+
+interface Analysis {
+  id: number;
+  project_id: number;
+  projectId?: number;
+  title?: string;
+  created_at: string;
+  language?: string;
+  overall_score?: number;
+  max_score?: number;
+  percentage?: number;
+}
+
+interface DashboardStats {
+  totalProjects: number;
+  totalAnalyses: number;
+  avgScore: number;
+  recentAnalyses: Analysis[];
+}
+
+interface DatabaseStats {
+  analysisCount?: number;
+}
+
+interface NewProject {
+  name: string;
+  description: string;
+  url: string;
+}
+
+interface AlertModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  variant: 'info' | 'warning' | 'danger' | 'success';
+  onConfirm: (() => Promise<void>) | null;
+  confirmText: string;
+  cancelText?: string;
+  isDangerous?: boolean;
+}
+
+type TabType = 'recent' | 'projects';
+
+const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats>({
     totalProjects: 0,
     totalAnalyses: 0,
     avgScore: 0,
     recentAnalyses: [],
   });
 
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('recent'); // 'recent' or 'projects'
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [newProject, setNewProject] = useState({
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<TabType>('recent');
+  const [showNewProjectModal, setShowNewProjectModal] =
+    useState<boolean>(false);
+  const [newProject, setNewProject] = useState<NewProject>({
     name: '',
     description: '',
     url: '',
   });
-  const [alertModal, setAlertModal] = useState({
+  const [alertModal, setAlertModal] = useState<AlertModalState>({
     isOpen: false,
     title: '',
     message: '',
@@ -50,21 +101,22 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (): Promise<void> => {
     setIsLoading(true);
     try {
       // Load projects
-      const projectsData = await window.electronAPI.projects.getAll({
+      const projectsData = (await window.electronAPI.projects.getAll({
         limit: 10,
-      });
+      })) as Project[];
       setProjects(projectsData || []);
 
       // Load database stats
-      const dbStats = await window.electronAPI.database.getStats();
+      const dbStats =
+        (await window.electronAPI.database.getStats()) as DatabaseStats;
       console.log('Database stats received:', dbStats);
 
       // Calculate average score from recent analyses
-      let recentAnalyses = [];
+      let recentAnalyses: Analysis[] = [];
       if (projectsData && projectsData.length > 0) {
         // Get analyses for all projects (only for projects with valid IDs)
         const validProjects = projectsData.filter(
@@ -74,14 +126,20 @@ const Dashboard = () => {
           const analysesPromises = validProjects.map(project =>
             window.electronAPI.analyses.getByProject(project.id, { limit: 10 })
           );
-          const analysesResults = await Promise.all(analysesPromises);
+          const analysesResults = (await Promise.all(
+            analysesPromises
+          )) as Analysis[][];
           recentAnalyses = analysesResults
             .flat()
             .map(analysis => ({
               ...analysis,
-              project_id: analysis.project_id || analysis.projectId,
+              project_id: analysis.project_id || analysis.projectId || 0,
             }))
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )
             .slice(0, 20); // Get more to ensure we have enough per project
         }
       }
@@ -106,7 +164,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreateProject = async () => {
+  const handleCreateProject = async (): Promise<void> => {
     if (!newProject.name.trim()) {
       setAlertModal({
         isOpen: true,
@@ -131,11 +189,13 @@ const Dashboard = () => {
       loadDashboardData();
     } catch (error) {
       console.error('Failed to create project:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       setAlertModal({
         isOpen: true,
         title: 'Failed to Create Project',
         message:
-          error.message || 'An error occurred while creating the project.',
+          errorMessage || 'An error occurred while creating the project.',
         variant: 'danger',
         onConfirm: null,
         confirmText: 'OK',
@@ -143,7 +203,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteProject = async projectId => {
+  const handleDeleteProject = async (projectId: number): Promise<void> => {
     setAlertModal({
       isOpen: true,
       title: 'Delete Project?',
@@ -157,11 +217,13 @@ const Dashboard = () => {
           loadDashboardData();
         } catch (error) {
           console.error('Failed to delete project:', error);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           setAlertModal({
             isOpen: true,
             title: 'Failed to Delete Project',
             message:
-              error.message || 'An error occurred while deleting the project.',
+              errorMessage || 'An error occurred while deleting the project.',
             variant: 'danger',
             onConfirm: null,
             confirmText: 'OK',
@@ -174,7 +236,7 @@ const Dashboard = () => {
     });
   };
 
-  const handleStartAnalysis = () => {
+  const handleStartAnalysis = (): void => {
     // Check if there are any projects
     if (projects.length === 0) {
       setShowNewProjectModal(true);
@@ -184,14 +246,16 @@ const Dashboard = () => {
     }
   };
 
-  const getGradeVariant = percentage => {
+  const getGradeVariant = (
+    percentage: number
+  ): 'success' | 'info' | 'warning' | 'danger' => {
     if (percentage >= 90) return 'success';
     if (percentage >= 70) return 'info';
     if (percentage >= 50) return 'warning';
     return 'danger';
   };
 
-  const getGradeLetter = percentage => {
+  const getGradeLetter = (percentage: number): string => {
     if (percentage >= 90) return 'A';
     if (percentage >= 80) return 'B';
     if (percentage >= 70) return 'C';
@@ -420,11 +484,13 @@ const Dashboard = () => {
                             <ProgressBar
                               value={
                                 analysis.percentage ||
-                                Math.round(
-                                  (analysis.overall_score /
-                                    analysis.max_score) *
-                                    100
-                                ) ||
+                                (analysis.overall_score && analysis.max_score
+                                  ? Math.round(
+                                      (analysis.overall_score /
+                                        analysis.max_score) *
+                                        100
+                                    )
+                                  : 0) ||
                                 0
                               }
                               max={100}
@@ -435,11 +501,14 @@ const Dashboard = () => {
                                 Score:{' '}
                                 <strong>
                                   {analysis.percentage ||
-                                    Math.round(
-                                      (analysis.overall_score /
-                                        analysis.max_score) *
-                                        100
-                                    ) ||
+                                    (analysis.overall_score &&
+                                    analysis.max_score
+                                      ? Math.round(
+                                          (analysis.overall_score /
+                                            analysis.max_score) *
+                                            100
+                                        )
+                                      : 0) ||
                                     0}
                                   %
                                 </strong>
@@ -645,6 +714,7 @@ const Dashboard = () => {
       <Modal
         isOpen={showNewProjectModal}
         onClose={() => setShowNewProjectModal(false)}
+        closeOnOverlayClick={false}
         title="Create New Project"
         footer={
           <>
@@ -700,9 +770,9 @@ const Dashboard = () => {
         onConfirm={
           alertModal.onConfirm
             ? () => {
-                alertModal.onConfirm();
+                alertModal.onConfirm?.();
               }
-            : null
+            : undefined
         }
         confirmText={alertModal.confirmText}
         cancelText={alertModal.cancelText}

@@ -7,10 +7,14 @@
  * - Filtered recommendations list
  * - Before/After comparison
  * - Export functionality
+ *
+ * Note: Type assertions to 'any' are used in this file to handle compatibility
+ * between database types and child component types. This is a pragmatic approach
+ * for component integration while maintaining type safety in the database layer.
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
@@ -20,41 +24,186 @@ import ResultsFilter from '../results/ResultsFilter';
 import BeforeAfterComparison from '../results/BeforeAfterComparison';
 import ComparisonSelector from '../results/ComparisonSelector';
 import ExportResults from '../results/ExportResults';
-import { calculateCategoryScores } from '../../utils/scoreCalculator';
 
-const AnalysisResults = ({
+// Local type for filters to avoid import conflicts
+interface Filters {
+  priorities: string[];
+  categories: string[];
+  statuses: string[];
+  search: string;
+  sortBy: string;
+}
+
+interface AnalysisResultsProps {
+  analysisId?: string | number;
+  onBack?: () => void;
+}
+
+interface DatabaseAnalysis {
+  id: number;
+  overall_score: number;
+  max_score: number;
+  percentage: number;
+  grade: string;
+  passed_rules: number;
+  failed_rules: number;
+  warnings: number;
+  category_scores: string | Record<string, unknown>;
+  created_at: string;
+  createdAt?: string;
+  url?: string;
+  project_id: number;
+  projectId?: number;
+  score?: number;
+  maxScore?: number;
+  passedRules?: number;
+  failedRules?: number;
+  categoryScores?: Record<string, unknown>;
+  issues?: unknown[];
+}
+
+interface Recommendation {
+  id: number;
+  title: string;
+  description?: string;
+  message?: string;
+  priority: string;
+  category: string;
+  status: string;
+  impact?: string;
+}
+
+interface Tab {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+type TabId = 'overview' | 'recommendations' | 'comparison';
+
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   analysisId: propAnalysisId,
   onBack: propOnBack,
 }) => {
-  const { id: routeAnalysisId } = useParams();
+  const { id: routeAnalysisId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // Use route param if available, otherwise use prop
   const analysisId = routeAnalysisId || propAnalysisId;
   const onBack = propOnBack || (() => navigate(-1));
-  const [activeTab, setActiveTab] = useState('overview');
-  const [analysis, setAnalysis] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
-  const [quickWins, setQuickWins] = useState([]);
-  const [filteredRecommendations, setFilteredRecommendations] = useState([]);
-  const [filters, setFilters] = useState({
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [analysis, setAnalysis] = useState<DatabaseAnalysis | null>(null);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [quickWins, setQuickWins] = useState<Recommendation[]>([]);
+  const [filteredRecommendations, setFilteredRecommendations] = useState<
+    Recommendation[]
+  >([]);
+  const [filters, setFilters] = useState<Filters>({
     priorities: [],
     categories: [],
     statuses: [],
     search: '',
     sortBy: 'priority',
   });
-  const [comparisonAnalysis, setComparisonAnalysis] = useState(null);
+  const [comparisonAnalysis, setComparisonAnalysis] =
+    useState<DatabaseAnalysis | null>(null);
   const [selectedComparisonAnalysisId, setSelectedComparisonAnalysisId] =
-    useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+    useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const tabs = [
+  const tabs: Tab[] = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'recommendations', label: 'Recommendations', icon: '💡' },
     { id: 'comparison', label: 'Comparison', icon: '📈' },
   ];
+
+  const loadAnalysisData = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Load analysis data
+      const analysisData = (await window.electronAPI.analyses.get(
+        Number(analysisId)
+      )) as DatabaseAnalysis;
+
+      if (!analysisData) {
+        throw new Error('Analysis not found');
+      }
+
+      // Parse JSON data if stored as string and add computed fields
+      const parsedAnalysis: DatabaseAnalysis = {
+        ...analysisData,
+        score: analysisData.overall_score || 0,
+        maxScore: analysisData.max_score || 100,
+        passedRules: analysisData.passed_rules || 0,
+        failedRules: analysisData.failed_rules || 0,
+        categoryScores:
+          typeof analysisData.category_scores === 'string' &&
+          analysisData.category_scores
+            ? JSON.parse(analysisData.category_scores)
+            : analysisData.category_scores || {},
+        issues: [], // Add empty issues array for calculateCategoryScores
+      };
+
+      setAnalysis(parsedAnalysis);
+
+      // Load recommendations
+      const recs = (await window.electronAPI.seo.getRecommendations(
+        Number(analysisId)
+      )) as Recommendation[];
+      console.log('[RENDERER] Fetched recommendations from electronAPI:', {
+        count: (recs || []).length,
+        sample: (recs || [])
+          .slice(0, 5)
+          .map(r => ({ id: r.id, title: r.title })),
+      });
+      setRecommendations(recs || []);
+
+      // Load quick wins using dedicated IPC method
+      const wins = (await window.electronAPI.seo.getQuickWins(
+        Number(analysisId)
+      )) as Recommendation[];
+      setQuickWins(wins || []);
+
+      // Auto-select the most recent previous analysis for comparison
+      const projectId = analysisData.project_id || analysisData.projectId;
+      if (projectId) {
+        const projectAnalyses = (await window.electronAPI.analyses.getByProject(
+          projectId,
+          { limit: 2, orderBy: 'createdAt DESC' }
+        )) as DatabaseAnalysis[];
+
+        if (projectAnalyses && projectAnalyses.length > 1) {
+          const prevAnalysis = projectAnalyses[1];
+          if (prevAnalysis) {
+            const parsedPrevAnalysis: DatabaseAnalysis = {
+              ...prevAnalysis,
+              score: prevAnalysis.overall_score || 0,
+              maxScore: prevAnalysis.max_score || 100,
+              passedRules: prevAnalysis.passed_rules || 0,
+              failedRules: prevAnalysis.failed_rules || 0,
+              categoryScores:
+                typeof prevAnalysis.category_scores === 'string' &&
+                prevAnalysis.category_scores
+                  ? JSON.parse(prevAnalysis.category_scores)
+                  : prevAnalysis.category_scores || {},
+              issues: [],
+            };
+            setComparisonAnalysis(parsedPrevAnalysis);
+            setSelectedComparisonAnalysisId(prevAnalysis.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading analysis data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [analysisId]);
 
   useEffect(() => {
     if (analysisId) {
@@ -67,105 +216,20 @@ const AnalysisResults = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recommendations, filters]);
 
-  const loadAnalysisData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Load analysis data
-      const analysisData = await window.electronAPI.analyses.get(analysisId);
-
-      if (!analysisData) {
-        throw new Error('Analysis not found');
-      }
-
-      // Parse JSON data if stored as string and map snake_case to camelCase
-      const parsedAnalysis = {
-        ...analysisData,
-        // Map snake_case database fields to camelCase for UI
-        score: analysisData.overall_score || 0,
-        maxScore: analysisData.max_score || 100,
-        percentage: analysisData.percentage || 0,
-        grade: analysisData.grade || 'F',
-        passedRules: analysisData.passed_rules || 0,
-        failedRules: analysisData.failed_rules || 0,
-        warnings: analysisData.warnings || 0,
-        categoryScores:
-          typeof analysisData.category_scores === 'string' &&
-          analysisData.category_scores
-            ? JSON.parse(analysisData.category_scores)
-            : analysisData.category_scores || {},
-      };
-
-      setAnalysis(parsedAnalysis);
-
-      // Load recommendations
-      const recs = await window.electronAPI.seo.getRecommendations(analysisId);
-      setRecommendations(recs || []);
-
-      // Load quick wins using dedicated IPC method
-      const wins = await window.electronAPI.seo.getQuickWins(analysisId);
-      setQuickWins(wins || []);
-
-      // Auto-select the most recent previous analysis for comparison
-      // Note: database uses snake_case (project_id) not camelCase (projectId)
-      const projectId = analysisData.project_id || analysisData.projectId;
-      if (projectId) {
-        const projectAnalyses = await window.electronAPI.analyses.getByProject(
-          projectId,
-          { limit: 2, orderBy: 'createdAt DESC' }
-        );
-
-        if (projectAnalyses && projectAnalyses.length > 1) {
-          const prevAnalysis = projectAnalyses[1];
-          const parsedPrevAnalysis = {
-            ...prevAnalysis,
-            // Map snake_case database fields to camelCase for UI
-            score: prevAnalysis.overall_score || 0,
-            maxScore: prevAnalysis.max_score || 100,
-            percentage: prevAnalysis.percentage || 0,
-            grade: prevAnalysis.grade || 'F',
-            passedRules: prevAnalysis.passed_rules || 0,
-            failedRules: prevAnalysis.failed_rules || 0,
-            warnings: prevAnalysis.warnings || 0,
-            categoryScores:
-              typeof prevAnalysis.category_scores === 'string' &&
-              prevAnalysis.category_scores
-                ? JSON.parse(prevAnalysis.category_scores)
-                : prevAnalysis.category_scores || {},
-          };
-          setComparisonAnalysis(parsedPrevAnalysis);
-          setSelectedComparisonAnalysisId(prevAnalysis.id);
-        }
-      }
-    } catch (err) {
-      console.error('Error loading analysis data:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [analysisId]);
-
-  // Calculate category scores from analysis data
-  const categoryScores = useMemo(() => {
-    if (!analysis) return {};
-    return calculateCategoryScores(analysis);
-  }, [analysis]);
-
-  const applyFilters = () => {
+  const applyFilters = (): void => {
     let filtered = [...recommendations];
 
     // Apply priority filter
     if (filters.priorities.length > 0) {
       filtered = filtered.filter(rec =>
-        filters.priorities.includes(rec.priority?.toLowerCase())
+        filters.priorities.includes(rec.priority?.toLowerCase() || '')
       );
     }
 
     // Apply category filter
     if (filters.categories.length > 0) {
       filtered = filtered.filter(rec =>
-        filters.categories.includes(rec.category)
+        filters.categories.includes(rec.category || '')
       );
     }
 
@@ -188,20 +252,25 @@ const AnalysisResults = ({
     }
 
     // Apply sorting
-    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    const impactOrder = { high: 0, medium: 1, low: 2 };
+    const priorityOrder: Record<string, number> = {
+      critical: 0,
+      high: 1,
+      medium: 2,
+      low: 3,
+    };
+    const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'priority':
           return (
-            (priorityOrder[a.priority?.toLowerCase()] || 999) -
-            (priorityOrder[b.priority?.toLowerCase()] || 999)
+            (priorityOrder[a.priority?.toLowerCase() || ''] ?? 999) -
+            (priorityOrder[b.priority?.toLowerCase() || ''] ?? 999)
           );
         case 'impact':
           return (
-            (impactOrder[a.impact?.toLowerCase()] || 999) -
-            (impactOrder[b.impact?.toLowerCase()] || 999)
+            (impactOrder[a.impact?.toLowerCase() || ''] ?? 999) -
+            (impactOrder[b.impact?.toLowerCase() || ''] ?? 999)
           );
         case 'category':
           return (a.category || '').localeCompare(b.category || '');
@@ -215,10 +284,13 @@ const AnalysisResults = ({
     setFilteredRecommendations(filtered);
   };
 
-  const handleUpdateRecommendationStatus = async (recId, newStatus) => {
+  const handleUpdateRecommendationStatus = async (
+    recId: string | number,
+    newStatus: string
+  ): Promise<void> => {
     try {
       await window.electronAPI.seo.updateRecommendationStatus(
-        recId,
+        Number(recId),
         newStatus,
         ''
       );
@@ -226,7 +298,7 @@ const AnalysisResults = ({
       // Update local state
       setRecommendations(prev =>
         prev.map(rec =>
-          rec.id === recId ? { ...rec, status: newStatus } : rec
+          rec.id === Number(recId) ? { ...rec, status: newStatus } : rec
         )
       );
     } catch (err) {
@@ -234,29 +306,29 @@ const AnalysisResults = ({
     }
   };
 
-  const handleSelectComparisonAnalysis = async comparisonAnalysisId => {
+  const handleSelectComparisonAnalysis = async (
+    comparisonAnalysisId: number
+  ): Promise<void> => {
     setSelectedComparisonAnalysisId(comparisonAnalysisId);
 
     try {
-      const selectedAnalysis =
-        await window.electronAPI.analyses.get(comparisonAnalysisId);
+      const selectedAnalysis = (await window.electronAPI.analyses.get(
+        comparisonAnalysisId
+      )) as DatabaseAnalysis;
 
       if (selectedAnalysis) {
-        // Parse and map snake_case to camelCase
-        const parsedAnalysis = {
+        const parsedAnalysis: DatabaseAnalysis = {
           ...selectedAnalysis,
           score: selectedAnalysis.overall_score || 0,
           maxScore: selectedAnalysis.max_score || 100,
-          percentage: selectedAnalysis.percentage || 0,
-          grade: selectedAnalysis.grade || 'F',
           passedRules: selectedAnalysis.passed_rules || 0,
           failedRules: selectedAnalysis.failed_rules || 0,
-          warnings: selectedAnalysis.warnings || 0,
           categoryScores:
             typeof selectedAnalysis.category_scores === 'string' &&
             selectedAnalysis.category_scores
               ? JSON.parse(selectedAnalysis.category_scores)
               : selectedAnalysis.category_scores || {},
+          issues: [],
         };
         setComparisonAnalysis(parsedAnalysis);
       }
@@ -265,7 +337,7 @@ const AnalysisResults = ({
     }
   };
 
-  const getFilterStats = () => {
+  const getFilterStats = (): Record<string, number> => {
     const stats = {
       criticalCount: recommendations.filter(
         r => r.priority?.toLowerCase() === 'critical'
@@ -292,9 +364,9 @@ const AnalysisResults = ({
     return stats;
   };
 
-  const getUniqueCategories = () => {
+  const getUniqueCategories = (): string[] => {
     const categories = new Set(
-      recommendations.map(r => r.category).filter(Boolean)
+      recommendations.map(r => r.category).filter(Boolean) as string[]
     );
     return Array.from(categories);
   };
@@ -347,7 +419,7 @@ const AnalysisResults = ({
             <div className="results-meta">
               <Badge variant="info">
                 {new Date(
-                  analysis.created_at || analysis.createdAt
+                  analysis.created_at || analysis.createdAt || ''
                 ).toLocaleDateString()}
               </Badge>
               {analysis.url && (
@@ -358,8 +430,8 @@ const AnalysisResults = ({
         </div>
         <div className="results-header-actions">
           <ExportResults
-            analysis={analysis}
-            recommendations={recommendations}
+            analysis={analysis as any}
+            recommendations={recommendations as any}
           />
         </div>
       </div>
@@ -370,7 +442,7 @@ const AnalysisResults = ({
           <button
             key={tab.id}
             className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => setActiveTab(tab.id as TabId)}
           >
             <span className="tab-icon">{tab.icon}</span>
             <span className="tab-label">{tab.label}</span>
@@ -387,10 +459,7 @@ const AnalysisResults = ({
       <div className="results-content">
         {activeTab === 'overview' && (
           <div className="results-overview">
-            <ScoreBreakdown
-              analysis={analysis}
-              categoryScores={categoryScores}
-            />
+            <ScoreBreakdown analysis={analysis as any} />
 
             {quickWins.length > 0 && (
               <Card className="quick-wins-card">
@@ -399,7 +468,7 @@ const AnalysisResults = ({
                   Start with these high-impact, easy-to-fix recommendations
                 </p>
                 <RecommendationsList
-                  recommendations={quickWins}
+                  recommendations={quickWins as any}
                   onUpdateStatus={handleUpdateRecommendationStatus}
                 />
               </Card>
@@ -413,8 +482,7 @@ const AnalysisResults = ({
               <aside className="recommendations-sidebar">
                 <ResultsFilter
                   filters={filters}
-                  onFilterChange={setFilters}
-                  onSortChange={sortBy => setFilters({ ...filters, sortBy })}
+                  onFilterChange={newFilters => setFilters(newFilters as any)}
                   onSearchChange={search => setFilters({ ...filters, search })}
                   categories={getUniqueCategories()}
                   stats={getFilterStats()}
@@ -430,7 +498,7 @@ const AnalysisResults = ({
                 </div>
 
                 <RecommendationsList
-                  recommendations={filteredRecommendations}
+                  recommendations={filteredRecommendations as any}
                   onUpdateStatus={handleUpdateRecommendationStatus}
                 />
               </div>
@@ -443,19 +511,21 @@ const AnalysisResults = ({
             <div className="comparison-layout">
               <div className="comparison-selector-section">
                 <ComparisonSelector
-                  currentAnalysisId={analysisId}
-                  projectId={analysis?.project_id || analysis?.projectId}
-                  currentAnalysis={analysis}
-                  selectedAnalysisId={selectedComparisonAnalysisId}
-                  onSelectAnalysis={handleSelectComparisonAnalysis}
+                  currentAnalysisId={Number(analysisId)}
+                  projectId={(analysis?.project_id || analysis?.projectId) ?? 0}
+                  currentAnalysis={analysis as any}
+                  selectedAnalysisId={selectedComparisonAnalysisId ?? undefined}
+                  onSelectAnalysis={id =>
+                    handleSelectComparisonAnalysis(Number(id))
+                  }
                 />
               </div>
 
               <div className="comparison-results-section">
                 {comparisonAnalysis ? (
                   <BeforeAfterComparison
-                    beforeAnalysis={comparisonAnalysis}
-                    afterAnalysis={analysis}
+                    beforeAnalysis={comparisonAnalysis as any}
+                    afterAnalysis={analysis as any}
                   />
                 ) : (
                   <Card className="comparison-empty-state">
@@ -476,11 +546,6 @@ const AnalysisResults = ({
       </div>
     </div>
   );
-};
-
-AnalysisResults.propTypes = {
-  analysisId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onBack: PropTypes.func,
 };
 
 export default AnalysisResults;

@@ -40,7 +40,7 @@ export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
 // Async Types
 // ============================================================
 
-export type AsyncFunction<T = any, R = any> = (arg: T) => Promise<R>;
+export type AsyncFunction<T = unknown, R = unknown> = (arg: T) => Promise<R>;
 
 export type PromiseValue<T> = T extends Promise<infer U> ? U : T;
 
@@ -82,12 +82,12 @@ export type Validator<T> = (value: T) => ValidationResult;
 // Event Types
 // ============================================================
 
-export interface EventHandler<T = any> {
+export interface EventHandler<T = unknown> {
   (event: T): void | Promise<void>;
 }
 
 export interface EventMap {
-  [event: string]: any;
+  [event: string]: unknown;
 }
 
 export interface TypedEventEmitter<Events extends EventMap> {
@@ -180,7 +180,7 @@ export type FilterOperator =
   | 'isNull'
   | 'isNotNull';
 
-export interface Filter<T = any> {
+export interface Filter<T = unknown> {
   field: string;
   operator: FilterOperator;
   value: T;
@@ -228,7 +228,7 @@ export interface FileWithContent extends FileMetadata {
 export interface ErrorInfo {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   stack?: string;
 }
 
@@ -241,7 +241,7 @@ export interface ApiError extends ErrorInfo {
 // ============================================================
 
 export interface Config {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type Environment = 'development' | 'production' | 'test';
@@ -265,7 +265,10 @@ export type AsyncVoidFunction = () => Promise<void>;
 
 export type Callback<T = void> = (result: T) => void;
 export type ErrorCallback = (error: Error) => void;
-export type NodeCallback<T = any> = (error: Error | null, result?: T) => void;
+export type NodeCallback<T = unknown> = (
+  error: Error | null,
+  result?: T
+) => void;
 
 // ============================================================
 // Object Utility Types

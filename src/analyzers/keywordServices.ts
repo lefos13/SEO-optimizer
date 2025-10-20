@@ -433,7 +433,7 @@ export class KeywordServices {
         totalKeywords: keywordCounts.reduce((a, b) => a + b, 0),
         keywordCounts: keywords.map((keyword, idx) => ({
           keyword,
-          count: keywordCounts[idx]!,
+          count: keywordCounts[idx] ?? 0,
         })),
       };
     });
@@ -1459,24 +1459,37 @@ export class KeywordServices {
 
       // Filter out main keywords
       const mainKeywordsLower = mainKeywords.map(k => k.toLowerCase());
-      const lsiCandidates = suggestions.filter(
-        (s: any) => !mainKeywordsLower.includes((s.keyword || s).toLowerCase())
-      );
+      const lsiCandidates = suggestions.filter((s: unknown) => {
+        try {
+          const maybeKeyword = (s as { keyword?: string }).keyword ?? String(s);
+          return !mainKeywordsLower.includes(maybeKeyword.toLowerCase());
+        } catch (_e) {
+          return false;
+        }
+      });
 
       console.log(
         `[KEYWORD-SERVICES] Filtered to ${lsiCandidates.length} LSI candidates after removing main keywords`
       );
 
       // Score LSI candidates based on co-occurrence with main keywords
-      const scored = lsiCandidates.map((candidate: any) => {
-        const keyword = candidate.keyword || candidate;
+      const scored = lsiCandidates.map(candidate => {
+        const cand = candidate as {
+          keyword?: string;
+          frequency?: number;
+          relevance?: number;
+          type?: string;
+        };
+        const keyword = cand.keyword ?? String(candidate);
         const lsiScore = this._calculateLSIScore(keyword, mainKeywords, text);
+        const kind: 'word' | 'phrase' =
+          cand.type === 'phrase' ? 'phrase' : 'word';
         return {
           keyword,
-          frequency: candidate.frequency || 0,
-          relevance: candidate.relevance || 0,
-          lsiScore: lsiScore,
-          type: candidate.type || 'word',
+          frequency: cand.frequency || 0,
+          relevance: cand.relevance || 0,
+          lsiScore,
+          type: kind,
         };
       });
 

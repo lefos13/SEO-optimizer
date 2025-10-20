@@ -52,6 +52,7 @@ interface RecommendationInput {
   actions?: RecommendationAction[];
   example?: RecommendationExample;
   resources?: RecommendationResource[];
+  status?: string;
 }
 
 /**
@@ -147,6 +148,16 @@ export function saveRecommendations(
     `[PERSISTENCE] Saving ${recommendations.length} recommendations...`
   );
 
+  // Debug: print summary of first few recommendations
+  try {
+    console.log(
+      `[PERSISTENCE] Sample recs:`,
+      recommendations.slice(0, 3).map(r => ({ id: r.id, title: r.title }))
+    );
+  } catch (_e) {
+    // ignore
+  }
+
   recommendations.forEach((rec, index) => {
     try {
       // Insert main recommendation
@@ -158,7 +169,7 @@ export function saveRecommendations(
         `INSERT INTO recommendations (
           analysis_id, rec_id, rule_id, title, priority, category,
           description, effort, estimated_time, score_increase,
-          percentage_increase, why_explanation
+          percentage_increase, why_explanation, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           analysisId,
@@ -173,6 +184,7 @@ export function saveRecommendations(
           rec.impactEstimate?.scoreIncrease || 0,
           rec.impactEstimate?.percentageIncrease || 0,
           rec.why || '',
+          rec.status || 'pending',
         ]
       );
 
@@ -184,6 +196,9 @@ export function saveRecommendations(
           : null;
 
       if (recommendationId) {
+        console.log(
+          `[PERSISTENCE] Inserted recommendation with rowid: ${recommendationId} (analysis ${analysisId})`
+        );
         // Insert actions
         if (
           rec.actions &&
@@ -278,66 +293,123 @@ export function getRecommendations(
     const columns = recResult[0].columns;
     const rows = recResult[0].values;
 
-    // Convert to objects
-    const recommendations: RecommendationRow[] = rows.map(row => {
-      const obj: any = {};
+    // Convert to objects (cast through unknown to satisfy strict typing)
+    const recommendations = rows.map(row => {
+      const obj: Record<string, unknown> = {};
       columns.forEach((col, idx) => {
         obj[col] = row[idx];
       });
-      return obj;
-    });
+      return obj as unknown as RecommendationRow;
+    }) as RecommendationRow[];
 
-    // Fetch actions, examples, and resources for each recommendation
+    // Helper to check if a table exists in the DB
+    const tableExists = (tableName: string): boolean => {
+      try {
+        const res = db.exec(
+          `SELECT name FROM sqlite_master WHERE type='table' AND name = ? LIMIT 1`,
+          [tableName]
+        );
+        return !!(res && res.length > 0 && res[0] && res[0].values.length > 0);
+      } catch (e) {
+        console.error(
+          `[PERSISTENCE] Error checking table existence for ${tableName}:`,
+          e
+        );
+        return false;
+      }
+    };
+
+    // Fetch actions, examples, and resources for each recommendation (only if tables exist)
     recommendations.forEach(rec => {
-      // Get actions
-      const actionsResult = db.exec(
-        `SELECT * FROM recommendation_actions WHERE recommendation_id = ? ORDER BY step`,
-        [rec.id]
-      );
-      rec.actions =
-        actionsResult.length > 0 && actionsResult[0]
-          ? actionsResult[0].values.map(row => {
-              const action: any = {};
-              actionsResult[0]!.columns.forEach((col, idx) => {
-                action[col] = row[idx];
-              });
-              return action;
-            })
-          : [];
+      // Actions
+      if (tableExists('recommendation_actions')) {
+        try {
+          const actionsResult = db.exec(
+            `SELECT * FROM recommendation_actions WHERE recommendation_id = ? ORDER BY step`,
+            [rec.id]
+          );
+          rec.actions =
+            actionsResult.length > 0 && actionsResult[0]
+              ? (actionsResult[0].values.map(row => {
+                  const action: Record<string, unknown> = {};
+                  const cols = actionsResult[0]?.columns ?? [];
+                  cols.forEach((col, idx) => {
+                    action[col] = row[idx];
+                  });
+                  return action;
+                }) as unknown as ActionRow[])
+              : [];
+        } catch (_err) {
+          rec.actions = [];
+        }
+      } else {
+        rec.actions = [];
+      }
 
-      // Get example
-      const exampleResult = db.exec(
-        `SELECT * FROM recommendation_examples WHERE recommendation_id = ? LIMIT 1`,
-        [rec.id]
-      );
-      rec.example =
-        exampleResult.length > 0 &&
-        exampleResult[0]?.values &&
-        exampleResult[0].values.length > 0
-          ? (() => {
-              const example: any = {};
-              exampleResult[0]!.columns.forEach((col, idx) => {
-                example[col] = exampleResult[0]!.values[0]?.[idx];
-              });
-              return example;
-            })()
-          : null;
+      // Example
+      if (tableExists('recommendation_examples')) {
+        try {
+          const exampleResult = db.exec(
+            `SELECT * FROM recommendation_examples WHERE recommendation_id = ? LIMIT 1`,
+            [rec.id]
+          );
+          rec.example =
+            exampleResult.length > 0 &&
+            exampleResult[0]?.values &&
+            exampleResult[0].values.length > 0
+              ? ((() => {
+                  const example: Record<string, unknown> = {};
+                  const cols = exampleResult[0]?.columns ?? [];
+                  cols.forEach((col, idx) => {
+                    example[col] = exampleResult[0]?.values[0]?.[idx];
+                  });
+                  return example as unknown as ExampleRow;
+                })() as ExampleRow)
+              : null;
+        } catch (_err) {
+          rec.example = null;
+        }
+      } else {
+        rec.example = null;
+      }
 
-      // Get resources
-      const resourcesResult = db.exec(
-        `SELECT * FROM recommendation_resources WHERE recommendation_id = ?`,
-        [rec.id]
-      );
-      rec.resources =
-        resourcesResult.length > 0 && resourcesResult[0]
-          ? resourcesResult[0].values.map(row => {
-              const resource: any = {};
-              resourcesResult[0]!.columns.forEach((col, idx) => {
-                resource[col] = row[idx];
-              });
-              return resource;
-            })
-          : [];
+      // Resources
+      if (tableExists('recommendation_resources')) {
+        try {
+          const resourcesResult = db.exec(
+            `SELECT * FROM recommendation_resources WHERE recommendation_id = ?`,
+            [rec.id]
+          );
+          rec.resources =
+            resourcesResult.length > 0 && resourcesResult[0]
+              ? (resourcesResult[0].values.map(row => {
+                  const resource: Record<string, unknown> = {};
+                  const cols = resourcesResult[0]?.columns ?? [];
+                  cols.forEach((col, idx) => {
+                    resource[col] = row[idx];
+                  });
+                  return resource;
+                }) as unknown as ResourceRow[])
+              : [];
+        } catch (_err) {
+          rec.resources = [];
+        }
+
+        // Debug: print fetched recommendations summary
+        try {
+          console.log(
+            `[PERSISTENCE] Fetched ${recommendations.length} recommendations for analysis ${analysisId}`
+          );
+          console.log(
+            `[PERSISTENCE] Sample fetched recs:`,
+            recommendations.slice(0, 5).map(r => ({ id: r.id, title: r.title }))
+          );
+        } catch (_err) {
+          // ignore
+        }
+      } else {
+        rec.resources = [];
+      }
     });
 
     return recommendations;
@@ -413,12 +485,12 @@ export function getQuickWins(
 
     const columns = result[0].columns;
     return result[0].values.map(row => {
-      const obj: any = {};
+      const obj: Record<string, unknown> = {};
       columns.forEach((col, idx) => {
         obj[col] = row[idx];
       });
       return obj;
-    });
+    }) as unknown as Partial<RecommendationRow>[];
   } catch (error) {
     console.error('[PERSISTENCE] Error getting quick wins:', error);
     return [];
