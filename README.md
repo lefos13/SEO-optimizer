@@ -1,6 +1,6 @@
 # SEO Optimizer
 
-A desktop SEO analysis tool built with Electron, React, and SQLite for content optimization and SEO recommendations.
+A desktop SEO analysis tool built with Electron, React, TypeScript, and SQLite for content optimization and SEO recommendations.
 
 ## 🚀 Quick Start
 
@@ -20,10 +20,11 @@ yarn build
 
 ## 📋 Features
 
-- ✅ React 18 with React Router
+- ✅ **TypeScript** - Full type safety across main and renderer processes
+- ✅ React 19 with React Router
 - ✅ Modern dark desktop UI theme
 - ✅ SASS styling with modular architecture
-- ✅ Webpack bundling for JSX and SASS
+- ✅ Webpack + TypeScript bundling
 - ✅ SQLite database integration
 - ✅ Hot reload in development
 - ✅ **SEO Analysis Engine** - Rule-based content analysis
@@ -45,19 +46,43 @@ yarn build
   - **Content Services** - Structure, headings, links, length, gaps, competitive
 - ⚠️ **Frontend-Backend Integration** - Partial (see [Integration Gaps](./docs/INTEGRATION_GAPS.md))
 
-## �️ Available Scripts
+## 🛠️ Available Scripts
 
-- `yarn dev` - Development mode with DevTools and hot reload
+### Development
+
+- `yarn dev` - Development mode with DevTools and hot reload (all 3 webpack processes)
+- `yarn dev:clean` - Development mode with database reset
+
+### Building
+
+- `yarn clean` - Clean dist folder
+- `yarn build:all` - Build all webpack bundles (main + preload + renderer)
 - `yarn start` - Production build and run
-- `yarn webpack:build` - Build webpack bundle
-- `yarn webpack:watch` - Watch mode for development
-- `yarn lint` - Run ESLint
-- `yarn lint:fix` - Fix ESLint errors
-- `yarn format` - Format code with Prettier
-- `yarn build` - Build for all platforms
+- `yarn build` - Build distributable for all platforms
 - `yarn build:win` - Build for Windows
 - `yarn build:mac` - Build for macOS
 - `yarn build:linux` - Build for Linux
+
+### Webpack (Individual Processes)
+
+- `yarn webpack:main` - Build main process bundle
+- `yarn webpack:main:watch` - Watch main process
+- `yarn webpack:preload` - Build preload script
+- `yarn webpack:preload:watch` - Watch preload script
+- `yarn webpack:renderer` - Build renderer process bundle
+- `yarn webpack:renderer:watch` - Watch renderer process
+
+### TypeScript
+
+- `yarn typecheck` - Type check all TypeScript files
+- `yarn typecheck:main` - Type check main process
+- `yarn typecheck:renderer` - Type check renderer process
+
+### Code Quality
+
+- `yarn lint` - Run ESLint
+- `yarn lint:fix` - Fix ESLint errors
+- `yarn format` - Format code with Prettier
 
 ## 📁 Project Structure
 

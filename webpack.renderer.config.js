@@ -12,7 +12,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'renderer.js',
-    clean: true,
+    clean: false, // Don't clean - let other webpack configs add their files
   },
   devtool: 'source-map',
   module: {

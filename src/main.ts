@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron/main';
+import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import DatabaseManager from './main/dbManager';
 import { registerHandlers } from './main/ipcHandlers';
@@ -9,7 +9,9 @@ if (isDev) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const electronReload = require('electron-reload');
-    electronReload(__dirname, {
+    // Watch the src directory for changes (__dirname will be dist after webpack)
+    const srcPath = path.join(__dirname, '..', 'src');
+    electronReload(srcPath, {
       electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
       hardResetMethod: 'exit',
       // Watch these paths for changes
@@ -32,13 +34,15 @@ const createWindow = (): void => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload', 'preload.js'),
+      // After webpack, both main.js and preload.js are in dist/
+      preload: path.join(__dirname, 'preload.js'),
     },
     show: false, // Don't show until ready
   });
 
-  // Load the main HTML file regardless of dev or packaged env
-  const htmlPath = path.resolve(__dirname, '..', 'dist', 'index.html');
+  // Load the main HTML file
+  // After webpack, __dirname is dist, so HTML is at ./index.html
+  const htmlPath = path.join(__dirname, 'index.html');
 
   console.log('[MAIN] Loading HTML from:', htmlPath);
   console.log('[MAIN] __dirname:', __dirname);
@@ -63,10 +67,12 @@ const createWindow = (): void => {
     // Watch for changes in renderer files
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const chokidar = require('chokidar');
+    // __dirname is dist after webpack, so src is at ../src
+    const srcDir = path.join(__dirname, '..');
     const rendererWatcher = chokidar.watch(
       [
-        path.join(__dirname, 'renderer', '**', '*'),
-        path.join(__dirname, '..', 'public', '**', '*'),
+        path.join(srcDir, 'src', 'renderer', '**', '*'),
+        path.join(srcDir, 'public', '**', '*'),
       ],
       {
         ignoreInitial: true,

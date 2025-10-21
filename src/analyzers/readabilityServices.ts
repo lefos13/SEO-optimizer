@@ -36,6 +36,8 @@ export class ReadabilityServices {
     const languageCode = (options.language || 'en').toLowerCase();
     const langConfig = getLanguageConfig(languageCode);
 
+    console.log(`[READABILITY SERVICE] readability service analyze() called!`);
+
     const raw = typeof content === 'string' ? content : '';
     const trimmed = raw.trim();
 
