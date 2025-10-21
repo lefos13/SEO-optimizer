@@ -41,13 +41,20 @@ export function splitSentences(text: string): string[] {
 
 /**
  * Split text into paragraphs
+ * Handles both double newlines (\n\n) and single newlines (\n)
+ * for better plain text support
  */
 export function splitParagraphs(text: string): string[] {
   if (!text || typeof text !== 'string') return [];
-  return text
-    .split(/\n\s*\n/)
+
+  // Try to split by one or more newlines
+  // This works for both plain text (single \n) and markdown (double \n\n)
+  const paragraphs = text
+    .split(/\n+/)
     .map((p: string) => p.trim())
     .filter((p: string) => p.length > 0);
+
+  return paragraphs;
 }
 
 /**

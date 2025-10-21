@@ -93,10 +93,10 @@ export class ReadabilityServices {
       readingTimeMinutes: readingTime,
     };
 
-    // Analyze structure
+    // Analyze structure (use original text to preserve line breaks for paragraphs)
     const structure = {
       sentences: analyzeSentences(sanitized),
-      paragraphs: analyzeParagraphs(sanitized, langConfig),
+      paragraphs: analyzeParagraphs(text, langConfig), // Use 'text' instead of 'sanitized'
     };
 
     // Generate recommendations

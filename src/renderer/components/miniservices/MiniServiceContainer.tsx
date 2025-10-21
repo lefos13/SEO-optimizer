@@ -55,6 +55,9 @@ export interface MiniServiceContainerProps<T = unknown> {
 
   // Optional results container customization
   resultsContainerClassName?: string;
+
+  // Optional: hide action buttons (for services without explicit analyze/clear actions)
+  hideActions?: boolean;
 }
 
 const MiniServiceContainer = <T = unknown,>({
@@ -85,6 +88,7 @@ const MiniServiceContainer = <T = unknown,>({
 
   // Optional results container customization
   resultsContainerClassName = 'results-container',
+  hideActions = false,
 }: MiniServiceContainerProps<T>): React.ReactElement => {
   return (
     <MiniServiceWrapper title={title} description={description}>
@@ -104,21 +108,23 @@ const MiniServiceContainer = <T = unknown,>({
         )}
 
         {/* Action buttons */}
-        <div className="button-group">
-          <button
-            onClick={onAnalyze}
-            disabled={loading || analyzeButtonDisabled}
-            className="btn btn-primary"
-          >
-            {loading ? 'Analyzing...' : analyzeButtonText}
-          </button>
-
-          {results && onClear && (
-            <button onClick={onClear} className="btn btn-secondary">
-              {clearButtonText}
+        {!hideActions && (
+          <div className="button-group">
+            <button
+              onClick={onAnalyze}
+              disabled={loading || analyzeButtonDisabled}
+              className="btn btn-primary"
+            >
+              {loading ? 'Analyzing...' : analyzeButtonText}
             </button>
-          )}
-        </div>
+
+            {results && onClear && (
+              <button onClick={onClear} className="btn btn-secondary">
+                {clearButtonText}
+              </button>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Results Container */}

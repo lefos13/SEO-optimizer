@@ -3,7 +3,8 @@
  * Comprehensive technical SEO checklist with progress tracking
  */
 import React, { useState } from 'react';
-import MiniServiceWrapper from './MiniServiceWrapper';
+import MiniServiceContainer from './MiniServiceContainer';
+import Card from '../ui/Card';
 import { generateChecklist } from '../../../analyzers/technical';
 import type {
   TechnicalChecklist,
@@ -33,24 +34,8 @@ const TechnicalSEOChecklist: React.FC = () => {
     return items.filter(item => item.priority === filterPriority);
   };
 
-  return (
-    <MiniServiceWrapper
-      title="Technical SEO Checklist"
-      description="Complete technical SEO checklist to ensure best practices"
-    >
-      <div className="progress-section">
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${checklist.progress}%` }}
-          />
-        </div>
-        <div className="progress-text">
-          {checklist.checkedItems} / {checklist.totalItems} items completed (
-          {Math.round(checklist.progress)}%)
-        </div>
-      </div>
-
+  const renderInputs = () => (
+    <div className="input-section">
       <div className="filter-section">
         <label>Filter by Priority:</label>
         <select
@@ -65,6 +50,26 @@ const TechnicalSEOChecklist: React.FC = () => {
           <option value="low">Low</option>
         </select>
       </div>
+    </div>
+  );
+
+  const renderResults = () => (
+    <div className="results-section">
+      <Card className="summary-card">
+        <h3>📋 Checklist Progress</h3>
+        <div className="progress-section">
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{ width: `${checklist.progress}%` }}
+            />
+          </div>
+          <div className="progress-text">
+            {checklist.checkedItems} / {checklist.totalItems} items completed (
+            {Math.round(checklist.progress)}%)
+          </div>
+        </div>
+      </Card>
 
       <div className="checklist-section">
         {checklist.categories.map(category => {
@@ -117,7 +122,24 @@ const TechnicalSEOChecklist: React.FC = () => {
           );
         })}
       </div>
-    </MiniServiceWrapper>
+    </div>
+  );
+
+  return (
+    <MiniServiceContainer
+      title="Technical SEO Checklist"
+      description="Complete technical SEO checklist to ensure best practices"
+      onAnalyze={() => {
+        /* no-op for checklist */
+      }}
+      loading={false}
+      error={null}
+      results={{}} // always show results
+      inputCardTitle="Checklist Controls"
+      renderInputs={renderInputs}
+      renderResults={renderResults}
+      hideActions={true}
+    />
   );
 };
 
