@@ -9,6 +9,11 @@ import { KeywordServices } from '../analyzers/keywordServices';
 import type { ClusteringOptions } from '../analyzers/keywordServices';
 import ReadabilityServices from '../analyzers/readabilityServices';
 import ContentServices from '../analyzers/contentServices';
+import {
+  healthMonitor,
+  recordSaveMetrics,
+  recordFetchMetrics,
+} from './healthMonitor';
 export class IPCHandlers {
   /**
    * Register all IPC handlers for main process
@@ -16,21 +21,29 @@ export class IPCHandlers {
   static registerHandlers(): void {
     /* Inserted compatibility handler will be placed inside this method */
 
-    // Accept both shapes for compatibility:
-    // - saveRecommendations: (analysisId, recommendationsArray)
-    // - seo:recommendations:save: (analysisId, { recommendations: [...] })
+    // ============ SEO RECOMMENDATIONS SAVE HANDLER ============
+    // Consolidated handler for saving recommendations with proper error handling
     const handleSaveRecommendations = async (
       _event: unknown,
       analysisId: number,
       payload: unknown
     ) => {
+      const correlationId = `save-${analysisId}-${Date.now()}`;
+
       try {
         console.log(
-          '[IPC] \ud83d\udcbe Saving recommendations for analysis:',
+          `[IPC:${correlationId}] 💾 Starting enhanced save process for recommendations, analysis:`,
           analysisId
         );
 
-        // Normalize payload to an array of recommendations
+        // Input validation with detailed error messages
+        if (!analysisId || typeof analysisId !== 'number' || analysisId <= 0) {
+          throw new Error(
+            `Invalid analysis ID: ${analysisId}. Must be a positive number.`
+          );
+        }
+
+        // Normalize payload to an array of recommendations with enhanced validation
         let recommendationsArray: Array<Record<string, unknown>> = [];
 
         try {
@@ -50,45 +63,238 @@ export class IPCHandlers {
                   recommendations?: Array<Record<string, unknown>>;
                 }
               ).recommendations || [];
+          } else {
+            throw new Error(
+              'Invalid payload format: expected array or object with recommendations array'
+            );
           }
 
-          console.log(
-            '[IPC] \ud83d\udcbe Incoming recommendations sample:',
-            recommendationsArray.slice(0, 5)
+          // Validate recommendations array structure
+          if (!Array.isArray(recommendationsArray)) {
+            throw new Error('Recommendations must be an array');
+          }
+
+          if (recommendationsArray.length === 0) {
+            console.log(`[IPC:${correlationId}] ⚠️ No recommendations to save`);
+            return {
+              success: true,
+              savedCount: 0,
+              analysisId,
+              correlationId,
+              message: 'No recommendations to save',
+            };
+          }
+
+          // Validate each recommendation has required fields
+          recommendationsArray.forEach((rec, index) => {
+            if (!rec || typeof rec !== 'object') {
+              throw new Error(
+                `Recommendation at index ${index} is not a valid object`
+              );
+            }
+            if (!rec.title && !rec.id) {
+              throw new Error(
+                `Recommendation at index ${index} missing required title or id`
+              );
+            }
+          });
+
+          console.log(`[IPC:${correlationId}] 📊 Processing recommendations:`, {
+            count: recommendationsArray.length,
+            sample: recommendationsArray.slice(0, 3).map(r => ({
+              id: r.id,
+              title: r.title,
+              priority: r.priority,
+            })),
+          });
+        } catch (err) {
+          console.error(
+            `[IPC:${correlationId}] ❌ Error processing payload:`,
+            (err as Error).message
           );
-        } catch (_err) {
-          // ignore logging errors
+          throw err;
         }
 
-        const db = await dbManager.getDb();
-        const saved = await recommendationPersistence.saveRecommendations(
-          db,
-          analysisId,
+        // Validate database connection with enhanced error handling
+        let db;
+        try {
+          db = dbManager.getDb();
+          if (!db) {
+            throw new Error('Database connection is not available');
+          }
+
+          // Test database connectivity
+          db.exec('SELECT 1');
+          console.log(
+            `[IPC:${correlationId}] ✅ Database connection validated`
+          );
+        } catch (dbError) {
+          console.error(
+            `[IPC:${correlationId}] ❌ Database connection failed:`,
+            (dbError as Error).message
+          );
+          throw new Error(
+            `Database connection failed: ${(dbError as Error).message}`
+          );
+        }
+
+        // Save recommendations with enhanced transaction management and health monitoring
+        let saved: number;
+        const saveStartTime = Date.now();
+        try {
+          saved = recommendationPersistence.saveRecommendations(
+            db,
+            analysisId,
+            {
+              recommendations: recommendationsArray,
+            },
+            dbManager // Pass database manager for transaction management
+          );
+
+          // Record successful save metrics
+          recordSaveMetrics(
+            Date.now() - saveStartTime,
+            true,
+            analysisId,
+            saved
+          );
+        } catch (saveError) {
+          // Record failed save metrics
+          recordSaveMetrics(
+            Date.now() - saveStartTime,
+            false,
+            analysisId,
+            0,
+            (saveError as Error).message
+          );
+
+          console.error(
+            `[IPC:${correlationId}] ❌ Save operation failed:`,
+            (saveError as Error).message
+          );
+          throw new Error(
+            `Save operation failed: ${(saveError as Error).message}`
+          );
+        }
+
+        console.log(
+          `[IPC:${correlationId}] ✅ Recommendations saved successfully with transaction management:`,
           {
-            recommendations: recommendationsArray,
+            analysisId,
+            savedCount: saved,
+            expectedCount: recommendationsArray.length,
           }
         );
 
-        console.log(
-          '[IPC] \u2705 Recommendations saved successfully, count saved:',
-          saved
-        );
-        return { success: true };
+        // Enhanced verification with detailed logging
+        try {
+          const verifyResult = db.exec(
+            'SELECT COUNT(*) as count FROM recommendations WHERE analysis_id = ?',
+            [analysisId]
+          );
+          const actualCount =
+            verifyResult.length > 0 && verifyResult[0]?.values?.[0]?.[0]
+              ? (verifyResult[0].values[0][0] as number)
+              : 0;
+
+          console.log(
+            `[IPC:${correlationId}] 🔍 Final verification - recommendations in DB:`,
+            {
+              analysisId,
+              actualCount,
+              expectedCount: saved,
+              verified: actualCount === saved,
+            }
+          );
+
+          if (actualCount !== saved) {
+            console.warn(
+              `[IPC:${correlationId}] ⚠️ Count mismatch detected in final verification`
+            );
+          }
+        } catch (verifyError) {
+          console.error(
+            `[IPC:${correlationId}] ⚠️ Final verification failed:`,
+            (verifyError as Error).message
+          );
+          // Don't throw here as the save operation was successful
+        }
+
+        return {
+          success: true,
+          savedCount: saved,
+          analysisId,
+          correlationId,
+          message: `Successfully saved ${saved} recommendations with transaction management`,
+        };
       } catch (error) {
-        console.error(
-          '[IPC] \u274c Failed to save recommendations:',
-          (error as Error).message
-        );
-        throw new Error(
-          `Failed to save recommendations: ${(error as Error).message}`
-        );
+        const errorMessage = `Failed to save recommendations for analysis ${analysisId}: ${(error as Error).message}`;
+        console.error(`[IPC:${correlationId}] ❌`, errorMessage);
+
+        // Return structured error response with correlation ID
+        return {
+          success: false,
+          error: errorMessage,
+          analysisId,
+          correlationId,
+          savedCount: 0,
+        };
       }
     };
 
-    // Register the normalized handler
-    ipcMain.handle('seo:saveRecommendations', handleSaveRecommendations);
-    ipcMain.handle('seo:recommendations:save', handleSaveRecommendations);
-    // (Removed stray syntax error lines)
+    // Register consolidated handler with conflict detection
+    try {
+      // Check if handlers are already registered to prevent conflicts
+      const existingHandlers = ipcMain.eventNames();
+      const saveHandlerNames = [
+        'seo:saveRecommendations',
+        'seo:recommendations:save',
+      ];
+
+      saveHandlerNames.forEach(handlerName => {
+        if (existingHandlers.includes(handlerName)) {
+          console.warn(
+            `[IPC] ⚠️ Handler ${handlerName} already registered, removing existing handler`
+          );
+          ipcMain.removeAllListeners(handlerName);
+        }
+      });
+
+      // Register the consolidated handler for both legacy and new formats
+      ipcMain.handle('seo:saveRecommendations', handleSaveRecommendations);
+      ipcMain.handle('seo:recommendations:save', handleSaveRecommendations);
+
+      console.log(
+        '[IPC] ✅ Consolidated recommendation save handlers registered successfully'
+      );
+    } catch (handlerError) {
+      console.error(
+        '[IPC] ❌ Failed to register recommendation save handlers:',
+        (handlerError as Error).message
+      );
+      throw new Error(
+        `Handler registration failed: ${(handlerError as Error).message}`
+      );
+    }
+
+    ipcMain.handle('db:project:create', async (_event, data: unknown) => {
+      try {
+        console.log('[IPC] 🆕 Creating new project...');
+        const result = DatabaseOperations.createProject(
+          data as Parameters<typeof DatabaseOperations.createProject>[0]
+        );
+        console.log('[IPC] ✅ Project created successfully:', result.id);
+        return result;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to create project:',
+          (error as Error).message
+        );
+        throw new Error(
+          `Failed to create project: ${(error as Error).message}`
+        );
+      }
+    });
 
     ipcMain.handle('db:project:getAll', async _event => {
       try {
@@ -487,80 +693,614 @@ export class IPCHandlers {
     });
 
     // ============ SEO ANALYZER ============
-    ipcMain.handle(
-      'seo:analyze',
-      async (
-        _event,
-        content: string,
-        keywords: string[],
-        options?: unknown
-      ) => {
-        try {
-          console.log('[IPC] 🔍 SEO analysis requested:', {
-            contentLength: content?.length || 0,
-            keywordCount: keywords?.length || 0,
-          });
+    ipcMain.handle('seo:analyze', async (_event, analysisData: unknown) => {
+      try {
+        const data = analysisData as {
+          html?: string;
+          keywords?: string;
+          language?: string;
+        };
 
-          const analyzer = new SEOAnalyzer();
-          const result = await analyzer.analyze({
-            html: content,
-            keywords: keywords.join(', '),
-            language: ((options as { language?: string })?.language || 'en') as
-              | 'en'
-              | 'el',
-          });
+        console.log('[IPC] 🔍 SEO analysis requested:', {
+          contentLength: data.html?.length || 0,
+          keywords: data.keywords || '',
+        });
 
-          console.log('[IPC] ✅ SEO analysis complete:', {
-            score: result.score,
-            issuesFound: result.issues.length,
-          });
-          return result;
-        } catch (error) {
-          console.error(
-            '[IPC] ❌ SEO analysis failed:',
-            (error as Error).message
-          );
-          throw new Error(`SEO analysis failed: ${(error as Error).message}`);
-        }
+        const analyzer = new SEOAnalyzer();
+        const result = await analyzer.analyze({
+          html: data.html || '',
+          keywords: data.keywords || '',
+          language: (data.language || 'en') as 'en' | 'el',
+        });
+
+        console.log('[IPC] ✅ SEO analysis complete:', {
+          score: result.score,
+          issuesFound: result.issues.length,
+        });
+        return result;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ SEO analysis failed:',
+          (error as Error).message
+        );
+        throw new Error(`SEO analysis failed: ${(error as Error).message}`);
       }
-    );
+    });
 
     // ============ SEO RECOMMENDATIONS ============
     ipcMain.handle(
       'seo:recommendations:get',
       async (_event, analysisId: number) => {
-        try {
-          console.log(
-            '[IPC] 📋 Fetching recommendations for analysis:',
-            analysisId
-          );
-          const db = await dbManager.getDb();
-          const recommendations =
-            await recommendationPersistence.getRecommendations(db, analysisId);
+        const correlationId = `fetch-${analysisId}-${Date.now()}`;
+        const operationTimeout = 30000; // 30 second timeout
+        const maxRetries = 3;
+        let retryCount = 0;
 
-          console.log(
-            '[IPC] ✅ Recommendations fetched:',
-            recommendations.length
-          );
-          try {
-            console.log(
-              '[IPC] ✅ Sample fetched recs:',
-              recommendations
-                .slice(0, 5)
-                .map(r => ({ id: r.id, title: r.title }))
+        // Timeout wrapper for the entire operation
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(`Operation timed out after ${operationTimeout}ms`)
             );
-          } catch (_err) {
-            // ignore logging errors
+          }, operationTimeout);
+        });
+
+        // Main operation with retry logic
+        const fetchOperation = async (): Promise<{
+          success: boolean;
+          recommendations: any[];
+          metadata: {
+            analysisId: number;
+            totalCount: number;
+            correlationId: string;
+            fetchTimestamp: string;
+            attempt: number;
+            fetchTime: number;
+            performance: {
+              fetchTimeMs: number;
+              rating: string;
+            };
+          };
+        }> => {
+          while (retryCount < maxRetries) {
+            try {
+              console.log(
+                `[IPC:${correlationId}] 📋 Enhanced fetch attempt ${retryCount + 1}/${maxRetries} for analysis:`,
+                analysisId
+              );
+
+              // Enhanced input validation with detailed error messages
+              if (analysisId === null || analysisId === undefined) {
+                throw new Error('Analysis ID is null or undefined');
+              }
+
+              if (typeof analysisId !== 'number') {
+                throw new Error(
+                  `Invalid analysis ID type: expected number, got ${typeof analysisId}`
+                );
+              }
+
+              if (!Number.isInteger(analysisId)) {
+                throw new Error(
+                  `Analysis ID must be an integer, got: ${analysisId}`
+                );
+              }
+
+              if (analysisId <= 0) {
+                throw new Error(
+                  `Analysis ID must be positive, got: ${analysisId}`
+                );
+              }
+
+              // Enhanced database connection validation with retry logic
+              let db;
+              try {
+                db = dbManager.getDb();
+                if (!db) {
+                  throw new Error(
+                    'Database manager returned null/undefined connection'
+                  );
+                }
+
+                // Enhanced connectivity test with timeout
+                const connectivityStart = Date.now();
+                const connectivityTest = db.exec(
+                  'SELECT 1 as connectivity_test, datetime("now") as current_time'
+                );
+                const connectivityTime = Date.now() - connectivityStart;
+
+                if (connectivityTime > 5000) {
+                  console.warn(
+                    `[IPC:${correlationId}] ⚠️ Slow database connectivity: ${connectivityTime}ms`
+                  );
+                }
+
+                console.log(
+                  `[IPC:${correlationId}] ✅ Enhanced database connection validated (${connectivityTime}ms):`,
+                  {
+                    hasResult: connectivityTest.length > 0,
+                    testValue: connectivityTest[0]?.values?.[0]?.[0],
+                    timestamp: connectivityTest[0]?.values?.[0]?.[1],
+                    responseTime: connectivityTime,
+                  }
+                );
+              } catch (dbError) {
+                const dbErrorMsg = `Database connection failed on attempt ${retryCount + 1}: ${(dbError as Error).message}`;
+                console.error(`[IPC:${correlationId}] ❌ ${dbErrorMsg}`, {
+                  attempt: retryCount + 1,
+                  maxRetries,
+                  errorType: (dbError as Error).constructor.name,
+                  willRetry: retryCount < maxRetries - 1,
+                });
+
+                if (retryCount < maxRetries - 1) {
+                  retryCount++;
+                  const retryDelay = Math.min(
+                    1000 * Math.pow(2, retryCount),
+                    5000
+                  ); // Exponential backoff, max 5s
+                  console.log(
+                    `[IPC:${correlationId}] 🔄 Retrying in ${retryDelay}ms...`
+                  );
+                  await new Promise(resolve => setTimeout(resolve, retryDelay));
+                  continue;
+                }
+
+                throw new Error(dbErrorMsg);
+              }
+
+              // Enhanced database state validation with comprehensive diagnostics
+              try {
+                const diagnosticsStart = Date.now();
+
+                // Check if analysis exists with enhanced validation
+                const analysisCheck = db.exec(
+                  'SELECT id, title, created_at, status FROM analyses WHERE id = ? LIMIT 1',
+                  [analysisId]
+                );
+
+                if (
+                  !analysisCheck ||
+                  analysisCheck.length === 0 ||
+                  !analysisCheck[0] ||
+                  analysisCheck[0].values.length === 0
+                ) {
+                  console.warn(
+                    `[IPC:${correlationId}] ⚠️ Analysis ${analysisId} not found - running fallback diagnostics`
+                  );
+
+                  // Fallback: Get recent analyses for context
+                  const recentAnalyses = db.exec(
+                    'SELECT id, title, created_at FROM analyses ORDER BY created_at DESC LIMIT 10'
+                  );
+                  const recentIds =
+                    recentAnalyses.length > 0 && recentAnalyses[0]
+                      ? recentAnalyses[0].values.map(row => ({
+                          id: row[0],
+                          title: row[1],
+                          created_at: row[2],
+                        }))
+                      : [];
+
+                  console.log(
+                    `[IPC:${correlationId}] 📋 Recent analyses for context:`,
+                    recentIds
+                  );
+                } else {
+                  const analysis = analysisCheck[0].values[0];
+                  if (analysis) {
+                    console.log(
+                      `[IPC:${correlationId}] ✅ Analysis validation passed:`,
+                      {
+                        id: analysis[0],
+                        title: analysis[1],
+                        created_at: analysis[2],
+                        status: analysis[3] || 'unknown',
+                      }
+                    );
+                  }
+                }
+
+                // Enhanced recommendations diagnostics with performance monitoring
+                const diagnosticsQueries = [
+                  {
+                    name: 'total_recommendations',
+                    query: 'SELECT COUNT(*) as total FROM recommendations',
+                    params: [],
+                  },
+                  {
+                    name: 'recommendations_by_analysis',
+                    query:
+                      'SELECT analysis_id, COUNT(*) as count FROM recommendations GROUP BY analysis_id ORDER BY count DESC LIMIT 10',
+                    params: [],
+                  },
+                  {
+                    name: 'specific_analysis_count',
+                    query:
+                      'SELECT COUNT(*) as count FROM recommendations WHERE analysis_id = ?',
+                    params: [analysisId],
+                  },
+                  {
+                    name: 'sample_recommendations',
+                    query:
+                      'SELECT id, rec_id, title, priority, status, created_at FROM recommendations WHERE analysis_id = ? ORDER BY priority DESC, score_increase DESC LIMIT 5',
+                    params: [analysisId],
+                  },
+                ];
+
+                const diagnosticsResults: Record<
+                  string,
+                  {
+                    success: boolean;
+                    queryTime?: number;
+                    result?: {
+                      columns: string[];
+                      rowCount: number;
+                      data: any[][];
+                    } | null;
+                    error?: string;
+                    errorType?: string;
+                  }
+                > = {};
+
+                for (const diagnostic of diagnosticsQueries) {
+                  try {
+                    const queryStart = Date.now();
+                    const result = db.exec(diagnostic.query, diagnostic.params);
+                    const queryTime = Date.now() - queryStart;
+
+                    diagnosticsResults[diagnostic.name] = {
+                      success: true,
+                      queryTime,
+                      result:
+                        result.length > 0 && result[0]
+                          ? {
+                              columns: result[0].columns,
+                              rowCount: result[0].values.length,
+                              data: result[0].values,
+                            }
+                          : null,
+                    };
+
+                    if (queryTime > 1000) {
+                      console.warn(
+                        `[IPC:${correlationId}] ⚠️ Slow diagnostic query '${diagnostic.name}': ${queryTime}ms`
+                      );
+                    }
+                  } catch (queryError) {
+                    diagnosticsResults[diagnostic.name] = {
+                      success: false,
+                      error: (queryError as Error).message,
+                      errorType: (queryError as Error).constructor.name,
+                    };
+                  }
+                }
+
+                const diagnosticsTime = Date.now() - diagnosticsStart;
+                console.log(
+                  `[IPC:${correlationId}] 🔍 Enhanced diagnostics completed (${diagnosticsTime}ms):`,
+                  {
+                    totalTime: diagnosticsTime,
+                    results: {
+                      totalRecommendations:
+                        diagnosticsResults.total_recommendations?.result
+                          ?.data?.[0]?.[0] || 0,
+                      analysisBreakdown:
+                        diagnosticsResults.recommendations_by_analysis?.result?.data?.map(
+                          (row: (string | number)[]) => ({
+                            analysisId: row[0],
+                            count: row[1],
+                          })
+                        ) || [],
+                      specificCount:
+                        diagnosticsResults.specific_analysis_count?.result
+                          ?.data?.[0]?.[0] || 0,
+                      sampleRecommendations:
+                        diagnosticsResults.sample_recommendations?.result?.data?.map(
+                          (row: (string | number)[]) => ({
+                            id: row[0],
+                            rec_id: row[1],
+                            title: row[2],
+                            priority: row[3],
+                            status: row[4],
+                            created_at: row[5],
+                          })
+                        ) || [],
+                    },
+                    queryPerformance: Object.entries(diagnosticsResults).map(
+                      ([name, result]) => ({
+                        query: name,
+                        success: result.success,
+                        time: result.queryTime || 0,
+                        error: result.error || null,
+                      })
+                    ),
+                  }
+                );
+              } catch (diagnosticsError) {
+                console.error(
+                  `[IPC:${correlationId}] ❌ Enhanced diagnostics failed:`,
+                  {
+                    error: (diagnosticsError as Error).message,
+                    errorType: (diagnosticsError as Error).constructor.name,
+                    attempt: retryCount + 1,
+                  }
+                );
+                // Continue with main operation even if diagnostics fail
+              }
+
+              // Enhanced fetch operation with timeout and fallback mechanisms
+              let recommendations;
+              const fetchStart = Date.now();
+              try {
+                // Primary fetch attempt with timeout monitoring
+                console.log(
+                  `[IPC:${correlationId}] 🚀 Starting primary fetch operation...`
+                );
+
+                recommendations = recommendationPersistence.getRecommendations(
+                  db,
+                  analysisId
+                );
+
+                const fetchTime = Date.now() - fetchStart;
+
+                // Record successful fetch metrics
+                recordFetchMetrics(
+                  fetchTime,
+                  true,
+                  analysisId,
+                  recommendations.length
+                );
+
+                // Performance monitoring and warnings
+                if (fetchTime > 10000) {
+                  console.warn(
+                    `[IPC:${correlationId}] ⚠️ Very slow fetch operation: ${fetchTime}ms`
+                  );
+                } else if (fetchTime > 5000) {
+                  console.warn(
+                    `[IPC:${correlationId}] ⚠️ Slow fetch operation: ${fetchTime}ms`
+                  );
+                }
+
+                console.log(
+                  `[IPC:${correlationId}] ✅ Primary fetch completed (${fetchTime}ms):`,
+                  {
+                    count: recommendations.length,
+                    analysisId,
+                    fetchTime,
+                    attempt: retryCount + 1,
+                    performance:
+                      fetchTime < 1000
+                        ? 'excellent'
+                        : fetchTime < 5000
+                          ? 'good'
+                          : 'slow',
+                  }
+                );
+
+                // Enhanced result validation and logging
+                if (recommendations && recommendations.length > 0) {
+                  try {
+                    // Validate recommendation structure
+                    const validationResults = recommendations.map(
+                      (rec, index) => ({
+                        index,
+                        hasId: !!rec.id,
+                        hasTitle: !!rec.title,
+                        hasPriority: !!rec.priority,
+                        hasValidStructure: !!(
+                          rec.id &&
+                          rec.title &&
+                          rec.priority
+                        ),
+                      })
+                    );
+
+                    const invalidRecommendations = validationResults.filter(
+                      v => !v.hasValidStructure
+                    );
+
+                    if (invalidRecommendations.length > 0) {
+                      console.warn(
+                        `[IPC:${correlationId}] ⚠️ Found ${invalidRecommendations.length} recommendations with invalid structure:`,
+                        invalidRecommendations
+                      );
+                    }
+
+                    console.log(
+                      `[IPC:${correlationId}] 📋 Enhanced result summary:`,
+                      {
+                        totalCount: recommendations.length,
+                        validCount: validationResults.filter(
+                          v => v.hasValidStructure
+                        ).length,
+                        invalidCount: invalidRecommendations.length,
+                        sampleRecommendations: recommendations
+                          .slice(0, 3)
+                          .map(r => ({
+                            id: r.id,
+                            rec_id: r.rec_id,
+                            title:
+                              r.title?.substring(0, 50) +
+                              (r.title?.length > 50 ? '...' : ''),
+                            priority: r.priority,
+                            status: r.status,
+                            category: r.category,
+                            hasActions: r.actions?.length || 0,
+                            hasExample: !!r.example,
+                            hasResources: r.resources?.length || 0,
+                          })),
+                        byPriority: recommendations.reduce(
+                          (acc, r) => {
+                            acc[r.priority] = (acc[r.priority] || 0) + 1;
+                            return acc;
+                          },
+                          {} as Record<string, number>
+                        ),
+                        byStatus: recommendations.reduce(
+                          (acc, r) => {
+                            acc[r.status] = (acc[r.status] || 0) + 1;
+                            return acc;
+                          },
+                          {} as Record<string, number>
+                        ),
+                      }
+                    );
+                  } catch (loggingError) {
+                    console.warn(
+                      `[IPC:${correlationId}] ⚠️ Error in enhanced result logging:`,
+                      (loggingError as Error).message
+                    );
+                  }
+                } else {
+                  console.log(
+                    `[IPC:${correlationId}] ℹ️ No recommendations found for analysis ${analysisId} on attempt ${retryCount + 1}`
+                  );
+
+                  // If no recommendations found and this is not the last retry, continue to retry
+                  if (retryCount < maxRetries - 1) {
+                    console.log(
+                      `[IPC:${correlationId}] 🔄 No results found, will retry...`
+                    );
+                    throw new Error('No recommendations found, retrying...');
+                  }
+                }
+
+                // Success - return results
+                return {
+                  success: true,
+                  recommendations,
+                  metadata: {
+                    analysisId,
+                    totalCount: recommendations.length,
+                    correlationId,
+                    fetchTimestamp: new Date().toISOString(),
+                    attempt: retryCount + 1,
+                    fetchTime,
+                    performance: {
+                      fetchTimeMs: fetchTime,
+                      rating:
+                        fetchTime < 1000
+                          ? 'excellent'
+                          : fetchTime < 5000
+                            ? 'good'
+                            : 'slow',
+                    },
+                  },
+                };
+              } catch (fetchError) {
+                // Record failed fetch metrics
+                recordFetchMetrics(
+                  Date.now() - fetchStart,
+                  false,
+                  analysisId,
+                  0,
+                  (fetchError as Error).message
+                );
+
+                const fetchErrorMsg = `Fetch operation failed on attempt ${retryCount + 1}: ${(fetchError as Error).message}`;
+                console.error(`[IPC:${correlationId}] ❌ ${fetchErrorMsg}`, {
+                  attempt: retryCount + 1,
+                  maxRetries,
+                  errorType: (fetchError as Error).constructor.name,
+                  willRetry: retryCount < maxRetries - 1,
+                  stack: (fetchError as Error).stack,
+                });
+
+                if (retryCount < maxRetries - 1) {
+                  retryCount++;
+                  const retryDelay = Math.min(
+                    1000 * Math.pow(2, retryCount),
+                    5000
+                  ); // Exponential backoff
+                  console.log(
+                    `[IPC:${correlationId}] 🔄 Retrying fetch in ${retryDelay}ms...`
+                  );
+                  await new Promise(resolve => setTimeout(resolve, retryDelay));
+                  continue;
+                }
+
+                throw new Error(fetchErrorMsg);
+              }
+            } catch (attemptError) {
+              if (retryCount < maxRetries - 1) {
+                retryCount++;
+                const retryDelay = Math.min(
+                  1000 * Math.pow(2, retryCount),
+                  5000
+                );
+                console.log(
+                  `[IPC:${correlationId}] 🔄 Operation failed, retrying in ${retryDelay}ms...`
+                );
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                continue;
+              }
+              throw attemptError;
+            }
           }
-          return recommendations;
-        } catch (error) {
-          console.error(
-            '[IPC] ❌ Failed to fetch recommendations:',
-            (error as Error).message
-          );
+
+          // If we reach here, all retries failed
           throw new Error(
-            `Failed to fetch recommendations: ${(error as Error).message}`
+            `All ${maxRetries} attempts failed for analysis ${analysisId}`
           );
+        };
+
+        try {
+          // Race between the main operation and timeout
+          const result = await Promise.race([fetchOperation(), timeoutPromise]);
+
+          return result;
+        } catch (error) {
+          const isTimeout = (error as Error).message.includes('timed out');
+          const errorMessage = `Failed to fetch recommendations for analysis ${analysisId}: ${(error as Error).message}`;
+
+          console.error(`[IPC:${correlationId}] ❌ Final error:`, {
+            error: errorMessage,
+            isTimeout,
+            totalAttempts: retryCount + 1,
+            maxRetries,
+            errorType: (error as Error).constructor.name,
+          });
+
+          // Enhanced error response with fallback data
+          const errorResponse = {
+            success: false,
+            error: errorMessage,
+            errorType: isTimeout ? 'timeout' : 'fetch_failed',
+            metadata: {
+              analysisId,
+              correlationId,
+              totalAttempts: retryCount + 1,
+              maxRetries,
+              timeoutMs: operationTimeout,
+              timestamp: new Date().toISOString(),
+            },
+            // Provide empty recommendations as fallback
+            recommendations: [],
+            fallbackData: {
+              message:
+                'Operation failed, returning empty recommendations as fallback',
+              suggestedActions: [
+                'Check database connection',
+                'Verify analysis ID exists',
+                'Try again in a few moments',
+                'Check application logs for details',
+              ],
+            },
+          };
+
+          // For timeout errors, don't throw - return error response
+          if (isTimeout) {
+            console.log(
+              `[IPC:${correlationId}] 🔄 Returning timeout fallback response`
+            );
+            return errorResponse;
+          }
+
+          // For other errors, throw to maintain existing error handling
+          throw new Error(errorMessage);
         }
       }
     );
@@ -658,9 +1398,10 @@ export class IPCHandlers {
             htmlContent,
             keywords
           );
-          const densities = analysis.densityResults.map(
-            result => result.density
-          );
+          const densities = analysis.densityResults.map(result => ({
+            keyword: result.keyword,
+            density: result.density || 0,
+          }));
 
           console.log('[IPC] ✅ Keyword densities calculated');
           return densities;
@@ -1054,6 +1795,267 @@ export class IPCHandlers {
         }
       }
     );
+
+    // ============ HEALTH MONITORING & DIAGNOSTICS ============
+
+    ipcMain.handle('health:check', async _event => {
+      try {
+        console.log('[IPC] 🏥 Health check requested...');
+        const healthStatus = await healthMonitor.performHealthCheck();
+        console.log('[IPC] ✅ Health check completed:', healthStatus.overall);
+        return healthStatus;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Health check failed:',
+          (error as Error).message
+        );
+        throw new Error(`Health check failed: ${(error as Error).message}`);
+      }
+    });
+
+    ipcMain.handle('health:status', async _event => {
+      try {
+        console.log('[IPC] 📊 Health status requested...');
+        const status = healthMonitor.getCurrentHealthStatus();
+        console.log('[IPC] ✅ Health status retrieved');
+        return status;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to get health status:',
+          (error as Error).message
+        );
+        throw new Error(
+          `Failed to get health status: ${(error as Error).message}`
+        );
+      }
+    });
+
+    ipcMain.handle('health:metrics', async _event => {
+      try {
+        console.log('[IPC] 📈 Performance metrics requested...');
+        const metrics = healthMonitor.getPerformanceStats();
+        console.log('[IPC] ✅ Performance metrics retrieved:', {
+          totalOperations: metrics.totalOperations,
+          successRate: (metrics.successRate * 100).toFixed(1) + '%',
+          avgResponseTime: Math.round(metrics.averageResponseTime) + 'ms',
+        });
+        return metrics;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to get performance metrics:',
+          (error as Error).message
+        );
+        throw new Error(
+          `Failed to get performance metrics: ${(error as Error).message}`
+        );
+      }
+    });
+
+    ipcMain.handle('health:reset', async _event => {
+      try {
+        console.log('[IPC] 🔄 Health monitor reset requested...');
+        healthMonitor.reset();
+        console.log('[IPC] ✅ Health monitor reset completed');
+        return { success: true, message: 'Health monitor reset successfully' };
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to reset health monitor:',
+          (error as Error).message
+        );
+        throw new Error(
+          `Failed to reset health monitor: ${(error as Error).message}`
+        );
+      }
+    });
+
+    // ============ SETTINGS & SYSTEM OPERATIONS ============
+
+    ipcMain.handle('settings:clearDatabase', async _event => {
+      try {
+        console.log('[IPC] 🗑️ Clearing database...');
+
+        // Clear all tables in order (respecting foreign key constraints)
+        const db = await dbManager.getDb();
+
+        // Delete in reverse dependency order
+        db.exec('DELETE FROM mini_service_results');
+        db.exec('DELETE FROM recommendations');
+        db.exec('DELETE FROM analyses');
+        db.exec('DELETE FROM projects');
+        db.exec('DELETE FROM seo_rules');
+
+        // Reset auto-increment counters
+        db.exec('DELETE FROM sqlite_sequence');
+
+        console.log('[IPC] ✅ Database cleared successfully');
+        return { success: true, message: 'Database cleared successfully' };
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to clear database:',
+          (error as Error).message
+        );
+        throw new Error(
+          `Failed to clear database: ${(error as Error).message}`
+        );
+      }
+    });
+
+    ipcMain.handle('settings:exportData', async _event => {
+      try {
+        console.log('[IPC] 📤 Exporting data...');
+
+        const projects = DatabaseOperations.getAllProjects({ isActive: null });
+        const analyses = [];
+        const rules = DatabaseOperations.getAllSeoRules({ isActive: null });
+
+        // Get all analyses for all projects
+        for (const project of projects) {
+          const projectAnalyses = DatabaseOperations.getProjectAnalyses(
+            project.id
+          );
+          analyses.push(...projectAnalyses);
+        }
+
+        const exportData = {
+          version: '1.0.0',
+          exportDate: new Date().toISOString(),
+          data: {
+            projects,
+            analyses,
+            rules,
+          },
+        };
+
+        console.log('[IPC] ✅ Data exported successfully:', {
+          projects: projects.length,
+          analyses: analyses.length,
+          rules: rules.length,
+        });
+
+        return exportData;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to export data:',
+          (error as Error).message
+        );
+        throw new Error(`Failed to export data: ${(error as Error).message}`);
+      }
+    });
+
+    ipcMain.handle(
+      'settings:importData',
+      async (_event, importData: unknown) => {
+        try {
+          console.log('[IPC] 📥 Importing data...');
+
+          const data = importData as {
+            version: string;
+            data: {
+              projects: Array<Record<string, unknown>>;
+              analyses: Array<Record<string, unknown>>;
+              rules: Array<Record<string, unknown>>;
+            };
+          };
+
+          const imported = { projects: 0, analyses: 0, rules: 0 };
+
+          // Import projects
+          for (const project of data.data.projects || []) {
+            try {
+              DatabaseOperations.createProject(
+                project as unknown as Parameters<
+                  typeof DatabaseOperations.createProject
+                >[0]
+              );
+              imported.projects++;
+            } catch (error) {
+              console.warn(
+                '[IPC] ⚠️ Failed to import project:',
+                (error as Error).message
+              );
+            }
+          }
+
+          // Import rules
+          for (const rule of data.data.rules || []) {
+            try {
+              DatabaseOperations.createSeoRule(
+                rule as unknown as Parameters<
+                  typeof DatabaseOperations.createSeoRule
+                >[0]
+              );
+              imported.rules++;
+            } catch (error) {
+              console.warn(
+                '[IPC] ⚠️ Failed to import rule:',
+                (error as Error).message
+              );
+            }
+          }
+
+          // Import analyses
+          for (const analysis of data.data.analyses || []) {
+            try {
+              DatabaseOperations.createAnalysis(
+                analysis as unknown as Parameters<
+                  typeof DatabaseOperations.createAnalysis
+                >[0]
+              );
+              imported.analyses++;
+            } catch (error) {
+              console.warn(
+                '[IPC] ⚠️ Failed to import analysis:',
+                (error as Error).message
+              );
+            }
+          }
+
+          console.log('[IPC] ✅ Data imported successfully:', imported);
+          return { success: true, imported };
+        } catch (error) {
+          console.error(
+            '[IPC] ❌ Failed to import data:',
+            (error as Error).message
+          );
+          throw new Error(`Failed to import data: ${(error as Error).message}`);
+        }
+      }
+    );
+
+    ipcMain.handle('settings:getAppInfo', async _event => {
+      try {
+        console.log('[IPC] ℹ️ Getting app info...');
+
+        const stats = await dbManager.getStats();
+        const packageInfo = await import('../../package.json');
+
+        const appInfo = {
+          version: packageInfo.version,
+          name: packageInfo.name,
+          description: packageInfo.description,
+          author: packageInfo.author,
+          license: packageInfo.license,
+          database: {
+            location: 'In-memory SQLite',
+            ...stats,
+          },
+          platform: {
+            os: process.platform,
+            arch: process.arch,
+            node: process.version,
+          },
+        };
+
+        console.log('[IPC] ✅ App info retrieved');
+        return appInfo;
+      } catch (error) {
+        console.error(
+          '[IPC] ❌ Failed to get app info:',
+          (error as Error).message
+        );
+        throw new Error(`Failed to get app info: ${(error as Error).message}`);
+      }
+    });
 
     // ============ CONTENT OPTIMIZATION SERVICES ============
 

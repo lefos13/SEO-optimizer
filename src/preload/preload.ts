@@ -1,133 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { DatabaseStats } from '../types';
+import type { ElectronAPI } from '../types/ipc.types';
 
 /**
  * Preload script for secure IPC communication
  * Exposes specific APIs to the renderer process through contextBridge
  */
-
-// Define the ElectronAPI interface
-export interface ElectronAPI {
-  projects: {
-    create: (projectData: unknown) => Promise<unknown>;
-    get: (projectId: number) => Promise<unknown>;
-    getAll: (options?: unknown) => Promise<unknown[]>;
-    update: (projectId: number, updates: unknown) => Promise<void>;
-    delete: (projectId: number) => Promise<void>;
-  };
-  analyses: {
-    create: (analysisData: unknown) => Promise<unknown>;
-    get: (analysisId: number) => Promise<unknown>;
-    getByProject: (projectId: number, options?: unknown) => Promise<unknown[]>;
-    update: (analysisId: number, updates: unknown) => Promise<void>;
-    delete: (analysisId: number) => Promise<void>;
-  };
-  rules: {
-    create: (ruleData: unknown) => Promise<unknown>;
-    get: (ruleId: number) => Promise<unknown>;
-    getAll: (options?: unknown) => Promise<unknown[]>;
-    getByCategory: (category: string) => Promise<unknown[]>;
-    update: (ruleId: number, updates: unknown) => Promise<void>;
-    delete: (ruleId: number) => Promise<void>;
-  };
-  results: {
-    create: (resultData: unknown) => Promise<unknown>;
-    get: (resultId: number) => Promise<unknown>;
-    getByAnalysis: (analysisId: number) => Promise<unknown[]>;
-    update: (resultId: number, updates: unknown) => Promise<void>;
-    delete: (resultId: number) => Promise<void>;
-    deleteByAnalysis: (analysisId: number) => Promise<void>;
-  };
-  database: {
-    getStats: () => Promise<DatabaseStats>;
-  };
-  seo: {
-    analyze: (content: unknown) => Promise<unknown>;
-    getRecommendations: (analysisId: number) => Promise<unknown>;
-    updateRecommendationStatus: (
-      recId: number,
-      status: string,
-      notes?: string
-    ) => Promise<void>;
-    getQuickWins: (analysisId: number) => Promise<unknown[]>;
-    calculateDensity: (text: string, keyword: string) => Promise<number>;
-    calculateDensities: (
-      text: string,
-      keywords: string[]
-    ) => Promise<Record<string, number>>;
-    suggestKeywords: (
-      html: string,
-      maxSuggestions?: number
-    ) => Promise<unknown[]>;
-    saveRecommendations: (
-      analysisId: number,
-      enhancedRecommendations: unknown[]
-    ) => Promise<void>;
-    fetchUrl: (url: string, options?: unknown) => Promise<unknown>;
-  };
-  keyword: {
-    analyzeDensity: (content: string, keywords: string[]) => Promise<unknown>;
-    generateLongTail: (
-      content: string,
-      seedKeywords: string[],
-      maxSuggestions?: number
-    ) => Promise<unknown[]>;
-    estimateDifficulty: (
-      keywords: string[],
-      content: string
-    ) => Promise<unknown>;
-    cluster: (keywords: string[], content: string) => Promise<unknown>;
-    generateLSI: (
-      content: string,
-      mainKeywords: string[],
-      maxSuggestions?: number
-    ) => Promise<unknown[]>;
-  };
-  readability: {
-    analyze: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeOverview: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeStructure: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeReadingLevels: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeImprovements: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeLanguageGuidance: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-    analyzeLiveScore: (
-      content: string,
-      options?: { language?: string }
-    ) => Promise<unknown>;
-  };
-  content: {
-    analyzeStructure: (content: string, options?: unknown) => Promise<unknown>;
-    optimizeHeadings: (content: string, keywords: string[]) => Promise<unknown>;
-    recommendInternalLinks: (
-      content: string,
-      existingPages: unknown[]
-    ) => Promise<unknown>;
-    optimizeLength: (content: string, options?: unknown) => Promise<unknown>;
-    analyzeGaps: (content: string, topics: string[]) => Promise<unknown>;
-    analyzeCompetitive: (
-      content: string,
-      competitors: unknown[]
-    ) => Promise<unknown>;
-  };
-}
 
 // Expose protected methods to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -305,6 +182,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
     analyzeCompetitive: (content: string, competitors: unknown[]) =>
       ipcRenderer.invoke('content:analyzeCompetitive', content, competitors),
   },
+
+  // Health Monitoring & Diagnostics
+  health: {
+    check: () => ipcRenderer.invoke('health:check'),
+    status: () => ipcRenderer.invoke('health:status'),
+    metrics: () => ipcRenderer.invoke('health:metrics'),
+    reset: () => ipcRenderer.invoke('health:reset'),
+  },
+
+  // Settings & System Operations
+  settings: {
+    clearDatabase: () => ipcRenderer.invoke('settings:clearDatabase'),
+    exportData: () => ipcRenderer.invoke('settings:exportData'),
+    importData: (data: unknown) =>
+      ipcRenderer.invoke('settings:importData', data),
+    getAppInfo: () => ipcRenderer.invoke('settings:getAppInfo'),
+  },
+
+  // Generic invoke method for direct IPC calls
+  invoke: (channel: string, ...args: unknown[]) =>
+    ipcRenderer.invoke(channel, ...args),
 } as ElectronAPI);
 
 // Declare global types for renderer process

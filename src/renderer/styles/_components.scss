@@ -501,3 +501,315 @@
     flex: 1;
   }
 }
+
+// Toggle Component
+.toggle-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+
+  &.toggle-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.toggle-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+
+  &:focus-visible + .toggle-label {
+    @include focus-ring;
+  }
+}
+
+.toggle-label {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  background: $color-bg-tertiary;
+  border: 1px solid $color-border;
+  border-radius: 20px;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $color-primary;
+  }
+
+  &.toggle-sm {
+    width: 32px;
+    height: 18px;
+  }
+
+  &.toggle-md {
+    width: 44px;
+    height: 24px;
+  }
+
+  &.toggle-lg {
+    width: 56px;
+    height: 30px;
+  }
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: $color-text-secondary;
+  border-radius: 50%;
+  transition: all $transition-base;
+
+  .toggle-sm & {
+    width: 14px;
+    height: 14px;
+  }
+
+  .toggle-md & {
+    width: 20px;
+    height: 20px;
+  }
+
+  .toggle-lg & {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.toggle-input:checked + .toggle-label {
+  background: $color-primary;
+  border-color: $color-primary;
+
+  .toggle-slider {
+    background: white;
+    transform: translateX(calc(100% + 2px));
+  }
+
+  .toggle-sm .toggle-slider {
+    transform: translateX(14px);
+  }
+
+  .toggle-md .toggle-slider {
+    transform: translateX(20px);
+  }
+
+  .toggle-lg .toggle-slider {
+    transform: translateX(26px);
+  }
+}
+
+.toggle-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle-title {
+  display: block;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+  cursor: pointer;
+}
+
+.toggle-description {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+// Select Component
+.select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &.select-full-width {
+    width: 100%;
+  }
+}
+
+.select-label {
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  font-size: $font-size-sm;
+}
+
+.select-container {
+  position: relative;
+}
+
+.select-input {
+  width: 100%;
+  padding: $spacing-sm $spacing-lg $spacing-sm $spacing-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  color: $color-text-primary;
+  font-size: $font-size-base;
+  appearance: none;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    @include focus-ring;
+  }
+
+  &:hover {
+    border-color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.select-error {
+    border-color: $color-danger;
+  }
+}
+
+.select-arrow {
+  position: absolute;
+  right: $spacing-md;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  pointer-events: none;
+}
+
+.select-description {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.4;
+}
+
+.select-error-text {
+  font-size: $font-size-sm;
+  color: $color-danger;
+  line-height: 1.4;
+}
+
+// Settings specific styles
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: $spacing-xl;
+  margin-bottom: $spacing-xl;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-lg;
+  padding-top: $spacing-xl;
+  border-top: 1px solid $color-border;
+}
+
+.notification {
+  padding: $spacing-md $spacing-lg;
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+  font-weight: $font-weight-medium;
+
+  &.notification-success {
+    background: rgba($color-success, 0.1);
+    border: 1px solid $color-success;
+    color: $color-success;
+  }
+
+  &.notification-error {
+    background: rgba($color-danger, 0.1);
+    border: 1px solid $color-danger;
+    color: $color-danger;
+  }
+}
+
+.database-stats {
+  margin: $spacing-lg 0;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $border-radius-md;
+  border: 1px solid $color-border;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: $spacing-md;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.stat-value {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.confirm-dialog {
+  margin-top: $spacing-lg;
+  padding: $spacing-lg;
+  background: rgba($color-danger, 0.05);
+  border: 1px solid $color-danger;
+  border-radius: $border-radius-md;
+
+  p {
+    margin-bottom: $spacing-lg;
+    color: $color-text-primary;
+  }
+
+  .button-group {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+  }
+}
+
+.about-info {
+  .about-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm 0;
+    border-bottom: 1px solid $color-border;
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    strong {
+      color: $color-text-primary;
+    }
+  }
+
+  .text-muted {
+    color: $color-text-secondary;
+    line-height: 1.5;
+  }
+
+  .mt-3 {
+    margin-top: $spacing-lg;
+  }
+}

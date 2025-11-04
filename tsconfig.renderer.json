@@ -7,7 +7,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "outDir": "./dist/renderer",
-    "rootDir": "./src/renderer",
+    "rootDir": "./src",
     "noEmit": true,
     "types": ["node"],
     "allowImportingTsExtensions": true

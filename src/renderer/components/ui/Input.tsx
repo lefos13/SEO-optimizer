@@ -18,8 +18,12 @@ export interface InputProps {
   required?: boolean;
   error?: string;
   help?: string;
+  description?: string;
   fullWidth?: boolean;
   className?: string;
+  min?: string | number;
+  max?: string | number;
+  step?: string | number;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -36,8 +40,12 @@ const Input: React.FC<InputProps> = ({
   required = false,
   error,
   help,
+  description,
   fullWidth = false,
   className = '',
+  min,
+  max,
+  step,
 }) => {
   const inputId = id || name || label?.toLowerCase().replace(/\s+/g, '-');
 
@@ -71,10 +79,18 @@ const Input: React.FC<InputProps> = ({
         disabled={disabled}
         readOnly={readOnly}
         required={required}
+        min={min}
+        max={max}
+        step={step}
       />
 
       {error && <span className="input-error-message">{error}</span>}
-      {help && !error && <span className="input-help">{help}</span>}
+      {description && !error && (
+        <span className="input-help">{description}</span>
+      )}
+      {help && !error && !description && (
+        <span className="input-help">{help}</span>
+      )}
     </div>
   );
 };

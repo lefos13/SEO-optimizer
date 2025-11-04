@@ -3,6 +3,7 @@
  * Type-safe IPC channels and message types for Electron
  */
 
+import type { IpcMainInvokeEvent } from 'electron';
 import type { AnalysisResult } from './seo.types';
 import type {
   AnalysisResultRow,
@@ -277,7 +278,7 @@ export interface URLFetchResponse {
 // ============================================================
 
 export type IPCHandler<TRequest = unknown, TResponse = unknown> = (
-  event: Electron.IpcMainInvokeEvent,
+  event: IpcMainInvokeEvent,
   request: TRequest
 ) => Promise<TResponse>;
 
@@ -349,52 +350,142 @@ export interface IPCHandlerMap {
 // ============================================================
 
 export interface ElectronAPI {
-  seo: {
-    analyze: (data: SEOAnalyzeRequest) => Promise<SEOAnalyzeResponse>;
-    analyzeUrl: (data: SEOAnalyzeUrlRequest) => Promise<SEOAnalyzeUrlResponse>;
+  projects: {
+    create: (projectData: unknown) => Promise<unknown>;
+    get: (projectId: number) => Promise<unknown>;
+    getAll: (options?: unknown) => Promise<unknown[]>;
+    update: (projectId: number, updates: unknown) => Promise<void>;
+    delete: (projectId: number) => Promise<void>;
+  };
+  analyses: {
+    create: (analysisData: unknown) => Promise<unknown>;
+    get: (analysisId: number) => Promise<unknown>;
+    getByProject: (projectId: number, options?: unknown) => Promise<unknown[]>;
+    update: (analysisId: number, updates: unknown) => Promise<void>;
+    delete: (analysisId: number) => Promise<void>;
+  };
+  rules: {
+    create: (ruleData: unknown) => Promise<unknown>;
+    get: (ruleId: number) => Promise<unknown>;
+    getAll: (options?: unknown) => Promise<unknown[]>;
+    getByCategory: (category: string) => Promise<unknown[]>;
+    update: (ruleId: number, updates: unknown) => Promise<void>;
+    delete: (ruleId: number) => Promise<void>;
+  };
+  results: {
+    create: (resultData: unknown) => Promise<unknown>;
+    get: (resultId: number) => Promise<unknown>;
+    getByAnalysis: (analysisId: number) => Promise<unknown[]>;
+    update: (resultId: number, updates: unknown) => Promise<void>;
+    delete: (resultId: number) => Promise<void>;
+    deleteByAnalysis: (analysisId: number) => Promise<void>;
   };
   database: {
-    saveAnalysis: (
-      data: DBSaveAnalysisRequest
-    ) => Promise<DBSaveAnalysisResponse>;
-    getAnalysis: (id: number) => Promise<DBGetAnalysisResponse>;
-    getAllAnalyses: (
-      params?: DBGetAllAnalysesRequest
-    ) => Promise<DBGetAllAnalysesResponse>;
-    deleteAnalysis: (id: number) => Promise<DBDeleteAnalysisResponse>;
-    createProject: (
-      data: DBCreateProjectRequest
-    ) => Promise<DBCreateProjectResponse>;
-    getProject: (id: number) => Promise<DBGetProjectResponse>;
-    getAllProjects: () => Promise<DBGetAllProjectsResponse>;
-    updateProject: (
-      data: DBUpdateProjectRequest
-    ) => Promise<DBUpdateProjectResponse>;
-    deleteProject: (id: number) => Promise<DBDeleteProjectResponse>;
-    reset: () => Promise<DBResetResponse>;
-    getStats: () => Promise<DBGetStatsResponse>;
+    getStats: () => Promise<unknown>;
+  };
+  seo: {
+    analyze: (content: unknown) => Promise<unknown>;
+    getRecommendations: (analysisId: number) => Promise<unknown>;
+    updateRecommendationStatus: (
+      recId: number,
+      status: string,
+      notes?: string
+    ) => Promise<void>;
+    getQuickWins: (analysisId: number) => Promise<unknown[]>;
+    calculateDensity: (text: string, keyword: string) => Promise<number>;
+    calculateDensities: (
+      text: string,
+      keywords: string[]
+    ) => Promise<Record<string, number>>;
+    suggestKeywords: (
+      html: string,
+      maxSuggestions?: number
+    ) => Promise<unknown[]>;
+    saveRecommendations: (
+      analysisId: number,
+      enhancedRecommendations: unknown[]
+    ) => Promise<void>;
+    fetchUrl: (url: string, options?: unknown) => Promise<unknown>;
   };
   keyword: {
-    suggest: (data: KeywordSuggestRequest) => Promise<KeywordSuggestResponse>;
-    extract: (data: KeywordExtractRequest) => Promise<KeywordExtractResponse>;
+    analyzeDensity: (content: string, keywords: string[]) => Promise<unknown>;
+    generateLongTail: (
+      content: string,
+      seedKeywords: string[],
+      maxSuggestions?: number
+    ) => Promise<unknown[]>;
+    estimateDifficulty: (
+      keywords: string[],
+      content: string
+    ) => Promise<unknown>;
+    cluster: (keywords: string[], content: string) => Promise<unknown>;
+    generateLSI: (
+      content: string,
+      mainKeywords: string[],
+      maxSuggestions?: number
+    ) => Promise<unknown[]>;
   };
   readability: {
     analyze: (
-      data: ReadabilityAnalyzeRequest
-    ) => Promise<ReadabilityAnalyzeResponse>;
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeOverview: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeStructure: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeReadingLevels: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeImprovements: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeLanguageGuidance: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
+    analyzeLiveScore: (
+      content: string,
+      options?: { language?: string }
+    ) => Promise<unknown>;
   };
   content: {
-    optimize: (
-      data: ContentOptimizeRequest
-    ) => Promise<ContentOptimizeResponse>;
+    analyzeStructure: (content: string, options?: unknown) => Promise<unknown>;
+    optimizeHeadings: (content: string, keywords: string[]) => Promise<unknown>;
+    recommendInternalLinks: (
+      content: string,
+      existingPages: unknown[]
+    ) => Promise<unknown>;
+    optimizeLength: (content: string, options?: unknown) => Promise<unknown>;
+    analyzeGaps: (content: string, topics: string[]) => Promise<unknown>;
+    analyzeCompetitive: (
+      content: string,
+      competitors: unknown[]
+    ) => Promise<unknown>;
   };
-  url: {
-    fetch: (data: URLFetchRequest) => Promise<URLFetchResponse>;
+  health: {
+    check: () => Promise<unknown>;
+    status: () => Promise<unknown>;
+    metrics: () => Promise<unknown>;
+    reset: () => Promise<{ success: boolean; message: string }>;
   };
+  settings: {
+    clearDatabase: () => Promise<{ success: boolean; message: string }>;
+    exportData: () => Promise<unknown>;
+    importData: (data: unknown) => Promise<unknown>;
+    getAppInfo: () => Promise<unknown>;
+  };
+  invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
 }
 
 declare global {
   interface Window {
-    electron: ElectronAPI;
+    electronAPI: ElectronAPI;
   }
 }

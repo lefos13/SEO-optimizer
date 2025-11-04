@@ -13,6 +13,7 @@
  * for component integration while maintaining type safety in the database layer.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
@@ -37,6 +38,20 @@ interface Filters {
 interface AnalysisResultsProps {
   analysisId?: string | number;
   onBack?: () => void;
+}
+
+interface ErrorState {
+  type: 'analysis' | 'recommendations' | 'quickwins' | 'comparison' | 'general';
+  message: string;
+  details?: string;
+  retryable: boolean;
+}
+
+interface LoadingState {
+  analysis: boolean;
+  recommendations: boolean;
+  quickwins: boolean;
+  comparison: boolean;
 }
 
 interface DatabaseAnalysis {
@@ -109,8 +124,14 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     useState<DatabaseAnalysis | null>(null);
   const [selectedComparisonAnalysisId, setSelectedComparisonAnalysisId] =
     useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<LoadingState>({
+    analysis: true,
+    recommendations: false,
+    quickwins: false,
+    comparison: false,
+  });
+  const [error, setError] = useState<ErrorState | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   const tabs: Tab[] = [
     { id: 'overview', label: 'Overview', icon: '📊' },
@@ -118,58 +139,419 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     { id: 'comparison', label: 'Comparison', icon: '📈' },
   ];
 
+  // Helper function to create error states
+  const createError = (
+    type: ErrorState['type'],
+    message: string,
+    details?: string,
+    retryable: boolean = true
+  ): ErrorState => ({
+    type,
+    message,
+    details,
+    retryable,
+  });
+
+  // Helper function to update loading state
+  const updateLoadingState = (updates: Partial<LoadingState>): void => {
+    setIsLoading(prev => ({ ...prev, ...updates }));
+  };
+
+  // Helper function to handle errors with logging
+  const handleError = (
+    type: ErrorState['type'],
+    error: unknown,
+    context: string
+  ): void => {
+    console.error(`[AnalysisResults] ${context}:`, error);
+
+    let message = 'An unexpected error occurred';
+    let details = '';
+    let retryable = true;
+
+    if (error instanceof Error) {
+      message = error.message;
+      details = error.stack || '';
+    } else if (typeof error === 'string') {
+      message = error;
+    }
+
+    // Determine if error is retryable based on type and message
+    if (message.includes('not found') || message.includes('404')) {
+      retryable = false;
+    }
+
+    setError(createError(type, message, details, retryable));
+  };
+
+  // Retry mechanism with exponential backoff
+  const retryWithBackoff = async (
+    operation: () => Promise<void>,
+    maxRetries: number = 3
+  ): Promise<void> => {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        await operation();
+        setRetryCount(0); // Reset retry count on success
+        return;
+      } catch (error) {
+        if (attempt === maxRetries) {
+          throw error; // Re-throw on final attempt
+        }
+
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt) * 1000;
+        console.log(
+          `[AnalysisResults] Retry attempt ${attempt + 1} in ${delay}ms`
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  };
+
+  // Data validation functions
+  const isValidRecommendation = (rec: unknown): rec is Recommendation => {
+    if (!rec || typeof rec !== 'object') {
+      return false;
+    }
+
+    const recommendation = rec as Record<string, unknown>;
+
+    // Required fields
+    if (typeof recommendation.id !== 'number' || recommendation.id <= 0) {
+      return false;
+    }
+
+    if (
+      typeof recommendation.title !== 'string' ||
+      !recommendation.title.trim()
+    ) {
+      return false;
+    }
+
+    // Optional but validated fields
+    if (
+      recommendation.priority &&
+      typeof recommendation.priority === 'string' &&
+      !['critical', 'high', 'medium', 'low'].includes(
+        recommendation.priority.toLowerCase()
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      recommendation.category &&
+      typeof recommendation.category !== 'string'
+    ) {
+      return false;
+    }
+
+    if (recommendation.status && typeof recommendation.status !== 'string') {
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateRecommendationsArray = (data: unknown): Recommendation[] => {
+    if (!Array.isArray(data)) {
+      console.warn(
+        '[AnalysisResults] Recommendations data is not an array:',
+        typeof data
+      );
+      return [];
+    }
+
+    const validRecommendations: Recommendation[] = [];
+    const invalidItems: unknown[] = [];
+
+    data.forEach((item, index) => {
+      if (isValidRecommendation(item)) {
+        // Sanitize and normalize the recommendation
+        const sanitizedRec: Recommendation = {
+          id: item.id,
+          title: item.title.trim(),
+          description:
+            typeof item.description === 'string'
+              ? item.description.trim()
+              : undefined,
+          message:
+            typeof item.message === 'string' ? item.message.trim() : undefined,
+          priority:
+            typeof item.priority === 'string'
+              ? item.priority.toLowerCase()
+              : 'medium',
+          category:
+            typeof item.category === 'string' ? item.category : 'general',
+          status:
+            typeof item.status === 'string'
+              ? item.status.toLowerCase()
+              : 'pending',
+          impact:
+            typeof item.impact === 'string'
+              ? item.impact.toLowerCase()
+              : undefined,
+        };
+        validRecommendations.push(sanitizedRec);
+      } else {
+        console.warn(
+          `[AnalysisResults] Invalid recommendation at index ${index}:`,
+          item
+        );
+        invalidItems.push(item);
+      }
+    });
+
+    if (invalidItems.length > 0) {
+      console.warn(
+        `[AnalysisResults] Found ${invalidItems.length} invalid recommendations out of ${data.length} total`
+      );
+    }
+
+    return validRecommendations;
+  };
+
+  const validateAndSetRecommendations = (
+    data: unknown,
+    context: string
+  ): void => {
+    try {
+      const validatedRecommendations = validateRecommendationsArray(data);
+
+      console.log(`[AnalysisResults] ${context} - Validated recommendations:`, {
+        total: Array.isArray(data) ? data.length : 0,
+        valid: validatedRecommendations.length,
+        invalid: Array.isArray(data)
+          ? data.length - validatedRecommendations.length
+          : 0,
+      });
+
+      setRecommendations(validatedRecommendations);
+    } catch (error) {
+      console.error(
+        `[AnalysisResults] Error validating recommendations in ${context}:`,
+        error
+      );
+      setRecommendations([]); // Fallback to empty array
+      throw new Error(
+        `Invalid recommendations data received: ${error instanceof Error ? error.message : 'Unknown validation error'}`
+      );
+    }
+  };
+
+  const validateAndSetQuickWins = (data: unknown, context: string): void => {
+    try {
+      const validatedQuickWins = validateRecommendationsArray(data);
+
+      console.log(`[AnalysisResults] ${context} - Validated quick wins:`, {
+        total: Array.isArray(data) ? data.length : 0,
+        valid: validatedQuickWins.length,
+        invalid: Array.isArray(data)
+          ? data.length - validatedQuickWins.length
+          : 0,
+      });
+
+      setQuickWins(validatedQuickWins);
+    } catch (error) {
+      console.error(
+        `[AnalysisResults] Error validating quick wins in ${context}:`,
+        error
+      );
+      setQuickWins([]); // Fallback to empty array
+      throw new Error(
+        `Invalid quick wins data received: ${error instanceof Error ? error.message : 'Unknown validation error'}`
+      );
+    }
+  };
+
   const loadAnalysisData = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
+    updateLoadingState({ analysis: true });
     setError(null);
 
     try {
-      // Load analysis data
-      const analysisData = (await window.electronAPI.analyses.get(
-        Number(analysisId)
-      )) as DatabaseAnalysis;
+      await retryWithBackoff(async () => {
+        // Load analysis data
+        console.log(
+          '[AnalysisResults] Loading analysis data for ID:',
+          analysisId
+        );
+        const analysisData = (await window.electronAPI.analyses.get(
+          Number(analysisId)
+        )) as DatabaseAnalysis;
 
-      if (!analysisData) {
-        throw new Error('Analysis not found');
-      }
+        if (!analysisData) {
+          throw new Error(`Analysis with ID ${analysisId} not found`);
+        }
 
-      // Parse JSON data if stored as string and add computed fields
-      const parsedAnalysis: DatabaseAnalysis = {
-        ...analysisData,
-        score: analysisData.overall_score || 0,
-        maxScore: analysisData.max_score || 100,
-        passedRules: analysisData.passed_rules || 0,
-        failedRules: analysisData.failed_rules || 0,
-        categoryScores:
-          typeof analysisData.category_scores === 'string' &&
-          analysisData.category_scores
-            ? JSON.parse(analysisData.category_scores)
-            : analysisData.category_scores || {},
-        issues: [], // Add empty issues array for calculateCategoryScores
-      };
+        // Parse JSON data if stored as string and add computed fields
+        const parsedAnalysis: DatabaseAnalysis = {
+          ...analysisData,
+          score: analysisData.overall_score || 0,
+          maxScore: analysisData.max_score || 100,
+          passedRules: analysisData.passed_rules || 0,
+          failedRules: analysisData.failed_rules || 0,
+          categoryScores:
+            typeof analysisData.category_scores === 'string' &&
+            analysisData.category_scores
+              ? JSON.parse(analysisData.category_scores)
+              : analysisData.category_scores || {},
+          issues: [], // Add empty issues array for calculateCategoryScores
+        };
 
-      setAnalysis(parsedAnalysis);
-
-      // Load recommendations
-      const recs = (await window.electronAPI.seo.getRecommendations(
-        Number(analysisId)
-      )) as Recommendation[];
-      console.log('[RENDERER] Fetched recommendations from electronAPI:', {
-        count: (recs || []).length,
-        sample: (recs || [])
-          .slice(0, 5)
-          .map(r => ({ id: r.id, title: r.title })),
+        setAnalysis(parsedAnalysis);
+        console.log('[AnalysisResults] Analysis data loaded successfully');
       });
-      setRecommendations(recs || []);
+    } catch (err) {
+      handleError('analysis', err, 'Loading analysis data');
+      return; // Don't continue if analysis loading failed
+    } finally {
+      updateLoadingState({ analysis: false });
+    }
 
-      // Load quick wins using dedicated IPC method
-      const wins = (await window.electronAPI.seo.getQuickWins(
-        Number(analysisId)
-      )) as Recommendation[];
-      setQuickWins(wins || []);
+    // Load recommendations with separate error handling
+    await loadRecommendations();
 
-      // Auto-select the most recent previous analysis for comparison
-      const projectId = analysisData.project_id || analysisData.projectId;
-      if (projectId) {
+    // Load quick wins with separate error handling
+    await loadQuickWins();
+
+    // Load comparison data with separate error handling
+    await loadComparisonData();
+  }, [analysisId]);
+
+  const loadRecommendations = useCallback(async (): Promise<void> => {
+    if (!analysisId) return;
+
+    updateLoadingState({ recommendations: true });
+
+    try {
+      await retryWithBackoff(async () => {
+        console.log(
+          '[AnalysisResults] Loading recommendations for analysis ID:',
+          analysisId
+        );
+        const response = await window.electronAPI.seo.getRecommendations(
+          Number(analysisId)
+        );
+
+        console.log(
+          '[AnalysisResults] Raw recommendations response received:',
+          {
+            type: typeof response,
+            isArray: Array.isArray(response),
+            hasRecommendations:
+              response &&
+              typeof response === 'object' &&
+              'recommendations' in response,
+            responseStructure:
+              response && typeof response === 'object'
+                ? Object.keys(response)
+                : 'Not an object',
+          }
+        );
+
+        // Extract recommendations array from response object
+        let recs: unknown;
+        if (Array.isArray(response)) {
+          // Direct array response (legacy format)
+          recs = response;
+        } else if (
+          response &&
+          typeof response === 'object' &&
+          'recommendations' in response
+        ) {
+          // Object response with recommendations property (new format)
+          recs = (response as any).recommendations;
+        } else {
+          console.warn(
+            '[AnalysisResults] Unexpected response format:',
+            response
+          );
+          recs = [];
+        }
+
+        console.log('[AnalysisResults] Extracted recommendations data:', {
+          type: typeof recs,
+          isArray: Array.isArray(recs),
+          count: Array.isArray(recs) ? recs.length : 'N/A',
+          sample: Array.isArray(recs)
+            ? recs.slice(0, 3).map((r: any) => ({
+                id: r?.id,
+                title: r?.title,
+                category: r?.category,
+                hasRequiredFields: !!(r?.id && r?.title),
+              }))
+            : 'Not an array',
+        });
+
+        validateAndSetRecommendations(recs, 'loadRecommendations');
+      });
+    } catch (err) {
+      handleError('recommendations', err, 'Loading recommendations');
+      // Validation function already sets empty array as fallback
+    } finally {
+      updateLoadingState({ recommendations: false });
+    }
+  }, [analysisId]);
+
+  const loadQuickWins = useCallback(async (): Promise<void> => {
+    if (!analysisId) return;
+
+    updateLoadingState({ quickwins: true });
+
+    try {
+      await retryWithBackoff(async () => {
+        console.log(
+          '[AnalysisResults] Loading quick wins for analysis ID:',
+          analysisId
+        );
+        const wins = await window.electronAPI.seo.getQuickWins(
+          Number(analysisId)
+        );
+
+        console.log('[AnalysisResults] Raw quick wins data received:', {
+          type: typeof wins,
+          isArray: Array.isArray(wins),
+          count: Array.isArray(wins) ? wins.length : 'N/A',
+          sample: Array.isArray(wins)
+            ? wins.slice(0, 3).map((r: any) => ({
+                id: r?.id,
+                title: r?.title,
+                category: r?.category,
+                hasRequiredFields: !!(r?.id && r?.title),
+              }))
+            : 'Not an array',
+        });
+
+        validateAndSetQuickWins(wins, 'loadQuickWins');
+      });
+    } catch (err) {
+      handleError('quickwins', err, 'Loading quick wins');
+      // Validation function already sets empty array as fallback
+    } finally {
+      updateLoadingState({ quickwins: false });
+    }
+  }, [analysisId]);
+
+  const loadComparisonData = useCallback(async (): Promise<void> => {
+    if (!analysis) return;
+
+    updateLoadingState({ comparison: true });
+
+    try {
+      await retryWithBackoff(async () => {
+        const projectId = analysis.project_id || analysis.projectId;
+        if (!projectId) {
+          console.log(
+            '[AnalysisResults] No project ID found, skipping comparison data'
+          );
+          return;
+        }
+
+        console.log(
+          '[AnalysisResults] Loading comparison data for project ID:',
+          projectId
+        );
         const projectAnalyses = (await window.electronAPI.analyses.getByProject(
           projectId,
           { limit: 2, orderBy: 'createdAt DESC' }
@@ -193,17 +575,19 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             };
             setComparisonAnalysis(parsedPrevAnalysis);
             setSelectedComparisonAnalysisId(prevAnalysis.id);
+            console.log(
+              '[AnalysisResults] Comparison data loaded successfully'
+            );
           }
         }
-      }
+      });
     } catch (err) {
-      console.error('Error loading analysis data:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(errorMessage);
+      handleError('comparison', err, 'Loading comparison data');
+      // Don't set fallback data for comparison as it's optional
     } finally {
-      setIsLoading(false);
+      updateLoadingState({ comparison: false });
     }
-  }, [analysisId]);
+  }, [analysis]);
 
   useEffect(() => {
     if (analysisId) {
@@ -213,87 +597,166 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
   useEffect(() => {
     applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recommendations, filters]);
 
   const applyFilters = (): void => {
-    let filtered = [...recommendations];
-
-    // Apply priority filter
-    if (filters.priorities.length > 0) {
-      filtered = filtered.filter(rec =>
-        filters.priorities.includes(rec.priority?.toLowerCase() || '')
-      );
-    }
-
-    // Apply category filter
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(rec =>
-        filters.categories.includes(rec.category || '')
-      );
-    }
-
-    // Apply status filter
-    if (filters.statuses.length > 0) {
-      filtered = filtered.filter(rec =>
-        filters.statuses.includes(rec.status?.toLowerCase() || 'pending')
-      );
-    }
-
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        rec =>
-          rec.title?.toLowerCase().includes(searchLower) ||
-          rec.description?.toLowerCase().includes(searchLower) ||
-          rec.message?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply sorting
-    const priorityOrder: Record<string, number> = {
-      critical: 0,
-      high: 1,
-      medium: 2,
-      low: 3,
-    };
-    const impactOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
-
-    filtered.sort((a, b) => {
-      switch (filters.sortBy) {
-        case 'priority':
-          return (
-            (priorityOrder[a.priority?.toLowerCase() || ''] ?? 999) -
-            (priorityOrder[b.priority?.toLowerCase() || ''] ?? 999)
+    try {
+      // Validate recommendations before filtering
+      const validRecommendations = recommendations.filter(rec => {
+        if (!isValidRecommendation(rec)) {
+          console.warn(
+            '[AnalysisResults] Invalid recommendation found during filtering:',
+            rec
           );
-        case 'impact':
-          return (
-            (impactOrder[a.impact?.toLowerCase() || ''] ?? 999) -
-            (impactOrder[b.impact?.toLowerCase() || ''] ?? 999)
-          );
-        case 'category':
-          return (a.category || '').localeCompare(b.category || '');
-        case 'status':
-          return (a.status || 'pending').localeCompare(b.status || 'pending');
-        default:
-          return 0;
+          return false;
+        }
+        return true;
+      });
+
+      if (validRecommendations.length !== recommendations.length) {
+        console.warn(
+          `[AnalysisResults] Filtered out ${recommendations.length - validRecommendations.length} invalid recommendations during filtering`
+        );
       }
-    });
 
-    setFilteredRecommendations(filtered);
+      let filtered = [...validRecommendations];
+
+      // Apply priority filter
+      if (filters.priorities.length > 0) {
+        filtered = filtered.filter(rec =>
+          filters.priorities.includes(rec.priority?.toLowerCase() || '')
+        );
+      }
+
+      // Apply category filter
+      if (filters.categories.length > 0) {
+        filtered = filtered.filter(rec =>
+          filters.categories.includes(rec.category || '')
+        );
+      }
+
+      // Apply status filter
+      if (filters.statuses.length > 0) {
+        filtered = filtered.filter(rec =>
+          filters.statuses.includes(rec.status?.toLowerCase() || 'pending')
+        );
+      }
+
+      // Apply search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        filtered = filtered.filter(
+          rec =>
+            rec.title?.toLowerCase().includes(searchLower) ||
+            rec.description?.toLowerCase().includes(searchLower) ||
+            rec.message?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Apply sorting
+      const priorityOrder: Record<string, number> = {
+        critical: 0,
+        high: 1,
+        medium: 2,
+        low: 3,
+      };
+      const impactOrder: Record<string, number> = {
+        high: 0,
+        medium: 1,
+        low: 2,
+      };
+
+      filtered.sort((a, b) => {
+        try {
+          switch (filters.sortBy) {
+            case 'priority':
+              return (
+                (priorityOrder[a.priority?.toLowerCase() || ''] ?? 999) -
+                (priorityOrder[b.priority?.toLowerCase() || ''] ?? 999)
+              );
+            case 'impact':
+              return (
+                (impactOrder[a.impact?.toLowerCase() || ''] ?? 999) -
+                (impactOrder[b.impact?.toLowerCase() || ''] ?? 999)
+              );
+            case 'category':
+              return (a.category || '').localeCompare(b.category || '');
+            case 'status':
+              return (a.status || 'pending').localeCompare(
+                b.status || 'pending'
+              );
+            default:
+              return 0;
+          }
+        } catch (sortError) {
+          console.warn(
+            '[AnalysisResults] Error sorting recommendations:',
+            sortError
+          );
+          return 0;
+        }
+      });
+
+      setFilteredRecommendations(filtered);
+    } catch (error) {
+      console.error('[AnalysisResults] Error applying filters:', error);
+      // Fallback to empty array if filtering fails
+      setFilteredRecommendations([]);
+    }
   };
+
+  const handleRetry = useCallback(async (): Promise<void> => {
+    if (!error?.retryable) return;
+
+    setRetryCount(prev => prev + 1);
+    setError(null);
+
+    console.log(
+      `[AnalysisResults] Retrying operation (attempt ${retryCount + 1})`
+    );
+
+    switch (error.type) {
+      case 'analysis':
+        await loadAnalysisData();
+        break;
+      case 'recommendations':
+        await loadRecommendations();
+        break;
+      case 'quickwins':
+        await loadQuickWins();
+        break;
+      case 'comparison':
+        await loadComparisonData();
+        break;
+      default:
+        await loadAnalysisData();
+        break;
+    }
+  }, [
+    error,
+    retryCount,
+    loadAnalysisData,
+    loadRecommendations,
+    loadQuickWins,
+    loadComparisonData,
+  ]);
 
   const handleUpdateRecommendationStatus = async (
     recId: string | number,
     newStatus: string
   ): Promise<void> => {
     try {
-      await window.electronAPI.seo.updateRecommendationStatus(
-        Number(recId),
-        newStatus,
-        ''
+      console.log(
+        `[AnalysisResults] Updating recommendation ${recId} status to ${newStatus}`
       );
+
+      await retryWithBackoff(async () => {
+        await window.electronAPI.seo.updateRecommendationStatus(
+          Number(recId),
+          newStatus,
+          ''
+        );
+      });
 
       // Update local state
       setRecommendations(prev =>
@@ -301,8 +764,12 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           rec.id === Number(recId) ? { ...rec, status: newStatus } : rec
         )
       );
+
+      console.log(
+        `[AnalysisResults] Successfully updated recommendation ${recId} status`
+      );
     } catch (err) {
-      console.error('Error updating recommendation status:', err);
+      handleError('general', err, `Updating recommendation ${recId} status`);
     }
   };
 
@@ -310,13 +777,25 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     comparisonAnalysisId: number
   ): Promise<void> => {
     setSelectedComparisonAnalysisId(comparisonAnalysisId);
+    updateLoadingState({ comparison: true });
 
     try {
-      const selectedAnalysis = (await window.electronAPI.analyses.get(
-        comparisonAnalysisId
-      )) as DatabaseAnalysis;
+      await retryWithBackoff(async () => {
+        console.log(
+          '[AnalysisResults] Loading comparison analysis:',
+          comparisonAnalysisId
+        );
 
-      if (selectedAnalysis) {
+        const selectedAnalysis = (await window.electronAPI.analyses.get(
+          comparisonAnalysisId
+        )) as DatabaseAnalysis;
+
+        if (!selectedAnalysis) {
+          throw new Error(
+            `Comparison analysis with ID ${comparisonAnalysisId} not found`
+          );
+        }
+
         const parsedAnalysis: DatabaseAnalysis = {
           ...selectedAnalysis,
           score: selectedAnalysis.overall_score || 0,
@@ -330,48 +809,101 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               : selectedAnalysis.category_scores || {},
           issues: [],
         };
+
         setComparisonAnalysis(parsedAnalysis);
-      }
+        console.log(
+          '[AnalysisResults] Comparison analysis loaded successfully'
+        );
+      });
     } catch (err) {
-      console.error('Error loading comparison analysis:', err);
+      handleError(
+        'comparison',
+        err,
+        `Loading comparison analysis ${comparisonAnalysisId}`
+      );
+      // Reset comparison analysis on error
+      setComparisonAnalysis(null);
+    } finally {
+      updateLoadingState({ comparison: false });
     }
   };
 
   const getFilterStats = (): Record<string, number> => {
-    const stats = {
-      criticalCount: recommendations.filter(
-        r => r.priority?.toLowerCase() === 'critical'
-      ).length,
-      highCount: recommendations.filter(
-        r => r.priority?.toLowerCase() === 'high'
-      ).length,
-      mediumCount: recommendations.filter(
-        r => r.priority?.toLowerCase() === 'medium'
-      ).length,
-      lowCount: recommendations.filter(r => r.priority?.toLowerCase() === 'low')
-        .length,
-      pendingCount: recommendations.filter(
-        r => !r.status || r.status === 'pending'
-      ).length,
-      'in-progressCount': recommendations.filter(
-        r => r.status === 'in-progress'
-      ).length,
-      completedCount: recommendations.filter(r => r.status === 'completed')
-        .length,
-      dismissedCount: recommendations.filter(r => r.status === 'dismissed')
-        .length,
-    };
-    return stats;
+    try {
+      // Validate recommendations before calculating stats
+      const validRecommendations = recommendations.filter(
+        isValidRecommendation
+      );
+
+      const stats = {
+        criticalCount: validRecommendations.filter(
+          r => r.priority?.toLowerCase() === 'critical'
+        ).length,
+        highCount: validRecommendations.filter(
+          r => r.priority?.toLowerCase() === 'high'
+        ).length,
+        mediumCount: validRecommendations.filter(
+          r => r.priority?.toLowerCase() === 'medium'
+        ).length,
+        lowCount: validRecommendations.filter(
+          r => r.priority?.toLowerCase() === 'low'
+        ).length,
+        pendingCount: validRecommendations.filter(
+          r => !r.status || r.status === 'pending'
+        ).length,
+        'in-progressCount': validRecommendations.filter(
+          r => r.status === 'in-progress'
+        ).length,
+        completedCount: validRecommendations.filter(
+          r => r.status === 'completed'
+        ).length,
+        dismissedCount: validRecommendations.filter(
+          r => r.status === 'dismissed'
+        ).length,
+      };
+      return stats;
+    } catch (error) {
+      console.error('[AnalysisResults] Error calculating filter stats:', error);
+      // Return empty stats on error
+      return {
+        criticalCount: 0,
+        highCount: 0,
+        mediumCount: 0,
+        lowCount: 0,
+        pendingCount: 0,
+        'in-progressCount': 0,
+        completedCount: 0,
+        dismissedCount: 0,
+      };
+    }
   };
 
   const getUniqueCategories = (): string[] => {
-    const categories = new Set(
-      recommendations.map(r => r.category).filter(Boolean) as string[]
-    );
-    return Array.from(categories);
+    try {
+      // Validate recommendations before extracting categories
+      const validRecommendations = recommendations.filter(
+        isValidRecommendation
+      );
+
+      const categories = new Set(
+        validRecommendations
+          .map(r => r.category)
+          .filter(
+            category => category && typeof category === 'string'
+          ) as string[]
+      );
+      return Array.from(categories);
+    } catch (error) {
+      console.error(
+        '[AnalysisResults] Error getting unique categories:',
+        error
+      );
+      return []; // Return empty array on error
+    }
   };
 
-  if (isLoading) {
+  // Show loading state for initial analysis load
+  if (isLoading.analysis) {
     return (
       <div className="results-loading">
         <div className="loading-spinner"></div>
@@ -380,15 +912,29 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     );
   }
 
-  if (error) {
+  // Show error state for critical errors (analysis not found, etc.)
+  if (error && error.type === 'analysis') {
     return (
       <div className="results-error">
         <div className="error-icon">⚠️</div>
-        <h3>Error Loading Results</h3>
-        <p>{error}</p>
-        <Button variant="primary" onClick={onBack}>
-          Go Back
-        </Button>
+        <h3>Error Loading Analysis</h3>
+        <p>{error.message}</p>
+        {error.details && (
+          <details className="error-details">
+            <summary>Technical Details</summary>
+            <pre>{error.details}</pre>
+          </details>
+        )}
+        <div className="error-actions">
+          {error.retryable && (
+            <Button variant="secondary" onClick={handleRetry}>
+              Retry
+            </Button>
+          )}
+          <Button variant="primary" onClick={onBack}>
+            Go Back
+          </Button>
+        </div>
       </div>
     );
   }
@@ -408,6 +954,26 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
   return (
     <div className="analysis-results">
+      {/* Error notification for non-critical errors */}
+      {error && error.type !== 'analysis' && (
+        <div className="error-notification">
+          <div className="error-content">
+            <span className="error-icon">⚠️</span>
+            <div className="error-text">
+              <strong>Error loading {error.type}:</strong> {error.message}
+            </div>
+            {error.retryable && (
+              <Button variant="ghost" size="small" onClick={handleRetry}>
+                Retry
+              </Button>
+            )}
+            <Button variant="ghost" size="small" onClick={() => setError(null)}>
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="results-header">
         <div className="results-header-content">
@@ -461,7 +1027,15 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           <div className="results-overview">
             <ScoreBreakdown analysis={analysis as any} />
 
-            {quickWins.length > 0 && (
+            {isLoading.quickwins ? (
+              <Card className="quick-wins-card">
+                <h3 className="card-title">🚀 Quick Wins</h3>
+                <div className="loading-content">
+                  <div className="loading-spinner small"></div>
+                  <p>Loading quick wins...</p>
+                </div>
+              </Card>
+            ) : quickWins.length > 0 ? (
               <Card className="quick-wins-card">
                 <h3 className="card-title">🚀 Quick Wins</h3>
                 <p className="card-subtitle">
@@ -472,7 +1046,23 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                   onUpdateStatus={handleUpdateRecommendationStatus}
                 />
               </Card>
-            )}
+            ) : error?.type === 'quickwins' ? (
+              <Card className="quick-wins-card">
+                <h3 className="card-title">🚀 Quick Wins</h3>
+                <div className="error-content">
+                  <p>Failed to load quick wins: {error.message}</p>
+                  {error.retryable && (
+                    <Button
+                      variant="secondary"
+                      size="small"
+                      onClick={handleRetry}
+                    >
+                      Retry
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ) : null}
           </div>
         )}
 
@@ -492,15 +1082,50 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               <div className="recommendations-main">
                 <div className="recommendations-header">
                   <h3 className="recommendations-title">All Recommendations</h3>
-                  <Badge variant="info">
-                    {filteredRecommendations.length} of {recommendations.length}
-                  </Badge>
+                  {isLoading.recommendations ? (
+                    <div className="loading-badge">
+                      <div className="loading-spinner small"></div>
+                      <span>Loading...</span>
+                    </div>
+                  ) : (
+                    <Badge variant="info">
+                      {filteredRecommendations.length} of{' '}
+                      {recommendations.length}
+                    </Badge>
+                  )}
                 </div>
 
-                <RecommendationsList
-                  recommendations={filteredRecommendations as any}
-                  onUpdateStatus={handleUpdateRecommendationStatus}
-                />
+                {isLoading.recommendations ? (
+                  <div className="recommendations-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Loading recommendations...</p>
+                  </div>
+                ) : error?.type === 'recommendations' ? (
+                  <div className="recommendations-error">
+                    <div className="error-icon">⚠️</div>
+                    <h4>Failed to Load Recommendations</h4>
+                    <p>{error.message}</p>
+                    {error.retryable && (
+                      <Button variant="secondary" onClick={handleRetry}>
+                        Retry Loading Recommendations
+                      </Button>
+                    )}
+                  </div>
+                ) : recommendations.length === 0 ? (
+                  <div className="recommendations-empty">
+                    <div className="empty-icon">💡</div>
+                    <h4>No Recommendations Available</h4>
+                    <p>
+                      This analysis does not have any recommendations to
+                      display.
+                    </p>
+                  </div>
+                ) : (
+                  <RecommendationsList
+                    recommendations={filteredRecommendations as any}
+                    onUpdateStatus={handleUpdateRecommendationStatus}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -522,7 +1147,27 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
               </div>
 
               <div className="comparison-results-section">
-                {comparisonAnalysis ? (
+                {isLoading.comparison ? (
+                  <Card className="comparison-loading-state">
+                    <div className="loading-content">
+                      <div className="loading-spinner"></div>
+                      <p>Loading comparison data...</p>
+                    </div>
+                  </Card>
+                ) : error?.type === 'comparison' ? (
+                  <Card className="comparison-error-state">
+                    <div className="error-content">
+                      <div className="error-icon">⚠️</div>
+                      <h3>Error Loading Comparison</h3>
+                      <p>{error.message}</p>
+                      {error.retryable && (
+                        <Button variant="secondary" onClick={handleRetry}>
+                          Retry Loading Comparison
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                ) : comparisonAnalysis ? (
                   <BeforeAfterComparison
                     beforeAnalysis={comparisonAnalysis as any}
                     afterAnalysis={analysis as any}

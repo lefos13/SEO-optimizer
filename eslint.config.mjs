@@ -116,6 +116,7 @@ export default [
           './tsconfig.json',
           './tsconfig.main.json',
           './tsconfig.renderer.json',
+          './tsconfig.test.json',
         ],
         ecmaFeatures: {
           jsx: true,
