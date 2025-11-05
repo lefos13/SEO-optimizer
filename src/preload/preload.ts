@@ -200,6 +200,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAppInfo: () => ipcRenderer.invoke('settings:getAppInfo'),
   },
 
+  // Window Controls
+  window: {
+    minimize: () => ipcRenderer.invoke('window:minimize'),
+    maximize: () => ipcRenderer.invoke('window:maximize'),
+    close: () => ipcRenderer.invoke('window:close'),
+    isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+  },
+
   // Generic invoke method for direct IPC calls
   invoke: (channel: string, ...args: unknown[]) =>
     ipcRenderer.invoke(channel, ...args),

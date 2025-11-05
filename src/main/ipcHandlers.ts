@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 import DatabaseOperations from './dbOperations';
 import dbManager from './dbManager';
 import SEOAnalyzer from '../analyzers/seoAnalyzer';
@@ -2255,6 +2255,37 @@ export class IPCHandlers {
         }
       }
     );
+
+    // ============ WINDOW CONTROLS ============
+    ipcMain.handle('window:minimize', () => {
+      const win = BrowserWindow.getFocusedWindow();
+      if (win) {
+        win.minimize();
+      }
+    });
+
+    ipcMain.handle('window:maximize', () => {
+      const win = BrowserWindow.getFocusedWindow();
+      if (win) {
+        if (win.isMaximized()) {
+          win.unmaximize();
+        } else {
+          win.maximize();
+        }
+      }
+    });
+
+    ipcMain.handle('window:close', () => {
+      const win = BrowserWindow.getFocusedWindow();
+      if (win) {
+        win.close();
+      }
+    });
+
+    ipcMain.handle('window:isMaximized', () => {
+      const win = BrowserWindow.getFocusedWindow();
+      return win ? win.isMaximized() : false;
+    });
   }
 }
 

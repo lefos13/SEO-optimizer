@@ -1,0 +1,81 @@
+/**
+ * Window Controls Styles
+ * Modern styling for custom window controls
+ */
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  -webkit-app-region: no-drag; // Allow clicking controls
+  margin-left: auto;
+}
+
+.window-control {
+  width: 46px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0;
+  margin: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: $color-bg-hover;
+    color: $color-text-primary;
+  }
+
+  &:active {
+    background: $color-bg-active;
+    transform: scale(0.95);
+  }
+
+  // Close button special styling
+  &--close {
+    &:hover {
+      background: #e81123;
+      color: #ffffff;
+    }
+
+    &:active {
+      background: #c50e1f;
+    }
+  }
+
+  // Minimize button
+  &--minimize {
+    &:hover {
+      background: $color-bg-hover;
+    }
+  }
+
+  // Maximize button
+  &--maximize {
+    &:hover {
+      background: $color-bg-hover;
+    }
+  }
+
+  // Focus styles for accessibility
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: -2px;
+  }
+}
+
+// Note: Main content margin-top is handled in _layout.scss

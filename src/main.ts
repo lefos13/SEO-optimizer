@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
 import DatabaseManager from './main/dbManager';
 import { registerHandlers } from './main/ipcHandlers';
@@ -25,12 +25,16 @@ if (isDev) {
 /**
  * Create the main application window
  */
+
 const createWindow = (): void => {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    frame: false, // Remove default window frame
+    titleBarStyle: 'hidden',
+    titleBarOverlay: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -38,6 +42,7 @@ const createWindow = (): void => {
       preload: path.join(__dirname, 'preload.js'),
     },
     show: false, // Don't show until ready
+    backgroundColor: '#1a1a1a', // Match dark theme
   });
 
   // Load the main HTML file
@@ -90,6 +95,9 @@ const createWindow = (): void => {
 // Initialize the application when Electron is ready
 app.whenReady().then(async () => {
   try {
+    // Remove menu bar completely
+    Menu.setApplicationMenu(null);
+
     // Initialize database (async operation)
     await DatabaseManager.initialize();
 

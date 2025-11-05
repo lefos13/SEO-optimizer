@@ -9,9 +9,28 @@
 // App Layout
 .app-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
   background: $color-bg-primary;
+}
+
+// Window Titlebar
+.window-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 8px;
+  z-index: 1000;
+  -webkit-app-region: drag; // Allow dragging the window
+  user-select: none;
 }
 
 // Main Content Area
@@ -21,6 +40,7 @@
   flex-direction: column;
   overflow: hidden;
   margin-left: $sidebar-width;
+  margin-top: 32px; // Account for titlebar height
 }
 
 .content-wrapper {
@@ -34,9 +54,9 @@
 .sidebar {
   position: fixed;
   left: 0;
-  top: 0;
+  top: 32px; // Account for titlebar height
   width: $sidebar-width;
-  height: 100vh;
+  height: calc(100vh - 32px); // Subtract titlebar height
   background: $color-bg-secondary;
   border-right: 1px solid $color-border;
   display: flex;

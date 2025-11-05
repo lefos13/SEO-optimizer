@@ -2,6 +2,8 @@
 
 A desktop SEO analysis tool built with Electron, React, TypeScript, and SQLite for content optimization and SEO recommendations.
 
+> **Note**: This project was **created using AI tools** to accelerate development and explore modern web technologies. The majority of the codebase was built with the assistance of AI coding tools, making this a **vibe coding project** that demonstrates the power of AI-assisted development.
+
 ## 🚀 Quick Start
 
 ```bash
@@ -17,6 +19,16 @@ yarn start
 # Build for distribution
 yarn build
 ```
+
+## 🤖 AI-Assisted Development
+
+This project was **primarily built using AI tools** to accelerate development and explore modern development workflows. The use of AI coding assistants enabled:
+
+- **Rapid Prototyping**: Quickly generate boilerplate code and component structures
+- **Feature Implementation**: Efficiently implement complex features with AI assistance
+- **Code Quality**: Maintain high code quality with AI-suggested best practices
+- **Learning**: Explore new technologies and patterns with AI guidance
+- **Problem Solving**: Leverage AI for debugging and optimization
 
 ## 📋 Features
 

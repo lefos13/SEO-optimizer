@@ -481,6 +481,12 @@ export interface ElectronAPI {
     importData: (data: unknown) => Promise<unknown>;
     getAppInfo: () => Promise<unknown>;
   };
+  window: {
+    minimize: () => Promise<void>;
+    maximize: () => Promise<void>;
+    close: () => Promise<void>;
+    isMaximized: () => Promise<boolean>;
+  };
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
 }
 
