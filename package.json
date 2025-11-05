@@ -1,8 +1,8 @@
 {
   "name": "seo-optimizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop SEO analysis tool for content optimization",
-  "author": "Your Name",
+  "author": "Evan Free",
   "license": "MIT",
   "packageManager": "yarn@4.5.2",
   "main": "dist/main.js",
